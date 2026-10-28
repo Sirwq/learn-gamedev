@@ -37,12 +37,13 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md): DeepSeek V4.1 Flash, first via Yandex AI Studio (rubles), later direct; behind a Yandex Cloud Function (not Cloudflare, throttled in Russia) that builds the prompt itself, caps sizes, and rate-limits per browser ID, per IP and by a global daily token budget. Not in the MVP (see Out of scope).
 - [How does the Ask DeepSeek button help without giving answers?](tickets/010-ai-tutor-rules.md): top-bar button copies a Tutor prompt (hint-ladder rules + Lesson, Goals, open Script, Console tail, `My question:`) and opens plain chat.deepseek.com; toast says paste; no `?q=` prefill (undocumented, fragile); no anti-cheat.
 - [What does the achievement map look like?](tickets/011-achievement-map.md): 🏆 top-bar button opens a full-window tree of 18 Achievements only (no Lessons), Minecraft-like square tiles and right-angled arrows, each unlocked by the one before; earned / locked / hidden tiles; top-right toasts; checked every frame in any Lesson, saved in localStorage.
+- [What does the Course menu look like?](tickets/012-course-menu.md): first screen on launch, a console-style cover carousel (big focused card, blurred art background, Course tabs on Q / E, key hints at the bottom); passed / next / locked cards; replay asks keep current code or load the code saved at that pass; green "Lesson passed" toast.
 
 ## Not yet specified
 
 - Non-AI help when a student is stuck (inline hints? reveal solution?), beyond the AI tutor and Reference code.
-- Art style beyond simple shapes.
-- Sandbox mode: using the engine on its own, without Lessons (how you enter it, which level or objects it starts with, whether Ask DeepSeek works there and what its Tutor prompt holds without a Lesson).
+- Art style beyond simple shapes, including the Lesson cover art on the Course menu.
+- Sandbox mode: using the engine on its own, without Lessons (how you enter it, maybe from the Course menu, which level or objects it starts with, whether Ask DeepSeek works there and what its Tutor prompt holds without a Lesson).
 
 ## Out of scope
 

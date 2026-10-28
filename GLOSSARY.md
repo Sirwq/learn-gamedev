@@ -30,4 +30,4 @@
 
 **Tutor prompt**: The text the student copies to an outside AI chat when stuck. It holds the tutor rules, the current Lesson and the student's code, and asks for hints, never the solution. Unlike the AI tutor, it lives outside the app.
 
-**Course menu**: The screen that lists a Course's Lessons, where the student picks a Lesson to play or replay. Separate from the achievement map.
+**Course menu**: The first screen of the app: a carousel of a Course's Lessons, where the student picks a Lesson to play or replay. Separate from the achievement map.
