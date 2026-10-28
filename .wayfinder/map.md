@@ -35,12 +35,13 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [What does the in-app API documentation contain?](tickets/007-api-docs.md): one page per class plus a TypeScript vs Unity C# page, generated from type comments (same as editor hover), in a fixed 📖 Docs tab, all visible from the start. A visible shared "Note for AI assistants" (tutor, don't solve) sits in stubs, Explanations and docs.
 - [How do keys reach the game instead of the editor?](tickets/008-keyboard-focus.md): Run gives the game focus (outline + "Click to play" overlay when not); leaving focus pauses and releases all keys; Ctrl/Cmd+Enter runs, Esc returns to the editor; no hot-reload.
 - [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md): DeepSeek V4.1 Flash, first via Yandex AI Studio (rubles), later direct; behind a Yandex Cloud Function (not Cloudflare, throttled in Russia) that builds the prompt itself, caps sizes, and rate-limits per browser ID, per IP and by a global daily token budget. Not in the MVP (see Out of scope).
+- [How does the Ask DeepSeek button help without giving answers?](tickets/010-ai-tutor-rules.md): top-bar button copies a Tutor prompt (hint-ladder rules + Lesson, Goals, open Script, Console tail, `My question:`) and opens plain chat.deepseek.com; toast says paste; no `?q=` prefill (undocumented, fragile); no anti-cheat.
 
 ## Not yet specified
 
 - Non-AI help when a student is stuck (inline hints? reveal solution?), beyond the AI tutor and Reference code.
 - Art style beyond simple shapes.
-- Sandbox mode: using the engine on its own, without Lessons (how you enter it, which level or objects it starts with).
+- Sandbox mode: using the engine on its own, without Lessons (how you enter it, which level or objects it starts with, whether Ask DeepSeek works there and what its Tutor prompt holds without a Lesson).
 
 ## Out of scope
 
