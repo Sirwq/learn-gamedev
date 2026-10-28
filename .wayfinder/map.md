@@ -38,6 +38,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [How does the Ask DeepSeek button help without giving answers?](tickets/010-ai-tutor-rules.md): top-bar button copies a Tutor prompt (hint-ladder rules + Lesson, Goals, open Script, Console tail, `My question:`) and opens plain chat.deepseek.com; toast says paste; no `?q=` prefill (undocumented, fragile); no anti-cheat.
 - [What does the achievement map look like?](tickets/011-achievement-map.md): 🏆 top-bar button opens a full-window tree of 18 Achievements only (no Lessons), Minecraft-like square tiles and right-angled arrows, each unlocked by the one before; earned / locked / hidden tiles; top-right toasts; checked every frame in any Lesson, saved in localStorage.
 - [What does the Course menu look like?](tickets/012-course-menu.md): first screen on launch, a console-style cover carousel (big focused card, blurred art background, Course tabs on Q / E, key hints at the bottom); passed / next / locked cards; replay asks keep current code or load the code saved at that pass; green "Lesson passed" toast.
+- [What non-AI help does a stuck student get?](tickets/013-stuck-help.md): up to 3 free hints per Lesson (nudge → idea → near-code) in `hints.md`, opened one by one at the bottom of the Explanation, saved in localStorage and added to the Tutor prompt; no solution before passing, instead a "Still stuck?" box points to Ask DeepSeek, 📖 Docs and the people next to you.
 
 ## Not yet specified
 

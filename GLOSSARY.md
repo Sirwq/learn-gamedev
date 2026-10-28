@@ -16,6 +16,8 @@
 
 **Script**: One code file the student edits, such as Player or Bullet. It defines one behaviour attached to a game object.
 
+**Hint**: A short written tip for a Lesson. A Lesson has up to three, each one closer to the answer, opened one at a time by a stuck student. A Hint never reveals the full solution.
+
 **Reference code**: A known-good version of a Script, unlocked after the student passes the Lesson that Script belongs to. The student can load it to replace their own.
 
 **Level**: The starting layout of game objects for a Lesson, such as walls, platforms, a flag and enemies. Each Lesson has exactly one Level.
