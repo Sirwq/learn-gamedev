@@ -1,0 +1,32 @@
+{
+  "name": "learn-dev",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "vitest run",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
+    "afk": "npx tsx .sandcastle/main.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sirwq/learn-gamedev.git"
+  },
+  "keywords": [],
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Sirwq/learn-gamedev/issues"
+  },
+  "homepage": "https://github.com/Sirwq/learn-gamedev#readme",
+  "dependencies": {
+    "monaco-editor": "^0.57.0",
+    "sucrase": "^3.35.1"
+  },
+  "devDependencies": {
+    "@ai-hero/sandcastle": "^0.12.0",
+    "typescript": "5.9",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

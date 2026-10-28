@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>learn-dev</title>
+    <style>
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; font: 14px system-ui, sans-serif; background: #1e1e1e; color: #ddd; }
+      header { display: flex; gap: 12px; align-items: center; padding: 8px; }
+      main { flex: 1; display: flex; min-height: 0; }
+      #game { width: 50%; align-self: flex-start; background: #000; outline-offset: -2px; }
+      #game:focus { outline: 2px solid #4af; }
+      #editor { flex: 1; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <button id="run">▶ Run</button>
+      <span id="status" role="status"></span>
+    </header>
+    <main>
+      <canvas id="game" width="640" height="480" tabindex="0"></canvas>
+      <div id="editor"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
