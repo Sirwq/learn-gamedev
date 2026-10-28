@@ -19,3 +19,5 @@ The app gets a built-in AI tutor (like cs50.ai's duck) using a **cloud Chinese m
 - **Open caveats**: hint quality isn't benchmarked (hand-grade ~20 real student mistakes on DeepSeek Flash vs Qwen3.6 35B before locking in); exact Yandex model id for DeepSeek unchecked.
 
 Details and sources: [research/ai-tutor-provider.md](../research/ai-tutor-provider.md)
+
+Later: for the MVP the user chose a free **Ask DeepSeek** copy-and-open button instead; this paid plan is out of scope until a built-in tutor is wanted.
