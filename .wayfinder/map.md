@@ -41,9 +41,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 
 ## Not yet specified
 
-- Non-AI help when a student is stuck (inline hints? reveal solution?), beyond the AI tutor and Reference code.
-- Art style beyond simple shapes, including the Lesson cover art on the Course menu.
-- Sandbox mode: using the engine on its own, without Lessons (how you enter it, maybe from the Course menu, which level or objects it starts with, whether Ask DeepSeek works there and what its Tutor prompt holds without a Lesson).
+<!-- nothing right now: all fog is ticketed -->
 
 ## Out of scope
 
