@@ -26,6 +26,8 @@
 
 **AI tutor**: The built-in assistant that helps a stuck student with hints and explanations, never with the solution.
 
-**Achievement**: A reward the student earns once, for doing something for the first time in the game (like a first jump) or for passing a Lesson. Shown on the achievement map.
+**Achievement**: A reward the student earns once, for doing something for the first time in the game (like a first jump). Passing a Lesson is not an Achievement. Shown on the achievement map, where each one is unlocked by the one before it.
 
 **Tutor prompt**: The text the student copies to an outside AI chat when stuck. It holds the tutor rules, the current Lesson and the student's code, and asks for hints, never the solution. Unlike the AI tutor, it lives outside the app.
+
+**Course menu**: The screen that lists a Course's Lessons, where the student picks a Lesson to play or replay. Separate from the achievement map.
