@@ -32,6 +32,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [What is the first Course?](tickets/005-first-course.md): a 15-Lesson platformer (move → speed → steer → gravity → jump → overlap → platforms → walls → camera → coins → enemy → stomp → shooting → health → moving platforms), at most one new concept per Lesson, guidance shrinks as it goes. Adds Unity `Debug.Log` with a Console panel.
 - [What should the app shell look and feel like?](tickets/006-app-shell.md): IDE layout: top bar with progress and Run, Lesson strip, game left, code above Console right. Goals float over the game, Lose and pass messages sit on the viewport, Compare takes the whole window.
 - [What does the in-app API documentation contain?](tickets/007-api-docs.md): one page per class plus a TypeScript vs Unity C# page, generated from type comments (same as editor hover), in a fixed 📖 Docs tab, all visible from the start. A visible shared "Note for AI assistants" (tutor, don't solve) sits in stubs, Explanations and docs.
+- [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md): DeepSeek V4.1 Flash, first via Yandex AI Studio (rubles), later direct; behind a Yandex Cloud Function (not Cloudflare, throttled in Russia) that builds the prompt itself, caps sizes, and rate-limits per browser ID, per IP and by a global daily token budget.
 
 ## Not yet specified
 
