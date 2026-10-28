@@ -21,3 +21,9 @@
 **Level**: The starting layout of game objects for a Lesson, such as walls, platforms, a flag and enemies. Each Lesson has exactly one Level.
 
 **Console**: The panel where the student's log messages and runtime errors appear while the game runs.
+
+**Sandbox mode**: Using the engine on its own, without Lessons or Goals.
+
+**AI tutor**: The built-in assistant that helps a stuck student with hints and explanations, never with the solution.
+
+**Achievement**: A reward the student earns once, for doing something for the first time in the game (like a first jump) or for passing a Lesson. Shown on the achievement map.

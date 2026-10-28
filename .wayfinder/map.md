@@ -19,6 +19,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
   - Student code copies Unity's API and names: see [What game API does the student code against?](tickets/002-game-api.md).
   - A Lesson passes via automatic Checks on game state.
   - MVP: one Course, one character, no accounts, progress in localStorage.
+  - Lessons unlock in order: passing one unlocks the next, no skipping.
 - Tracker: local markdown. Tickets live in `tickets/`, front matter holds `type`, `status`, `blocked_by`, `assignee`. Frontier = `status: open`, all `blocked_by` closed, no `assignee`.
 
 ## Decisions so far
@@ -30,11 +31,11 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [What is the Lesson file format?](tickets/004-lesson-format.md): one folder per Lesson (typed `lesson.ts`, `explanation.md`, real `.ts` stubs and full-file Reference code), `course.ts` sets the order, Level = list of boxes, Goals/Lose events = `{ message, test(world) }`, no locked code, no hints yet. Adds a Unity-style `Camera.main` with no auto-follow.
 - [What is the first Course?](tickets/005-first-course.md): a 15-Lesson platformer (move → speed → steer → gravity → jump → overlap → platforms → walls → camera → coins → enemy → stomp → shooting → health → moving platforms), at most one new concept per Lesson, guidance shrinks as it goes. Adds Unity `Debug.Log` with a Console panel.
 - [What should the app shell look and feel like?](tickets/006-app-shell.md): IDE layout: top bar with progress and Run, Lesson strip, game left, code above Console right. Goals float over the game, Lose and pass messages sit on the viewport, Compare takes the whole window.
+- [What does the in-app API documentation contain?](tickets/007-api-docs.md): one page per class plus a TypeScript vs Unity C# page, generated from type comments (same as editor hover), in a fixed 📖 Docs tab, all visible from the start. A visible shared "Note for AI assistants" (tutor, don't solve) sits in stubs, Explanations and docs.
 
 ## Not yet specified
 
-- Hints and help when a student is stuck (inline hints? reveal solution? AI help?).
-- Progress and unlock rules (linear only? can you skip?).
+- Non-AI help when a student is stuck (inline hints? reveal solution?), beyond the AI tutor and Reference code.
 - Art style beyond simple shapes.
 - Sandbox mode: using the engine on its own, without Lessons (how you enter it, which level or objects it starts with).
 
