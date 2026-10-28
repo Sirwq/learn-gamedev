@@ -24,7 +24,9 @@
 
 **Console**: The panel where the student's log messages and runtime errors appear while the game runs.
 
-**Sandbox mode**: Using the engine on its own, without Lessons or Goals.
+**Sandbox mode**: Using the engine on its own, without Lessons or Goals. Unlocked after the Course is finished.
+
+**Project**: One saved world the student builds in Sandbox mode: its Scripts and starting layout, with a name. A student can have many. Its code is separate from the Course code.
 
 **AI tutor**: The built-in assistant that helps a stuck student with hints and explanations, never with the solution.
 

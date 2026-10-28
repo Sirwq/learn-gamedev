@@ -40,6 +40,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [What does the Course menu look like?](tickets/012-course-menu.md): first screen on launch, a console-style cover carousel (big focused card, blurred art background, Course tabs on Q / E, key hints at the bottom); passed / next / locked cards; replay asks keep current code or load the code saved at that pass; green "Lesson passed" toast.
 - [What non-AI help does a stuck student get?](tickets/013-stuck-help.md): up to 3 free hints per Lesson (nudge → idea → near-code) in `hints.md`, opened one by one at the bottom of the Explanation, saved in localStorage and added to the Tutor prompt; no solution before passing, instead a "Still stuck?" box points to Ask DeepSeek, 📖 Docs and the people next to you.
 - [What is the art style?](tickets/014-art-style.md): pixel art PNG sprites, one per tag, stretched exactly onto the box (drawn shape = hitbox), tiled Ground / Platform / Wall, engine flips facing; fixed pixel night-sky background; covers are zoomed crops of the Level.
+- [How does Sandbox mode work?](tickets/015-sandbox-mode.md): secret code-only blank engine unlocked by passing Lesson 15 (menu slides to a Sandbox tab); many Projects, each Blank (hidden `Game` script) or a copy of the Course code in a playground Level; code separate from the Course; + Script; no Lesson parts; Achievements and Ask DeepSeek work.
 
 ## Not yet specified
 
@@ -55,3 +56,4 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - On-screen UI / HUD text: scores and debug output go to the Console instead ([What is the first Course?](tickets/005-first-course.md)).
 - Built-in paid AI tutor (LLM API behind a proxy): the MVP uses the free copy-and-open button instead; [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md) holds the plan for when it's added.
 - Students loading their own artwork: later version ([What is the art style?](tickets/014-art-style.md)).
+- Construct-like Sandbox (drag-and-drop Level editor + own sprites): Sandbox v2, later effort; the MVP Sandbox is code-only ([How does Sandbox mode work?](tickets/015-sandbox-mode.md)).
