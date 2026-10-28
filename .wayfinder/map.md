@@ -29,6 +29,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [How does a Check work?](tickets/003-check.md): Checks watch live play each frame for the Lesson's Goals (all met in one Run), test only the current Lesson, show a ⬜/✓ checklist plus Lose events, no anti-cheat; on pass, a Compare diff against Reference code.
 - [What is the Lesson file format?](tickets/004-lesson-format.md): one folder per Lesson (typed `lesson.ts`, `explanation.md`, real `.ts` stubs and full-file Reference code), `course.ts` sets the order, Level = list of boxes, Goals/Lose events = `{ message, test(world) }`, no locked code, no hints yet. Adds a Unity-style `Camera.main` with no auto-follow.
 - [What is the first Course?](tickets/005-first-course.md): a 15-Lesson platformer (move → speed → steer → gravity → jump → overlap → platforms → walls → camera → coins → enemy → stomp → shooting → health → moving platforms), at most one new concept per Lesson, guidance shrinks as it goes. Adds Unity `Debug.Log` with a Console panel.
+- [What should the app shell look and feel like?](tickets/006-app-shell.md): IDE layout: top bar with progress and Run, Lesson strip, game left, code above Console right. Goals float over the game, Lose and pass messages sit on the viewport, Compare takes the whole window.
 
 ## Not yet specified
 
