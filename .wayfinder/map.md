@@ -28,6 +28,7 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - [What game API does the student code against?](tickets/002-game-api.md): exact Unity names (MonoBehaviour classes, one file per script, read-only `Vector2` position, `Time.deltaTime` fixed 1/60, `Input.GetKeyDown(KeyCode.Space)`). No engine physics: the student writes it. Code carries over between Lessons, and each file gets a Load reference code button once its Lesson is passed.
 - [How does a Check work?](tickets/003-check.md): Checks watch live play each frame for the Lesson's Goals (all met in one Run), test only the current Lesson, show a ⬜/✓ checklist plus Lose events, no anti-cheat; on pass, a Compare diff against Reference code.
 - [What is the Lesson file format?](tickets/004-lesson-format.md): one folder per Lesson (typed `lesson.ts`, `explanation.md`, real `.ts` stubs and full-file Reference code), `course.ts` sets the order, Level = list of boxes, Goals/Lose events = `{ message, test(world) }`, no locked code, no hints yet. Adds a Unity-style `Camera.main` with no auto-follow.
+- [What is the first Course?](tickets/005-first-course.md): a 15-Lesson platformer (move → speed → steer → gravity → jump → overlap → platforms → walls → camera → coins → enemy → stomp → shooting → health → moving platforms), at most one new concept per Lesson, guidance shrinks as it goes. Adds Unity `Debug.Log` with a Console panel.
 
 ## Not yet specified
 
@@ -42,3 +43,5 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - Accounts and server-side saves.
 - A Lesson editor for authors.
 - Multiplayer.
+- Extra platformer Mechanics (double jump, wall jump, dash), animation, sound: variations or need engine features beyond the 15-Lesson Course ([What is the first Course?](tickets/005-first-course.md)).
+- On-screen UI / HUD text: scores and debug output go to the Console instead ([What is the first Course?](tickets/005-first-course.md)).

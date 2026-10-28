@@ -19,3 +19,5 @@
 **Reference code**: A known-good version of a Script, unlocked after the student passes the Lesson that Script belongs to. The student can load it to replace their own.
 
 **Level**: The starting layout of game objects for a Lesson, such as walls, platforms, a flag and enemies. Each Lesson has exactly one Level.
+
+**Console**: The panel where the student's log messages and runtime errors appear while the game runs.
