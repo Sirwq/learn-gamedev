@@ -1,6 +1,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
+import { course } from "./lessons/course";
 import { Camera, Destroy, findScript, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, toScreen, Vector2 } from "./engine";
 
 describe("Vector2", () => {
@@ -148,6 +149,9 @@ describe("student typings", () => {
         Destroy(this.gameObject);
       }
     }`)).toEqual([]);
+  });
+  it.each(course.map((l) => [l.title, l.scripts] as const))("accepts the Reference code of Lesson %s", (_, scripts) => {
+    for (const { reference } of Object.values(scripts)) expect(errors(reference)).toEqual([]);
   });
   it("rejects writing to position.x", () => {
     expect(errors(`class Player extends MonoBehaviour { Update() { this.transform.position.x += 5; } }`).join())

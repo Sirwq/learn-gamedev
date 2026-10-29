@@ -36,6 +36,10 @@ declare class GameObject {
   readonly tag: string;
   /** Where it is. */
   readonly transform: Transform;
+  /** Width of the box in pixels. Unity C# reads the size from a collider instead: `GetComponent<BoxCollider2D>().size.x`. */
+  readonly w: number;
+  /** Height of the box in pixels. Unity C# reads the size from a collider instead: `GetComponent<BoxCollider2D>().size.y`. */
+  readonly h: number;
   /** Every object with this tag, e.g. `GameObject.FindGameObjectsWithTag("Enemy").length`. */
   static FindGameObjectsWithTag(tag: string): GameObject[];
 }

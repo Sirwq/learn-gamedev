@@ -15,6 +15,17 @@ const play: Record<string, (frame: number) => string[]> = {
   "3. Steer": (f) => [f <= 60 ? KeyCode.LeftArrow : KeyCode.RightArrow],
   "4. Gravity": () => [KeyCode.RightArrow],
   "5. Jump": (f) => (f === 30 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  // Walk under the box, jump onto it, jump to the flag.
+  "6. Land on a box": (f) => (f <= 55 ? [KeyCode.RightArrow] : f === 56 || f === 120 ? [KeyCode.Space] : []),
+  // Jump onto the first platform, then two running jumps up the stairs, then up to the flag.
+  "7. Many platforms": (f) =>
+    f <= 22 ? [KeyCode.RightArrow]
+    : f === 23 || f === 200 ? [KeyCode.Space]
+    : f === 78 || f === 138 ? [KeyCode.RightArrow, KeyCode.Space]
+    : (f >= 70 && f < 100) || (f >= 130 && f < 166) ? [KeyCode.RightArrow]
+    : [],
+  // Run into the low wall, jump onto it, jump onto the tall one.
+  "8. Walls": (f) => (f === 31 || f === 75 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 95 ? [KeyCode.RightArrow] : []),
 };
 
 describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, lesson, index) => {
