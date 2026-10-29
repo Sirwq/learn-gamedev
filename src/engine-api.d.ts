@@ -65,6 +65,12 @@ declare class MonoBehaviour {
    */
   readonly transform: Transform;
   /**
+   * Plays the game's sounds.
+   * @example this.audio.PlayOneShot("Jump");
+   * @unity C# needs an AudioSource component and a clip: `GetComponent<AudioSource>().PlayOneShot(clip)`; here every Script has `this.audio` and the clip is a name.
+   */
+  readonly audio: AudioSource;
+  /**
    * Called once, before the first Update.
    * @example Start() { Debug.Log("ready"); }
    * @unity C# writes `void Start()`; TypeScript leaves out the return type.
@@ -76,6 +82,19 @@ declare class MonoBehaviour {
    * @unity C# writes `void Update()`; TypeScript leaves out the return type.
    */
   Update?(): void;
+}
+
+/**
+ * Plays sounds. Every Script has one: `this.audio`. Sounds play in Sandbox and Chapter 2 Lessons; Lessons 1–15 stay silent.
+ * @example this.audio.PlayOneShot("Coin");
+ */
+declare class AudioSource {
+  /**
+   * Plays one of the ten built-in sounds once. The same sound played several times in one frame plays once.
+   * @example this.audio.PlayOneShot("Jump");
+   * @unity C# passes an AudioClip from the editor: `GetComponent<AudioSource>().PlayOneShot(clip)`; here you pass the clip's name.
+   */
+  PlayOneShot(clip: "Jump" | "Coin" | "Hit" | "Hurt" | "Shoot" | "Explosion" | "Powerup" | "Win" | "Lose" | "Click"): void;
 }
 
 /**

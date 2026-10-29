@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { animates } from "./run-utils";
+import { v2Features } from "./run-utils";
 import { frameOf, playerFrames, tiles, urls } from "./sprites";
 
 describe("tiles", () => {
@@ -57,10 +57,10 @@ describe("frameOf", () => {
   });
 });
 
-describe("animates", () => {
+describe("v2Features", () => {
   it("is off in Lessons 1–15 and on in Chapter 2 and Sandbox", () => {
-    for (let lesson = 0; lesson < 15; lesson++) expect(animates({ lesson })).toBe(false);
-    expect(animates({ lesson: 15 })).toBe(true);
-    expect(animates({ level: { boxes: [] } })).toBe(true);
+    for (let lesson = 0; lesson < 15; lesson++) expect(v2Features({ lesson })).toBe(false);
+    expect(v2Features({ lesson: 15 })).toBe(true);
+    expect(v2Features({ level: { boxes: [] } })).toBe(true);
   });
 });

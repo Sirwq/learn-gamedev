@@ -25,7 +25,7 @@ describe("Docs", () => {
 
   it("has one page per class plus the C# page", () => {
     expect(pages.map((p) => p.title)).toEqual(
-      ["Vector2", "Transform", "MonoBehaviour", "GameObject", "Time", "Input", "KeyCode", "Debug", "Camera", "TypeScript vs Unity C#"],
+      ["Vector2", "Transform", "MonoBehaviour", "AudioSource", "GameObject", "Time", "Input", "KeyCode", "Debug", "Camera", "TypeScript vs Unity C#"],
     );
     expect(pages.find((p) => p.title === "GameObject")!.ids).toEqual(expect.arrayContaining(["Instantiate", "Destroy", "Prefab"]));
   });

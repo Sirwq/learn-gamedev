@@ -3,7 +3,8 @@ import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
 import type { FromWorker, ToWorker } from "./runner-protocol";
-import { modKey, runShortcut, runStartLine, transpile } from "./run-utils";
+import { modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
+import { loadMuted, playClips, saveMuted, stopSounds, unlockAudio } from "./sound";
 import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
 import { marked } from "marked";
 import { course } from "./lessons/course";
@@ -453,6 +454,24 @@ monaco.editor.onDidChangeMarkers(() => {
   runBtn.disabled = blocked;
 });
 
+// Mute: only shown where sounds can play.
+const hasSound = v2Features(project ? { level: project.level } : { lesson: lessonIndex });
+const muteBtn = document.getElementById("mute") as HTMLButtonElement;
+let muted = loadMuted(localStorage);
+const showMute = () => {
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  muteBtn.setAttribute("aria-pressed", String(muted));
+};
+muteBtn.hidden = !hasSound;
+showMute();
+muteBtn.onmousedown = (e) => e.preventDefault(); // keep focus on the game, so clicking doesn't pause it
+muteBtn.onclick = () => {
+  muted = !muted;
+  if (muted) stopSounds();
+  try { saveMuted(localStorage, muted); } catch {}
+  showMute();
+};
+
 let worker: Worker | undefined;
 const post = (message: ToWorker, transfer: Transferable[] = []) => worker?.postMessage(message, transfer);
 let watchdog: number | undefined;
@@ -471,6 +490,7 @@ function ended() {
 
 function stop() {
   worker?.terminate();
+  stopSounds();
   ended();
 }
 
@@ -498,6 +518,7 @@ function run() {
   canvas.onblur = () => {
     if (!running) return;
     post({ type: "pause" });
+    stopSounds();
     showOverlay("Click to play", false);
   };
   canvas.onfocus = () => {
@@ -507,6 +528,7 @@ function run() {
     showOverlay("", false);
   };
 
+  if (hasSound) unlockAudio(); // run() only ever follows a click or Ctrl+Enter, which may start audio
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
   stopBtn.hidden = false;
@@ -522,6 +544,7 @@ function run() {
     if (e.data.type === "paused") paused = e.data.paused;
     if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "achievements") earn(e.data.ids);
+    if (e.data.type === "sounds" && !muted) playClips(e.data.names);
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose

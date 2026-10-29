@@ -20,5 +20,5 @@ export const runShortcut = (platform: string) => `${modKey(platform)}↵`;
 export const runStartLine = (lessonIndex: number, projectName?: string) =>
   `▶ Running ${projectName ?? `Lesson ${lessonIndex + 1}`}…`;
 
-/** Sprites animate in Sandbox and Chapter 2 (Lesson 16 on); Lessons 1–15 draw still frames. */
-export const animates = (start: { lesson: number } | { level: unknown }) => !("lesson" in start) || start.lesson >= 15;
+/** Sandbox and Chapter 2 (Lesson 16 on) animate sprites and play sounds; Lessons 1–15 draw still frames and stay silent. */
+export const v2Features = (start: { lesson: number } | { level: unknown }) => !("lesson" in start) || start.lesson >= 15;

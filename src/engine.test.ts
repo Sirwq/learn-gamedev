@@ -2,7 +2,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
 import { course } from "./lessons/course";
-import { Camera, Destroy, findScript, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, toScreen, Vector2 } from "./engine";
+import { Camera, CLIPS, Destroy, findScript, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, takeSounds, toScreen, Vector2 } from "./engine";
 
 describe("Vector2", () => {
   it("adds and scales into new vectors", () => {
@@ -80,6 +80,29 @@ describe("Instantiate, Destroy and FindGameObjectsWithTag", () => {
   it("names a missing Script", () => {
     startGame([], {});
     expect(() => Instantiate(bullet, new Vector2(0, 0))).toThrow("There is no Script named Bullet");
+  });
+});
+
+describe("audio", () => {
+  it("queues each frame's clip names once, in order, and starts empty next frame", () => {
+    let play: string[] = [];
+    class Player extends MonoBehaviour {
+      Start() { this.audio.PlayOneShot("Click"); }
+      Update() { for (const n of play) this.audio.PlayOneShot(n as "Jump"); }
+    }
+    const game = startGame([{ tag: "Player", x: 0, y: 0, w: 32, h: 32, color: "orange", script: "Player" }], { Player });
+    play = ["Jump", "Coin", "Jump", "Jump"];
+    game.step();
+    expect(takeSounds()).toEqual(["Click", "Jump", "Coin"]);
+    play = [];
+    game.step();
+    expect(takeSounds()).toEqual([]);
+  });
+  it("names an unknown clip", () => {
+    class Player extends MonoBehaviour {
+      Start() { this.audio.PlayOneShot("Boing" as "Jump"); }
+    }
+    expect(() => startGame([{ tag: "Player", x: 0, y: 0, w: 32, h: 32, color: "orange", script: "Player" }], { Player })).toThrow("There is no sound named Boing");
   });
 });
 
@@ -182,6 +205,10 @@ describe("student typings", () => {
   });
   it.each(course.map((l) => [l.title, l.scripts] as const))("accepts the Reference code of Lesson %s", (_, scripts) => {
     for (const { reference } of Object.values(scripts)) expect(errors(reference)).toEqual([]);
+  });
+  it("autocompletes the ten clip names and rejects any other", () => {
+    for (const clip of CLIPS) expect(errors(`class Player extends MonoBehaviour { Start() { this.audio.PlayOneShot("${clip}"); } }`)).toEqual([]);
+    expect(errors(`class Player extends MonoBehaviour { Start() { this.audio.PlayOneShot("Boing"); } }`).join()).toContain(`"Boing"`);
   });
   it("rejects writing to position.x", () => {
     expect(errors(`class Player extends MonoBehaviour { Update() { this.transform.position.x += 5; } }`).join())

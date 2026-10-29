@@ -21,9 +21,31 @@ export class Transform {
   constructor(public position: Vector2) {}
 }
 
+/** The clip names `PlayOneShot` takes; the files are public/audio/<name>.mp3. */
+export const CLIPS = ["Jump", "Coin", "Hit", "Hurt", "Shoot", "Explosion", "Powerup", "Win", "Lose", "Click"] as const;
+export type Clip = (typeof CLIPS)[number];
+
+/** Clips played since the worker last sent them; a Set, so a clip played twice in a frame plays once. */
+const sounds = new Set<Clip>();
+
+/** Empties the queue, returning this frame's clips. */
+export function takeSounds(): Clip[] {
+  const names = [...sounds];
+  sounds.clear();
+  return names;
+}
+
+export class AudioSource {
+  PlayOneShot(clip: Clip) {
+    if (!CLIPS.includes(clip)) throw new Error(`There is no sound named ${clip}`);
+    sounds.add(clip);
+  }
+}
+
 export class MonoBehaviour {
   gameObject!: GameObject; // both set by the engine right after construction
   transform!: Transform;
+  readonly audio = new AudioSource();
   Start?(): void;
   Update?(): void;
 }
@@ -166,6 +188,7 @@ export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, T
 /** Spawns the Level, resets Camera.main, attaches one new Script instance per scripted box and calls Start. */
 export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) {
   Camera.main = new Camera(camera);
+  sounds.clear();
   const g: NonNullable<typeof game> = (game = { objects: [], behaviours: [], fresh: [], scripts });
   // Start runs once, before a Script's first Update; Scripts made inside Start get started too.
   const startFresh = () => {

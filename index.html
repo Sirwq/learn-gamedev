@@ -164,6 +164,9 @@
       #goals { position: absolute; top: 8px; left: 8px; margin: 0; padding: 8px 12px; list-style: none; background: #000a; border-radius: 6px; pointer-events: none; }
       #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; padding: 16px; background: #000a; font-size: 18px; }
       #overlay[hidden] { display: none; }
+      #mute { position: absolute; top: 8px; right: 8px; z-index: 1; min-width: 32px; min-height: 32px; padding: 0; background: #000a; border-color: #fff3; font-size: 16px; touch-action: manipulation; }
+      #mute:hover { background: #000c; }
+      #mute:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       #game:focus { outline: 2px solid var(--game-focus); }
       /* The editor gets all the height; the Console is a thin bar until it opens. */
       #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden; }
@@ -367,6 +370,7 @@
           <div id="viewport">
             <canvas id="game" width="960" height="540" tabindex="0"></canvas>
             <ul id="goals" aria-label="Goals"></ul>
+            <button id="mute" aria-label="Mute sound" title="Mute sound" hidden></button>
             <div id="overlay" role="alert" hidden><span id="overlay-text"></span><button id="overlay-run"><span aria-hidden="true">▶</span> Run</button><div id="pass" hidden></div></div>
           </div>
         </div>

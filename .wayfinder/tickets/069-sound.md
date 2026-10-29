@@ -1,7 +1,7 @@
 ---
 title: Sound with this.audio.PlayOneShot
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -31,3 +31,9 @@ UI ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/design
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+- **Clips**: the ten MP3s in `public/audio/` from the OpenGameArt CC0 pack (downloaded 2026-10-29), first-pick files from the spec table, converted with the spec's `ffmpeg` command (about 65 KB total). The pack ships no `LICENSE.txt`; its CC0 statement is in `INFO.txt`, copied unchanged as `public/audio/LICENSE.txt` and explained in `README.md`. Clips were not picked by ear.
+- **API**: `this.audio` (an `AudioSource`) on every `MonoBehaviour`; `PlayOneShot` takes the ten-name string union, so Monaco autocompletes it and flags other names. An unknown name at runtime throws "There is no sound named X". 📖 Docs has a new AudioSource page; both @unity notes reach the C# page.
+- **Path**: `engine.ts` queues names in a Set (`takeSounds()` drains it); the worker sends a new `{ type: "sounds" }` `FromWorker` message after each frame, only when `v2Features` (renamed from `animates`) is true, so Lessons 1–15 send nothing. `src/sound.ts` plays them with Web Audio; `run()` unlocks the AudioContext and loads the clips on first Run. Stop, canvas blur (pause) and muting stop playing sounds.
+- **Mute**: 🔊 / 🔇 button labelled "Mute sound" (`aria-pressed`) at the top right of the game view, only shown in Sandbox and Chapter 2, saved as `sound:muted` in localStorage. It doesn't take focus, so clicking it doesn't pause the game.
+
