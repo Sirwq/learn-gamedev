@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../04-gravity/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -23,6 +23,6 @@ export const lesson: Lesson = {
     offScreen,
     { message: "You touched the enemy. Press Run to try again.", test: (world) => overlaps(find(world, "Player"), find(world, "Enemy")) },
   ],
-  scripts: { Player: { stub: withNoteComment(stub), reference } },
+  scripts: { Player: { stub: stub, reference } },
   hints: splitHints(hints),
 };

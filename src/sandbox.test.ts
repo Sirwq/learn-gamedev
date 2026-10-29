@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createProject, deleteProject, duplicateProject, loadProjects, playground, sandboxUnlocked, saveProject, scriptNameError } from "./sandbox";
 import { markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
+import { aiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
 import { api, keyEvent, KeyCode, releaseAllKeys, scriptSource, startGame, worldView, type MonoBehaviour } from "./engine";
 import { transpile } from "./run-utils";
@@ -52,6 +53,13 @@ describe("Projects", () => {
     expect(loadProjects(s)[0].scripts.Player).toBe("my course player");
     saveProject({ ...p, scripts: { ...p.scripts, Player: "sandbox player" } }, s);
     expect(loadScripts(course, course.length - 1, s).Player).toBe("newer course player");
+  });
+
+  it("saved Projects lose the old AI note comment on line 1", () => {
+    const s = store();
+    const p = createProject("blank", course, s);
+    saveProject({ ...p, scripts: { Game: `// ${aiNote}\n\nclass Game {}` } }, s);
+    expect(loadProjects(s)[0].scripts.Game).toBe("class Game {}");
   });
 
   it("the playground uses every tag and is wider than the screen", () => {

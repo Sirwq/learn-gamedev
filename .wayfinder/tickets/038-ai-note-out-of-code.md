@@ -1,7 +1,7 @@
 ---
 title: Take the AI note out of the student's code
 label: design
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -24,3 +24,10 @@ Design ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/de
 - New and old saved code show no AI note in the editor; Reference code and Compare diff still line up.
 - Tests cover the strip-on-load (exact match only) and that the Tutor prompt still starts with the note.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `withNoteComment` is gone; the 15 Lesson stubs are now bare code (so stubs, Reference code and the Compare diff line up from line 1).
+- New `withoutNoteComment` in `src/lessons/ai-note.ts` drops the note only when the first line is exactly `// ${aiNote}`, plus the one blank line after it. Applied where saved code is read: `loadScripts` (Course code, also the replay snapshots that go through it and new "My platformer" copies) and `loadProjects` (Sandbox Projects). The stored text is rewritten on the next edit, as usual.
+- Explanations (`withNoteBox`), the docs and `tutorRules` keep the note. Spec 007 and its line in `.wayfinder/map.md` updated.
+- Tests: exact-match-only stripping (a changed note line or a note elsewhere is kept), no stub carries the note, Projects stripped on load, Tutor prompt starts with the note.

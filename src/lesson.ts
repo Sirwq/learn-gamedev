@@ -1,4 +1,5 @@
 import { type Box, Camera, type CameraStart, type World } from "./engine";
+import { withoutNoteComment } from "./lessons/ai-note";
 
 /** A Goal or Lose event: `test` runs every frame against the game objects and the seconds since the Run started. */
 export type Check = { message: string; test: (world: World, time: number) => boolean };
@@ -48,7 +49,7 @@ export const saveScript = (script: string, code: string, store: Pick<Storage, "s
 export function loadScripts(lessons: Pick<Lesson, "scripts">[], upTo: number, store: Pick<Storage, "getItem"> = localStorage) {
   const code: Record<string, string> = {};
   for (const { scripts } of lessons.slice(0, upTo + 1))
-    for (const [name, { stub }] of Object.entries(scripts)) code[name] ??= store.getItem(codeKey(name)) ?? stub;
+    for (const [name, { stub }] of Object.entries(scripts)) code[name] ??= withoutNoteComment(store.getItem(codeKey(name)) ?? stub);
   return code;
 }
 

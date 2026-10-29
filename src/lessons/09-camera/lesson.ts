@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../08-walls/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -23,6 +23,6 @@ export const lesson: Lesson = {
   // The flag is past the right edge of the first screen, and leaving the camera's view loses.
   goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [{ ...offScreen, message: "You walked out of the camera's view. Press Run to try again." }],
-  scripts: { Player: { stub: withNoteComment(stub), reference } },
+  scripts: { Player: { stub: stub, reference } },
   hints: splitHints(hints),
 };

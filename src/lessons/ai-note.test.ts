@@ -31,5 +31,5 @@ describe("tutorPrompt", () => {
     expect(sandbox).not.toContain("# Lesson");
   });
 
-  it("grows out of the shared AI note", () => expect(tutorRules.startsWith(aiNote)).toBe(true));
+  it("starts with the shared AI note", () => expect(prompt.startsWith(aiNote)).toBe(true));
 });

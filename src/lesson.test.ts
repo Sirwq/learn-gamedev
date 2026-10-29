@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type Lesson, loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot, splitHints } from "./lesson";
+import { aiNote } from "./lessons/ai-note";
+import { course } from "./lessons/course";
 
 const store = () => {
   const m = new Map<string, string>();
@@ -24,6 +26,17 @@ describe("saved Scripts", () => {
     expect(loadScripts(lessons, 1, s)).toEqual({ Player: "player stub", Bullet: "bullet stub" });
     saveScript("Player", "my player", s);
     expect(loadScripts(lessons, 1, s)).toEqual({ Player: "my player", Bullet: "bullet stub" });
+  });
+  it("lose the old AI note comment on line 1, and only an exact match of it", () => {
+    const s = store();
+    saveScript("Player", `// ${aiNote}\n\nclass Player {}`, s);
+    saveScript("Bullet", `// ${aiNote} (mine)\n\nclass Bullet {}`, s);
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "class Player {}", Bullet: `// ${aiNote} (mine)\n\nclass Bullet {}` });
+    saveScript("Player", `class Player {}\n// ${aiNote}\n`, s);
+    expect(loadScripts(lessons, 1, s).Player).toBe(`class Player {}\n// ${aiNote}\n`);
+  });
+  it("Lesson stubs carry no AI note", () => {
+    for (const l of course) for (const { stub } of Object.values(l.scripts)) expect(stub).not.toContain(aiNote);
   });
 });
 

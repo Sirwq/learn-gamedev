@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../06-land/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -23,6 +23,6 @@ export const lesson: Lesson = {
   // Each platform is only in reach from the one below it, and the flag only from the top one.
   goals: [{ message: "Climb the platforms to the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen],
-  scripts: { Player: { stub: withNoteComment(stub), reference } },
+  scripts: { Player: { stub: stub, reference } },
   hints: splitHints(hints),
 };

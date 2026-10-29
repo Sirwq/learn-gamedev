@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../12-stomp/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -30,8 +30,8 @@ export const lesson: Lesson = {
     },
   ],
   scripts: {
-    Player: { stub: withNoteComment(stub), reference },
-    Bullet: { stub: withNoteComment(bulletStub), reference: bulletReference },
+    Player: { stub: stub, reference },
+    Bullet: { stub: bulletStub, reference: bulletReference },
   },
   hints: splitHints(hints),
 };

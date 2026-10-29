@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "./stub/Enemy.ts?raw";
@@ -30,6 +30,6 @@ export const lesson: Lesson = {
     { message: "You touched the enemy. Press Run to try again.", test: (world) => overlaps(find(world, "Player"), find(world, "Enemy")) },
   ],
   // A new Script: Player carries on unchanged from Lesson 10.
-  scripts: { Enemy: { stub: withNoteComment(stub), reference } },
+  scripts: { Enemy: { stub: stub, reference } },
   hints: splitHints(hints),
 };

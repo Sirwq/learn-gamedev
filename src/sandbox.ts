@@ -2,6 +2,7 @@
 import { api } from "./engine";
 import { isPassed } from "./check";
 import { type Lesson, loadScripts } from "./lesson";
+import { withoutNoteComment } from "./lessons/ai-note";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -51,7 +52,10 @@ export const playground: Lesson["level"] = {
 };
 
 const KEY = "sandbox:projects";
-export const loadProjects = (store: Pick<Storage, "getItem"> = localStorage): Project[] => JSON.parse(store.getItem(KEY) ?? "[]");
+export const loadProjects = (store: Pick<Storage, "getItem"> = localStorage): Project[] =>
+  (JSON.parse(store.getItem(KEY) ?? "[]") as Project[]).map((p) => ({
+    ...p, scripts: Object.fromEntries(Object.entries(p.scripts).map(([n, c]) => [n, withoutNoteComment(c)])),
+  }));
 
 /** Saves a new Project at the end, or replaces the one with its id. */
 export function saveProject(project: Project, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {

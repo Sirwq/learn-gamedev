@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../07-platforms/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -27,6 +27,6 @@ export const lesson: Lesson = {
       test: (world) => world.some((o) => o.tag === "Wall" && overlaps(find(world, "Player"), o)),
     },
   ],
-  scripts: { Player: { stub: withNoteComment(stub), reference } },
+  scripts: { Player: { stub: stub, reference } },
   hints: splitHints(hints),
 };

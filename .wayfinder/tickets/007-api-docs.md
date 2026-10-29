@@ -24,6 +24,6 @@ Constraint from [What is the first Course?](005-first-course.md): add a `Debug` 
 
 **Source**: generated from the comments on the engine's type definitions, the same source as the Monaco hover (signature + one line). Docs and hover can't drift apart.
 
-**Note for AI assistants**: one shared, visible text in every Script stub's header comment, every Explanation and the docs. It asks an AI to tutor (explain, hint, point at the wrong line) and never write the Mechanic's solution. It isn't hidden: hidden prompts are easy to get around and feel sneaky.
+**Note for AI assistants**: one shared, visible text in every Explanation, the docs and the Ask DeepSeek Tutor prompt. Not in Script stubs (ticket 038): it was the first thing a beginner read and wasn't for them; code copied into an AI by hand no longer carries it. It asks an AI to tutor (explain, hint, point at the wrong line) and never write the Mechanic's solution. It isn't hidden: hidden prompts are easy to get around and feel sneaky.
 
 **Surfaced**: a built-in AI tutor (cloud Chinese model via a small proxy) and an achievement map, each now its own ticket.

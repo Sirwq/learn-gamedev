@@ -1,6 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { offScreen, splitHints } from "../../lesson";
-import { withNoteBox, withNoteComment } from "../ai-note";
+import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../09-camera/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -27,6 +27,6 @@ export const lesson: Lesson = {
   // Walking through a coin is not enough: it has to be Destroyed. The coin above the platform is out of reach from the ground.
   goals: [{ message: "Collect all coins", test: (world) => !world.some((o) => o.tag === "Coin") }],
   lose: [offScreen],
-  scripts: { Player: { stub: withNoteComment(stub), reference } },
+  scripts: { Player: { stub: stub, reference } },
   hints: splitHints(hints),
 };
