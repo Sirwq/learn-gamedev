@@ -30,6 +30,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [What does the Player look like as a Claude sprite?](tickets/058-claude-player-sprite.md): an original orange critter (not Anthropic's mascot) in a Claude-like palette, 16×16 at 2× filling the 32×32 Player box, with idle / walk / jump frames for Sandbox; Enemy and other tags stay Kenney.
 - [How do students keep their saves safe?](tickets/059-backup-ux.md): a 💾 Saves dialog on the menu from Lesson 1 (Export / Import everything, last-backup line), Export in the Project strip, Import as "From a file…" under + New; one quiet menu reminder after 7+ days with new progress; no popups or private-window detection; Import everything merges per Lesson and never overwrites; `<name>.learn-dev.json` / `learn-dev-backup-YYYY-MM-DD.json`.
 - [How do students share a Project?](tickets/060-share-project.md): the Export file is the share, imported as an ordinary new Project; before unlock 💾 Saves Import keeps it until Sandbox opens; Sandbox only, no Share button; a dev-build-only toggle unlocks Sandbox for checking.
+- [Which CC0 sound pack ships with v2?](tickets/061-sound-pack.md): SubspaceAudio's CC0 "512 Sound Effects (8-bit style)" covers all ten clip names; ten clips converted once to mono 96 kbps MP3 (about 70 KB) in `public/audio/` with the pack's licence and a source README.
 
 ## Not yet specified
 
