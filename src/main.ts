@@ -21,7 +21,7 @@ import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { courseMenu } from "./menu";
 import { toast } from "./toast";
-import { deleteProject, duplicateProject, loadProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
+import { deleteProject, duplicateProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -34,7 +34,13 @@ monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.
 const params = new URLSearchParams(location.search);
 const asked = params.get("lesson");
 const askedProject = sandboxUnlocked(course) ? params.get("sandbox") : null;
-const project: Project | undefined = loadProjects().find((p) => p.id === askedProject);
+// Project writes are async: a full disk surfaces here, so the student knows the change was not kept.
+addEventListener("unhandledrejection", (e) => {
+  if (e.reason?.name === "QuotaExceededError") toast("Storage is full: your last Project change was not saved. Delete a Project you no longer need and try again.");
+});
+await migrateProjects();
+const projects = await loadProjects();
+const project: Project | undefined = projects.find((p) => p.id === askedProject);
 const current = currentLesson(course);
 const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocked(course, Number(asked)) ? Number(asked) : current;
 const replaying = !project && lessonIndex !== current;
@@ -311,7 +317,7 @@ const startLevel = project ? project.level : course[lessonIndex].level;
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
 // The Course menu and its Sandbox tab.
-const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, askedProject, earned, images, focusEditor: () => editor.focus() });
+const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus() });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
 // The Lesson strip of a Project: its name, Rename / Duplicate / Delete.
@@ -323,11 +329,10 @@ if (project) {
     project.name = lessonTitle.textContent = name;
     saveProject(project);
   };
-  document.getElementById("duplicate")!.onclick = () => (location.search = `?sandbox=${duplicateProject(project).id}`);
+  document.getElementById("duplicate")!.onclick = async () => (location.search = `?sandbox=${(await duplicateProject(project)).id}`);
   document.getElementById("delete")!.onclick = () => {
     if (!confirm(`Delete "${project.name}"? Its Scripts are gone for good.`)) return;
-    deleteProject(project.id);
-    location.search = "?sandbox";
+    deleteProject(project.id).then(() => (location.search = "?sandbox"));
   };
 }
 

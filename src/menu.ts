@@ -13,6 +13,8 @@ type Page = {
   /** The Lesson this page shows (the open Project's page still has one). */
   lessonIndex: number;
   project: Project | undefined;
+  /** Every Project, as loaded with the page; the menu reloads them when a tab saves one. */
+  projects: Project[];
   /** ?sandbox's value, when Sandbox is unlocked. */
   askedProject: string | null;
   /** Live: Achievements earned so far, for the menu's stats line. */
@@ -22,7 +24,7 @@ type Page = {
   focusEditor: () => void;
 };
 
-export function courseMenu({ lessonIndex, project, askedProject, earned, images, focusEditor }: Page) {
+export function courseMenu({ lessonIndex, project, projects: loaded, askedProject, earned, images, focusEditor }: Page) {
   const current = currentLesson(course);
   const lessonTitle = document.getElementById("lesson-title")!;
   const trophies = document.getElementById("trophies")!;
@@ -40,7 +42,7 @@ export function courseMenu({ lessonIndex, project, askedProject, earned, images,
   let focused = lessonIndex;
   let states = cardStates(course);
   let menuCurrent = current; // moves on when a Lesson is passed on this page
-  let projects: Project[] = [];
+  let projects = loaded;
   function coverCard(small: string, title: string, i: number) {
     const card = document.createElement("button");
     card.tabIndex = -1; // ← → move between cards
@@ -68,7 +70,6 @@ export function courseMenu({ lessonIndex, project, askedProject, earned, images,
   }
   course.forEach((l, i) => drawCover(courseCards[i].querySelector("canvas")!, l.level.boxes));
   function buildProjectCards() {
-    projects = loadProjects();
     projectCards = [...projects.map((p, i) => coverCard("PROJECT", p.name, i)), coverCard("", "+ New", projects.length)];
     projects.forEach((p, i) => drawCover(projectCards[i].querySelector("canvas")!, p.level.boxes));
     drawCover(projectCards[projects.length].querySelector("canvas")!, []);
@@ -218,7 +219,7 @@ export function courseMenu({ lessonIndex, project, askedProject, earned, images,
   }
   document.getElementById("replay-cancel")!.onclick = () => replayBox.close();
   document.getElementById("new-cancel")!.onclick = () => newBox.close();
-  const create = (kind: "blank" | "platformer") => () => (location.search = `?sandbox=${createProject(kind, course).id}`);
+  const create = (kind: "blank" | "platformer") => async () => (location.search = `?sandbox=${(await createProject(kind, course)).id}`);
   document.getElementById("new-blank")!.onclick = create("blank");
   document.getElementById("new-platformer")!.onclick = create("platformer");
   replayBox.onclose = newBox.onclose = () => menu.focus();
@@ -294,5 +295,9 @@ export function courseMenu({ lessonIndex, project, askedProject, earned, images,
     focusCard(focused + step);
   });
   menuOpen.onclick = document.getElementById("progress")!.onclick = () => openMenu();
+  new BroadcastChannel("projects").onmessage = async () => {
+    projects = await loadProjects();
+    if (!menu.hidden && mode === "sandbox") showMode("sandbox");
+  };
   return { menu, openMenu, setMode };
 }

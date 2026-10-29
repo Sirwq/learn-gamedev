@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { createProject, deleteProject, duplicateProject, loadProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
+import "fake-indexeddb/auto";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { clear, get, keys, set, setMany } from "idb-keyval";
+import { createProject, deleteProject, duplicateProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
 import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
@@ -27,39 +29,105 @@ describe("Sandbox unlock", () => {
   });
 });
 
+vi.mock("idb-keyval", async (actual) => {
+  const m = await actual<typeof import("idb-keyval")>();
+  return { ...m, setMany: vi.fn(m.setMany) };
+});
+
+/** A store already migrated to IndexedDB. */
+const migrated = async () => {
+  const s = memoryStore();
+  await migrateProjects(s);
+  return s;
+};
+
 describe("Projects", () => {
-  it("are created, duplicated and deleted in storage", () => {
-    const s = memoryStore();
-    expect(loadProjects(s)).toEqual([]);
-    const blank = createProject("blank", course, s);
+  beforeEach(() => clear());
+
+  it("are created, duplicated and deleted in IndexedDB, images and all", async () => {
+    const s = await migrated();
+    expect(await loadProjects(s)).toEqual([]);
+    const blank = await createProject("blank", course, s);
     expect(blank.level.boxes).toEqual([expect.objectContaining({ tag: "Game", script: "Game", w: 0, h: 0 })]);
     expect(Object.keys(blank.scripts)).toEqual(["Game"]);
-    const copy = duplicateProject(blank, s);
+    await set(`image:${blank.id}:Player`, "png");
+    await set(`image:${blank.id}:Player:top`, "top png");
+    const copy = await duplicateProject(blank, s);
     expect(copy.id).not.toBe(blank.id);
-    expect(loadProjects(s).map((p) => p.name)).toEqual(["Blank", "Blank copy"]);
-    saveProject({ ...copy, name: "Mine" }, s);
-    expect(loadProjects(s).map((p) => p.name)).toEqual(["Blank", "Mine"]);
-    deleteProject(blank.id, s);
-    expect(loadProjects(s)).toEqual([{ ...copy, name: "Mine" }]);
+    expect(await get(`image:${copy.id}:Player:top`)).toBe("top png");
+    expect(await loadProjects(s).then((l) => l.map((p) => p.name))).toEqual(["Blank", "Blank copy"]);
+    await saveProject({ ...copy, name: "Mine" }, s);
+    expect(await loadProjects(s).then((l) => l.map((p) => p.name))).toEqual(["Blank", "Mine"]);
+    await deleteProject(blank.id, s);
+    expect(await loadProjects(s)).toEqual([{ ...copy, name: "Mine" }]);
+    expect((await keys<string>()).filter((k) => k.includes(blank.id))).toEqual([]);
+    expect(s.getItem("sandbox:projects")).toBeNull();
   });
 
-  it("My platformer copies the Course code once, and the two never touch again", () => {
+  it("before the migration they stay in localStorage", async () => {
     const s = memoryStore();
+    const blank = await createProject("blank", course, s);
+    await duplicateProject(blank, s);
+    await deleteProject(blank.id, s);
+    expect(JSON.parse(s.getItem("sandbox:projects")!).map((p: { name: string }) => p.name)).toEqual(["Blank copy"]);
+    expect(await keys()).toEqual([]);
+  });
+
+  it("the migration copies them, flags only after reading back, runs twice safely and keeps the old key", async () => {
+    const s = memoryStore();
+    const a = await createProject("blank", course, s);
+    const b = await createProject("platformer", course, s);
+    const old = s.getItem("sandbox:projects");
+    await migrateProjects(s);
+    expect(s.getItem("storage:v2")).toBe("1");
+    expect(await loadProjects(s)).toEqual([a, b]);
+    s.removeItem("storage:v2");
+    await migrateProjects(s);
+    expect(s.getItem("storage:v2")).toBe("1");
+    expect(await loadProjects(s)).toEqual([a, b]);
+    expect(s.getItem("sandbox:projects")).toBe(old);
+  });
+
+  it("a failed migration leaves the flag unset and Projects usable, and tries again next load", async () => {
+    const s = memoryStore();
+    const a = await createProject("blank", course, s);
+    vi.mocked(setMany).mockRejectedValueOnce(new Error("no IndexedDB"));
+    await migrateProjects(s);
+    expect(s.getItem("storage:v2")).toBeNull();
+    const b = await createProject("blank", course, s);
+    expect(await loadProjects(s)).toEqual([a, b]);
+    await migrateProjects(s);
+    expect(s.getItem("storage:v2")).toBe("1");
+    expect(await loadProjects(s)).toEqual([a, b]);
+  });
+
+  it("takes in Projects an old tab writes to localStorage after the migration, but not deleted ones", async () => {
+    const s = memoryStore();
+    const a = await createProject("blank", course, s);
+    await migrateProjects(s);
+    await deleteProject(a.id, s);
+    const late = { ...a, id: "late", name: "From an old tab" };
+    s.setItem("sandbox:projects", JSON.stringify([a, late]));
+    expect(await loadProjects(s)).toEqual([late]);
+  });
+
+  it("My platformer copies the Course code once, and the two never touch again", async () => {
+    const s = await migrated();
     saveScript("Player", "my course player", s);
-    const p = createProject("platformer", course, s);
+    const p = await createProject("platformer", course, s);
     expect(p.scripts).toEqual(loadScripts(course, course.length - 1, s));
     expect(p.scripts.Player).toBe("my course player");
     saveScript("Player", "newer course player", s);
-    expect(loadProjects(s)[0].scripts.Player).toBe("my course player");
-    saveProject({ ...p, scripts: { ...p.scripts, Player: "sandbox player" } }, s);
+    expect((await loadProjects(s))[0].scripts.Player).toBe("my course player");
+    await saveProject({ ...p, scripts: { ...p.scripts, Player: "sandbox player" } }, s);
     expect(loadScripts(course, course.length - 1, s).Player).toBe("newer course player");
   });
 
-  it("saved Projects lose the old AI note comment on line 1", () => {
-    const s = memoryStore();
-    const p = createProject("blank", course, s);
-    saveProject({ ...p, scripts: { Game: `// ${legacyAiNote}\n\nclass Game {}` } }, s);
-    expect(loadProjects(s)[0].scripts.Game).toBe("class Game {}");
+  it("saved Projects lose the old AI note comment on line 1", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    await saveProject({ ...p, scripts: { Game: `// ${legacyAiNote}\n\nclass Game {}` } }, s);
+    expect((await loadProjects(s))[0].scripts.Game).toBe("class Game {}");
   });
 
   it("the playground uses every tag and is wider than the screen", () => {

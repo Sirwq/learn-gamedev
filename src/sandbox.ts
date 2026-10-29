@@ -3,6 +3,7 @@ import { api } from "./engine";
 import { isPassed } from "./check";
 import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
+import { delMany, entries, get, getMany, keys, set, setMany } from "idb-keyval";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -56,36 +57,106 @@ export const playground: Lesson["level"] = {
   ],
 };
 
+// Projects live in IndexedDB (spec 051): `project:<id>` the JSON, `image:<id>:<tag>[:top]` PNG Blobs.
+// Until the one-time migration from localStorage's `sandbox:projects` has succeeded they stay in localStorage.
 const KEY = "sandbox:projects";
-export const loadProjects = (store: Pick<Storage, "getItem"> = localStorage): Project[] =>
-  (JSON.parse(store.getItem(KEY) ?? "[]") as Project[]).map((p) => ({
-    ...p, scripts: Object.fromEntries(Object.entries(p.scripts).map(([n, c]) => [n, withoutNoteComment(c)])),
-  }));
-
-/** Saves a new Project at the end, or replaces the one with its id. */
-export function saveProject(project: Project, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
-  const list = loadProjects(store);
-  const i = list.findIndex((p) => p.id === project.id);
-  list.splice(i < 0 ? list.length : i, i < 0 ? 0 : 1, project);
-  store.setItem(KEY, JSON.stringify(list));
+const MIGRATED = "storage:v2";
+/** Ids of the localStorage Projects already copied over, so a Project deleted in IndexedDB is not re-imported. */
+const SEEN = "migrated-ids";
+type Local = Pick<Storage, "getItem" | "setItem">;
+const onIdb = (store: Pick<Storage, "getItem">) => store.getItem(MIGRATED) === "1";
+const readLocal = (store: Pick<Storage, "getItem">) => JSON.parse(store.getItem(KEY) ?? "[]") as Project[];
+const projectKey = (id: string) => `project:${id}`;
+const entry = (p: Project): [string, unknown] => [projectKey(p.id), p];
+const imageKeys = async (id: string) => (await keys<string>()).filter((k) => k.startsWith(`image:${id}:`));
+const clean = (p: Project): Project => ({
+  ...p, scripts: Object.fromEntries(Object.entries(p.scripts).map(([n, c]) => [n, withoutNoteComment(c)])),
+});
+/** Other tabs (and this tab's menu) refresh their Sandbox list. */
+function changed() {
+  const channel = new BroadcastChannel("projects");
+  channel.postMessage("changed");
+  channel.close();
 }
 
-export const deleteProject = (id: string, store: Pick<Storage, "getItem" | "setItem"> = localStorage) =>
-  store.setItem(KEY, JSON.stringify(loadProjects(store).filter((p) => p.id !== id)));
+/** One-time copy of `sandbox:projects` into IndexedDB, flagged only once read back. Safe to run twice; never deletes the old key. */
+export async function migrateProjects(store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
+  const run = async () => {
+    if (onIdb(store)) return;
+    const list = readLocal(store);
+    await setMany([...list.map(entry), [SEEN, list.map((p) => p.id)]]);
+    const back = await getMany(list.map((p) => projectKey(p.id)));
+    if (back.every(Boolean)) store.setItem(MIGRATED, "1");
+  };
+  if (onIdb(store)) return;
+  try {
+    await (navigator.locks ? navigator.locks.request("storage-migrate", run) : run());
+  } catch {
+    // The flag stays unset: this session keeps Projects in localStorage and the next load tries again.
+  }
+}
 
-const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+export async function loadProjects(store: Pick<Storage, "getItem"> = localStorage): Promise<Project[]> {
+  if (!onIdb(store)) return readLocal(store).map(clean);
+  // A tab from before the migration may still write `sandbox:projects`: take in Projects it added since.
+  const seen = new Set((await get<string[]>(SEEN)) ?? []);
+  const fresh = readLocal(store).filter((p) => !seen.has(p.id));
+  if (fresh.length) await setMany([...fresh.map(entry), [SEEN, [...seen, ...fresh.map((p) => p.id)]]]);
+  // Keys come back sorted, and ids start with the creation time: oldest first, like the old list.
+  return (await entries<string, Project>()).filter(([k]) => k.startsWith("project:")).map(([, p]) => clean(p));
+}
 
-function add(project: Omit<Project, "id">, store: Pick<Storage, "getItem" | "setItem">) {
+/** Asks once, on the first save (a user gesture), for storage the browser won't evict; a "no" is not asked again. */
+function askPersist(store: Local) {
+  if (store.getItem("storage:persist-asked") || !navigator.storage?.persist) return;
+  store.setItem("storage:persist-asked", "1");
+  navigator.storage.persisted().then((yes) => yes || navigator.storage.persist()).catch(() => {});
+}
+
+/** Saves a new Project at the end, or replaces the one with its id. */
+export async function saveProject(project: Project, store: Local = localStorage) {
+  askPersist(store);
+  if (onIdb(store)) await set(projectKey(project.id), project);
+  else {
+    const list = readLocal(store);
+    const i = list.findIndex((p) => p.id === project.id);
+    list.splice(i < 0 ? list.length : i, i < 0 ? 0 : 1, project);
+    store.setItem(KEY, JSON.stringify(list));
+  }
+  changed();
+}
+
+/** Removes the Project and its images. */
+export async function deleteProject(id: string, store: Local = localStorage) {
+  if (onIdb(store)) await delMany([projectKey(id), ...(await imageKeys(id))]);
+  else store.setItem(KEY, JSON.stringify(readLocal(store).filter((p) => p.id !== id)));
+  changed();
+}
+
+let lastTime = 0;
+// Strictly increasing time part, so ids sort in creation order even within one millisecond.
+const newId = () => (lastTime = Math.max(Date.now(), lastTime + 1)).toString(36) + Math.random().toString(36).slice(2, 8);
+
+async function add(project: Omit<Project, "id">, store: Local) {
   const p = { ...project, id: newId() };
-  saveProject(p, store);
+  await saveProject(p, store);
   return p;
 }
 
 /** Blank: one hidden box tagged Game runs Game.ts. My platformer: a one-time copy of the Course code in the playground. */
-export const createProject = (kind: "blank" | "platformer", lessons: Pick<Lesson, "scripts">[], store: Pick<Storage, "getItem" | "setItem"> = localStorage) =>
+export const createProject = (kind: "blank" | "platformer", lessons: Pick<Lesson, "scripts">[], store: Local = localStorage) =>
   add(kind === "blank"
     ? { name: "Blank", scripts: { Game: scriptStub("Game") }, level: { boxes: [{ tag: "Game", x: 0, y: 0, w: 0, h: 0, color: "transparent", script: "Game" }] } }
     : { name: "My platformer", scripts: loadScripts(lessons, lessons.length - 1, store), level: playground }, store);
 
-export const duplicateProject = (project: Project, store: Pick<Storage, "getItem" | "setItem"> = localStorage) =>
-  add({ ...structuredClone(project), name: `${project.name} copy` }, store);
+/** A copy with a new id; the Project and its images are written in one transaction. */
+export async function duplicateProject(project: Project, store: Local = localStorage) {
+  const copy = { ...structuredClone(project), name: `${project.name} copy`, id: newId() };
+  if (!onIdb(store)) return saveProject(copy, store).then(() => copy);
+  askPersist(store);
+  const images = await imageKeys(project.id);
+  const blobs = await getMany(images);
+  await setMany([entry(copy), ...images.map((k, i): [string, unknown] => [k.replace(`image:${project.id}:`, `image:${copy.id}:`), blobs[i]])]);
+  changed();
+  return copy;
+}
