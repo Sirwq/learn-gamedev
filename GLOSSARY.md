@@ -28,7 +28,7 @@
 
 **Project**: One saved world the student builds in Sandbox mode: its Scripts and starting layout, with a name. A student can have many. Its code is separate from the Course code.
 
-**Level editor**: A screen where a Level's boxes are placed, moved and resized with the mouse instead of written in code. Planned for v2.
+**Level editor**: A screen where a Level's boxes are placed, moved and resized with the mouse instead of written in code. Part of v2, in Sandbox mode.
 
 **AI tutor**: The built-in assistant that helps a stuck student with hints and explanations, never with the solution.
 

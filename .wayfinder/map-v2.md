@@ -5,7 +5,7 @@ title: learn-dev v2 — after the MVP
 
 ## Destination
 
-A build-ready spec for v2: what comes after the MVP ([MVP map](map.md)). Working guess, not yet settled with the user: Sandbox v2 (a Level editor plus the student's own sprites). [What is in v2?](tickets/048-v2-scope.md) pins it down first.
+A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Construct-like Sandbox for the same student after the Course, with a Level editor, own sprites, sound and animation, on-screen UI text and Achievements for extra Mechanics, all behind the secret Sandbox unlock.
 
 ## Notes
 
@@ -18,12 +18,17 @@ A build-ready spec for v2: what comes after the MVP ([MVP map](map.md)). Working
 ## Decisions so far
 
 <!-- one line per closed ticket -->
+- [What is in v2?](tickets/048-v2-scope.md): a Construct-like Sandbox for the same student, all of it behind the secret Lesson-15 unlock: Level editor, own sprites, sound and animation, UI text, extra Mechanics as Achievements only. The authors' Lesson editor is left to its own ticket.
 
 ## Not yet specified
 
 - Teaching the new parts: whether the Course gains Lessons (or Achievements) for whatever v2 adds, or students find it on their own in Sandbox mode, like the secret unlock.
-- Sharing a Project with someone else (a file? a link?): hangs on what v2 includes and where Projects live.
+- Sharing a Project with someone else (a file? a link?): hangs on where Projects live.
 
 ## Out of scope
 
-<!-- filled in by What is in v2? -->
+- C# Course: a later effort, v3 or beyond ([How does student C# run in the browser?](tickets/053-csharp-runtime.md), closed).
+- Built-in paid AI tutor: Ask DeepSeek stays; the plan waits in [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md).
+- Accounts and server saves: backup is an export / import file instead.
+- Multiplayer.
+- Lessons for extra Mechanics (double jump, wall jump, dash): they are Achievements instead ([What is in v2?](tickets/048-v2-scope.md)).
