@@ -21,6 +21,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 <!-- one line per closed ticket -->
 - [What is in v2?](tickets/048-v2-scope.md): a Construct-like Sandbox for the same student, all of it behind the secret Lesson-15 unlock: Level editor, own sprites, sound and animation, UI text, extra Mechanics as Achievements only. The authors' Lesson editor is left to its own ticket.
 - [How does the Level editor work?](tickets/049-level-editor.md): Sandbox only, a 🗺 Level file tab where the stopped game view is the editor; inspector dropdowns, 20 px snap, edit only while stopped, Level code behind a button.
+- [How do students bring their own sprites?](tickets/050-own-sprites.md): Sandbox only, one PNG/JPEG per tag per Project (at most 256×256), set in the inspector; Stretch or 20 px Tile with an optional Top image, Reset to the Kenney art, drawn shape = hitbox kept, no new code API.
 
 ## Not yet specified
 
@@ -33,4 +34,5 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Built-in paid AI tutor: Ask DeepSeek stays; the plan waits in [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md).
 - Accounts and server saves: backup is an export / import file instead.
 - Multiplayer.
+- In-app sprite editor: students import images only; 📖 Docs point to Piskel or Aseprite ([How do students bring their own sprites?](tickets/050-own-sprites.md)).
 - Lessons for extra Mechanics (double jump, wall jump, dash): they are Achievements instead ([What is in v2?](tickets/048-v2-scope.md)).
