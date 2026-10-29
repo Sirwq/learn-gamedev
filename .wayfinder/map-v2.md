@@ -25,6 +25,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [Where do Projects with images live?](tickets/051-project-storage.md): Projects and their image Blobs move to IndexedDB (`idb-keyval`), Course progress and settings stay in localStorage; `persist()` asked once on first save; backup is a one-file JSON Export / Import per Project plus Export everything; a one-time, locked, repeat-safe migration that keeps the old key.
 - [Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md): no, it's student-only. Authors keep writing `level.boxes` by hand, helped by a Copy button on "View Level as Code"; Goals, Lose events, Hints, the Explanation and Reference code stay code and Markdown.
 - [What do sound and animation add to the engine?](tickets/054-sound-animation.md): Sandbox only; the engine animates from the Kenney pack's own frames with no API (tags without frames and own sprites stay still); `this.audio.PlayOneShot("Jump")` with ten fixed clip names from one CC0 pixel pack; the worker sends clip names to the page's Web Audio; a labelled mute button.
+- [What on-screen UI text does the student write?](tickets/055-ui-text.md): Sandbox only, screen text only; Unity's `OnGUI()` + `GUI.Label(new Rect(...), text)` with top-left, y-down coordinates; `GUI.color`, `GUI.skin.label` fontSize / alignment / outline (on by default), reset every frame; one Kenney CC0 pixel font; not in the Level editor; a hidden label list for screen readers.
 
 ## Not yet specified
 
@@ -36,6 +37,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Built-in paid AI tutor: Ask DeepSeek stays; the plan waits in [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md).
 - Accounts and server saves: backup is an export / import file instead ([Where do Projects with images live?](tickets/051-project-storage.md)).
 - Multiplayer.
+- Text placed in the world (signs, labels over an Enemy): v2 UI text is screen only ([What on-screen UI text does the student write?](tickets/055-ui-text.md)).
 - Students' own sounds and background music: a later chapter of Lessons, "How to add your own sounds" ([What do sound and animation add to the engine?](tickets/054-sound-animation.md)).
 - In-app sprite editor: students import images only; 📖 Docs point to Piskel or Aseprite ([How do students bring their own sprites?](tickets/050-own-sprites.md)).
 - Lessons for extra Mechanics (double jump, wall jump, dash): they are Achievements instead ([What is in v2?](tickets/048-v2-scope.md)).
