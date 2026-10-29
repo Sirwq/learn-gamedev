@@ -32,6 +32,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [How do students share a Project?](tickets/060-share-project.md): the Export file is the share, imported as an ordinary new Project; before unlock 💾 Saves Import keeps it until Sandbox opens; Sandbox only, no Share button; a dev-build-only toggle unlocks Sandbox for checking.
 - [Which CC0 sound pack ships with v2?](tickets/061-sound-pack.md): SubspaceAudio's CC0 "512 Sound Effects (8-bit style)" covers all ten clip names; ten clips converted once to mono 96 kbps MP3 (about 70 KB) in `public/audio/` with the pack's licence and a source README.
 - [How do students learn the v2 parts?](tickets/062-teaching-v2.md): an optional Chapter 2 of real Lessons (16 onwards) for sound, screen text and game feel, unlocked with Sandbox at Lesson 15 (Lessons 1–15 unchanged); a Docs Sandbox page and an "Example: Sandbox tour" Project teach the Level editor, sprites and sharing; no new Achievements; Mechanic Achievements get an "Extra" line.
+- [Which Lessons make up Chapter 2?](tickets/063-chapter-2-lessons.md): six Lessons on the student's own code (`Ch. 2 n / 6`): 16 Sounds, 17 Coin counter (`HUD.ts`), 18 Short and long jumps, 19 Coyote time (closes the walk-off jump gap), 20 Jump buffering, 21 Screen shake + Hurt; the Level forces the move where it can, otherwise Achievement-style frame and key tests; the checker's `world` gains `sounds` and `labels`; no `Land` clip or `Random` API; the engine plays no sound by itself.
 
 ## Not yet specified
 
