@@ -3,7 +3,7 @@ import { api } from "./engine";
 import { isPassed } from "./check";
 import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
-import { delMany, entries, get, getMany, keys, set, setMany } from "idb-keyval";
+import { delMany, get, getMany, keys, set, setMany } from "idb-keyval";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -103,7 +103,9 @@ export async function loadProjects(store: Pick<Storage, "getItem"> = localStorag
   const fresh = readLocal(store).filter((p) => !seen.has(p.id));
   if (fresh.length) await setMany([...fresh.map(entry), [SEEN, [...seen, ...fresh.map((p) => p.id)]]]);
   // Keys come back sorted, and ids start with the creation time: oldest first, like the old list.
-  return (await entries<string, Project>()).filter(([k]) => k.startsWith("project:")).map(([, p]) => clean(p));
+  // Only the Project keys are read: entries() would load every image Blob too.
+  const ids = (await keys<string>()).filter((k) => k.startsWith("project:"));
+  return (await getMany<Project>(ids)).map((p) => clean(p!));
 }
 
 /** Asks once, on the first save (a user gesture), for storage the browser won't evict; a "no" is not asked again. */

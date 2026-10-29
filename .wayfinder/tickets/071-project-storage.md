@@ -38,3 +38,8 @@ Projects now live in IndexedDB through `idb-keyval` (`project:<id>`, `image:<id>
 - `main.ts` catches `QuotaExceededError` from Project writes with an `unhandledrejection` handler and shows a toast.
 - Tests use `fake-indexeddb` and cover: create / duplicate / delete with images, localStorage before migration, migration (flag after read-back, safe twice, old key kept), a failed migration, and old-tab re-import.
 
+
+## Review follow-up
+
+- Fixed: `loadProjects` used `entries()`, which read every image Blob; it now reads only `project:` keys.
+- Left: a Project an old tab *edits* (same id) after the migration is not re-imported, only new ids are.
