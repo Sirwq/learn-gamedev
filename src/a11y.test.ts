@@ -1,7 +1,6 @@
-import { readFileSync } from "node:fs";
+import html from "../index.html?raw";
 import { describe, expect, it } from "vitest";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const tag = (id: string) => html.match(new RegExp(`<[a-z]+ id="${id}"[^>]*>`))?.[0] ?? "";
 
 describe("Lesson page accessibility", () => {

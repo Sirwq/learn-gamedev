@@ -41,3 +41,7 @@ Found in a Lighthouse run (Accessibility 93) and a guideline review of Lesson 1:
 - Text equivalents: decorative ▶ ■ ✕ 🏆 📖 ☰ are `aria-hidden` spans. The Docs tab is labelled "Docs", 🏆 shows "Achievements N / M", and the hint button is "Hint N of M". Goals read "Done:" or "To do:" (a `.sr-only` span) instead of ✓/⬜. Achievement map tiles got `role="img"` so their `aria-label` is allowed.
 - Test: `src/a11y.test.ts` checks the static markup. `npm run typecheck` and `npm test` pass.
 - Not verified: Lighthouse. Headless Chromium can't start in this container because libnspr4/libnss3 are missing and there is no root to install them. Contrast was checked by computing the ratios. The Compare diff editor still traps Tab (it has the Close button and Esc).
+
+## Review follow-up
+
+- `npm run typecheck` failed: `src/a11y.test.ts` imported `node:fs` (no @types/node). Fixed by importing `index.html?raw`, as other tests do.
