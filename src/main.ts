@@ -21,7 +21,7 @@ import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { courseMenu } from "./menu";
 import { toast } from "./toast";
-import { deleteProject, duplicateProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
+import { deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -320,7 +320,7 @@ images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasEl
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus() });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
-// The Lesson strip of a Project: its name, Rename / Duplicate / Delete.
+// The Lesson strip of a Project: its name, Rename / Duplicate / Export / Delete.
 if (project) {
   document.getElementById("project-actions")!.hidden = false;
   document.getElementById("rename")!.onclick = () => {
@@ -330,6 +330,13 @@ if (project) {
     saveProject(project);
   };
   document.getElementById("duplicate")!.onclick = async () => (location.search = `?sandbox=${(await duplicateProject(project)).id}`);
+  document.getElementById("export")!.onclick = async () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([await exportProject(project)], { type: "application/json" }));
+    a.download = exportFileName(project.name);
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href));
+  };
   document.getElementById("delete")!.onclick = () => {
     if (!confirm(`Delete "${project.name}"? Its Scripts are gone for good.`)) return;
     deleteProject(project.id).then(() => (location.search = "?sandbox"));

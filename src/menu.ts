@@ -6,7 +6,7 @@ import { achievements } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, type Images } from "./sprites";
 import { swipeStep } from "./swipe";
-import { createProject, loadProjects, type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
+import { createProject, importProject, loadProjects, type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
 import { toast } from "./toast";
 
 type Page = {
@@ -222,6 +222,29 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   const create = (kind: "blank" | "platformer") => async () => (location.search = `?sandbox=${(await createProject(kind, course)).id}`);
   document.getElementById("new-blank")!.onclick = create("blank");
   document.getElementById("new-platformer")!.onclick = create("platformer");
+  // Import always makes a new Project; a bad file gets importProject's plain message and writes nothing.
+  async function importFile(file: File) {
+    try {
+      location.search = `?sandbox=${(await importProject(await file.text())).id}`;
+    } catch (e) {
+      if ((e as Error).name === "QuotaExceededError") throw e; // main.ts's storage-full toast
+      newBox.close(); // the toast would sit under the modal dialog
+      toast((e as Error).message);
+    }
+  }
+  const fileInput = document.getElementById("new-file-input") as HTMLInputElement;
+  document.getElementById("new-file")!.onclick = () => fileInput.click();
+  fileInput.onchange = () => {
+    if (fileInput.files?.[0]) importFile(fileInput.files[0]);
+    fileInput.value = "";
+  };
+  const dropsFile = (e: DragEvent) => mode === "sandbox" && !!e.dataTransfer?.types.includes("Files");
+  menu.addEventListener("dragover", (e) => dropsFile(e) && e.preventDefault());
+  menu.addEventListener("drop", (e) => {
+    if (!dropsFile(e) || !e.dataTransfer!.files[0]) return;
+    e.preventDefault();
+    importFile(e.dataTransfer!.files[0]);
+  });
   replayBox.onclose = newBox.onclose = () => menu.focus();
   replayBox.onkeydown = newBox.onkeydown = (e) => {
     if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;

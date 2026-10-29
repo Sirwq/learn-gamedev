@@ -191,6 +191,7 @@
       #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid var(--border-subtle); overflow: auto; }
       #docs nav button { text-align: left; border: 0; background: none; color: var(--ink-muted); font-size: 12px; }
       #docs nav button:hover { background: var(--surface-raised); color: var(--ink-strong); }
+      #docs .docs-tip { order: 1; width: 0; min-width: 100%; margin: 12px 4px 4px; font-size: 11px; color: var(--ink-muted); }
       #docs nav button[aria-current="page"] { background: var(--surface-button); color: var(--ink-strong); }
       #docs article { flex: 1; font-size: 14px; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
       #docs article h3 { margin: 20px 0 4px; font-size: 1em; }
@@ -354,7 +355,7 @@
       <div id="left">
         <section id="lesson" tabindex="0" aria-labelledby="lesson-title">
           <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span>
-            <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="delete">Delete</button></span></h1>
+            <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="export" title="Save this Project as a file: to keep, or to send to a friend.">Export</button> <button id="delete">Delete</button></span></h1>
           <div id="explanation"></div>
           <div id="hints"></div>
           <p><button id="next-hint"></button></p>
@@ -385,7 +386,7 @@
           <span id="zoom" role="group" aria-label="Editor font size"><button id="zoom-out">−</button><button id="zoom-reset"></button><button id="zoom-in">+</button></span>
         </div>
         <div id="editor"></div>
-        <div id="docs" hidden><nav aria-label="Docs pages"></nav><article></article></div>
+        <div id="docs" hidden><nav aria-label="Docs pages"><p class="docs-tip">Share a Project: Export it and send the file. Your friend opens it with + New → From a file….</p></nav><article></article></div>
         <div id="console-panel">
           <button id="console-toggle" aria-expanded="false" aria-controls="console">Console <span id="console-count">0 lines</span></button>
           <pre id="console" role="log" aria-label="Console" hidden></pre>
@@ -443,6 +444,8 @@
       <h3>New Project</h3>
       <button id="new-blank" autofocus>Blank<small>An empty world with one hidden box running Game.ts. Build everything with Instantiate.</small></button>
       <button id="new-platformer">My platformer<small>A copy of your Course code in a big playground Level. Changes here never touch your Lessons.</small></button>
+      <button id="new-file">From a file…<small>A Project someone Exported, or your own. It comes in as a new Project.</small></button>
+      <input id="new-file-input" type="file" accept=".json,application/json" hidden>
       <button id="new-cancel">Cancel</button>
     </dialog>
     <div id="toasts" role="status"></div>

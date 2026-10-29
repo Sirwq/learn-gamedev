@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clear, get, keys, set, setMany } from "idb-keyval";
-import { createProject, deleteProject, duplicateProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
+import { createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
 import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
@@ -134,6 +134,62 @@ describe("Projects", () => {
     const tags = new Set(course.flatMap((l) => l.level.boxes.map((b) => b.tag)));
     expect(new Set(playground.boxes.map((b) => b.tag))).toEqual(tags);
     expect(Math.max(...playground.boxes.map((b) => b.x + b.w))).toBeGreaterThan(960);
+  });
+});
+
+/** A PNG header for a w×h image: all the import reads. */
+const png = (w: number, h: number) => {
+  const bytes = new Uint8Array(33);
+  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+  new DataView(bytes.buffer).setUint32(16, w);
+  new DataView(bytes.buffer).setUint32(20, h);
+  return new Blob([bytes], { type: "image/png" });
+};
+const bytesOf = async (b: unknown) => [...new Uint8Array(await (b as Blob).arrayBuffer())];
+
+describe("Export / Import one Project", () => {
+  beforeEach(() => clear());
+
+  it("round-trips a Project with its images into a new id", async () => {
+    const s = await migrated();
+    const p = await createProject("platformer", course, s);
+    await set(`image:${p.id}:Player`, png(32, 32));
+    await set(`image:${p.id}:Ground:top`, png(256, 20));
+    const file = await exportProject(p);
+    expect(JSON.parse(file)).toMatchObject({ format: "learn-dev-project", version: 1, images: { Player: expect.stringMatching(/^data:image\/png;base64,/) } });
+    const copy = await importProject(file, s);
+    expect(copy.id).not.toBe(p.id);
+    expect(copy).toEqual({ ...p, id: copy.id });
+    expect(await bytesOf(await get(`image:${copy.id}:Ground:top`))).toEqual(await bytesOf(png(256, 20)));
+    expect(await bytesOf(await get(`image:${copy.id}:Player`))).toEqual(await bytesOf(png(32, 32)));
+    expect((await loadProjects(s)).map((x) => x.id)).toEqual([p.id, copy.id]);
+  });
+
+  it("refuses a bad file without writing anything", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    await set(`image:${p.id}:Player`, png(32, 32));
+    const good = JSON.parse(await exportProject(p));
+    await set(`image:${p.id}:Player`, png(257, 32));
+    const big = JSON.parse(await exportProject(p));
+    const before = await keys();
+    const files = {
+      "broken JSON": "{nope",
+      "wrong format": JSON.stringify({ ...good, format: "something-else" }),
+      "newer version": JSON.stringify({ ...good, version: 2 }),
+      "oversized image": JSON.stringify(big),
+      "not a PNG": JSON.stringify({ ...good, images: { Player: "data:text/html;base64,PGI+" } }),
+      "bad box": JSON.stringify({ ...good, project: { ...good.project, level: { boxes: [{ tag: "Player" }] } } }),
+      "bad Script name": JSON.stringify({ ...good, project: { ...good.project, scripts: { "../x": "" } } }),
+    };
+    for (const [why, text] of Object.entries(files)) await expect(importProject(text, s), why).rejects.toThrow(/^This file can't be opened: /);
+    expect(await keys()).toEqual(before);
+  });
+
+  it("file names replace characters a file system doesn't allow", () => {
+    expect(exportFileName("My platformer")).toBe("My platformer.learn-dev.json");
+    expect(exportFileName('a/b\\c:d*e?"<>|')).toBe("a_b_c_d_e_____.learn-dev.json");
+    expect(exportFileName("  ")).toBe("Project.learn-dev.json");
   });
 });
 

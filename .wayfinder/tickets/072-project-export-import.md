@@ -1,7 +1,7 @@
 ---
 title: Export and Import one Project as a file
 label: build
-status: open
+status: closed
 blocked_by: [071-project-storage]
 assignee:
 ---
@@ -28,3 +28,10 @@ UI ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/design
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+Done. `src/sandbox.ts` has `exportProject`, `importProject` and `exportFileName`.
+
+- **Export**: a fourth button in the Project strip with the spec's tooltip. It downloads `{ format: "learn-dev-project", version: 1, project (without id), images: { "<tag>[:top]": "data:image/png;base64,…" } }` through a Blob URL and `<a download>`, as `exportFileName(name)`. Characters `\ / : * ? " < > |` and control characters become `_`; a blank name becomes `Project`.
+- **Import**: "+ New → From a file…" (a hidden `<input type=file>`) or a file dropped on the menu while the Sandbox tab is open. Everything is checked before anything is written: the JSON, `format`, `version` ≤ 1, the Project's shape (Script names are class names, boxes have numeric x/y/w/h), and each image's key and PNG header, with width and height ≤ 256 read from IHDR. No image is decoded or drawn. One `setMany` writes the new id with its images. A bad file throws "This file can't be opened: …", which shows as a toast.
+- Before the IndexedDB migration, a file without images goes to localStorage. A file with images is refused with a "reload and try again" message, because Blobs can't be kept there.
+- 📖 Docs: the share line sits under the page list in the Docs nav.
+- Tests: round trip into a new id with byte-identical images; broken JSON, wrong format, newer version, oversized image, non-PNG, bad box and bad Script name are all refused with no keys written; file-name sanitising.
