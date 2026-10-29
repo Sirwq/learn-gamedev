@@ -29,6 +29,6 @@ export const lesson: Lesson = {
       test: (world) => world.some((o) => o.tag === "Enemy" && overlaps(find(world, "Player"), o)),
     },
   ],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

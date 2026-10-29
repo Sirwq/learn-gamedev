@@ -26,6 +26,6 @@ export const lesson: Lesson = {
     { message: "Touch the right flag", test: (world) => overlaps(find(world, "Player"), flag(world, 1)) },
   ],
   lose: [offScreen],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

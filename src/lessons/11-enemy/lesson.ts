@@ -30,6 +30,6 @@ export const lesson: Lesson = {
     { message: "You touched the enemy. Press Run to try again.", test: (world) => overlaps(find(world, "Player"), find(world, "Enemy")) },
   ],
   // A new Script: Player carries on unchanged from Lesson 10.
-  scripts: { Enemy: { stub: stub, reference } },
+  scripts: { Enemy: { stub, reference } },
   hints: splitHints(hints),
 };

@@ -23,6 +23,6 @@ export const lesson: Lesson = {
   // The flag is past the right edge of the first screen, and leaving the camera's view loses.
   goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [{ ...offScreen, message: "You walked out of the camera's view. Press Run to try again." }],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

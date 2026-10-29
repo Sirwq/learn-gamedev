@@ -19,6 +19,6 @@ export const lesson: Lesson = {
   },
   goals: [{ message: "Reach the flag within 3 seconds", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen, { message: "Too slow: 3 seconds are up. Press Run to try again.", test: (_, time) => time > 3 }],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

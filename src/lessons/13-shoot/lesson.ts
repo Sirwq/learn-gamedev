@@ -30,7 +30,7 @@ export const lesson: Lesson = {
     },
   ],
   scripts: {
-    Player: { stub: stub, reference },
+    Player: { stub, reference },
     Bullet: { stub: bulletStub, reference: bulletReference },
   },
   hints: splitHints(hints),

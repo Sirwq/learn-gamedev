@@ -23,6 +23,6 @@ export const lesson: Lesson = {
   // Each platform is only in reach from the one below it, and the flag only from the top one.
   goals: [{ message: "Climb the platforms to the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

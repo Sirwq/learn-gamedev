@@ -30,6 +30,6 @@ export const lesson: Lesson = {
     { message: "You fell in the water. Press Run to try again.", test: (world) => overlaps(find(world, "Player"), find(world, "Water")) },
   ],
   // A new Script: Player carries on unchanged from Lesson 14.
-  scripts: { MovingPlatform: { stub: stub, reference } },
+  scripts: { MovingPlatform: { stub, reference } },
   hints: splitHints(hints),
 };

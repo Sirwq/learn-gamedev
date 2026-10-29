@@ -19,6 +19,6 @@ export const lesson: Lesson = {
   },
   goals: [{ message: "Reach the flag on the ground", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

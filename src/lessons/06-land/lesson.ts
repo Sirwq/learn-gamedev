@@ -21,6 +21,6 @@ export const lesson: Lesson = {
   // The flag is out of reach from the ground: only a jump from the box gets there.
   goals: [{ message: "Jump from the box to the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };

@@ -27,6 +27,6 @@ export const lesson: Lesson = {
   // Walking through a coin is not enough: it has to be Destroyed. The coin above the platform is out of reach from the ground.
   goals: [{ message: "Collect all coins", test: (world) => !world.some((o) => o.tag === "Coin") }],
   lose: [offScreen],
-  scripts: { Player: { stub: stub, reference } },
+  scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
 };
