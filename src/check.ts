@@ -1,4 +1,4 @@
-import type { World } from "./engine";
+import { Time, type World } from "./engine";
 import type { Lesson } from "./lesson";
 
 export type CheckResult = { met: boolean[]; passed: boolean; lost?: string };
@@ -6,10 +6,12 @@ export type CheckResult = { met: boolean[]; passed: boolean; lost?: string };
 /** One per Run: call every frame. A Goal stays ✓ for the rest of the Run; a Lose event resets them all. */
 export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
   const met = goals.map(() => false);
+  let frames = 0;
   return (world: World): CheckResult => {
-    const lost = lose.find((l) => l.test(world));
+    const time = ++frames * Time.deltaTime;
+    const lost = lose.find((l) => l.test(world, time));
     if (lost) return { met: met.fill(false).slice(), passed: false, lost: lost.message };
-    goals.forEach((g, i) => (met[i] ||= g.test(world)));
+    goals.forEach((g, i) => (met[i] ||= g.test(world, time)));
     return { met: met.slice(), passed: met.every(Boolean) };
   };
 }

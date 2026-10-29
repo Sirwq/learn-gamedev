@@ -1,5 +1,5 @@
 import type { Lesson } from "../../lesson";
-import { find, overlaps } from "../../lesson";
+import { find, offScreen, overlaps } from "../../lesson";
 import { withNoteBox, withNoteComment } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import stub from "./stub/Player.ts?raw";
@@ -16,14 +16,6 @@ export const lesson: Lesson = {
     ],
   },
   goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
-  lose: [
-    {
-      message: "You fell off the screen. Press Run to try again.",
-      test: (world) => {
-        const p = find(world, "Player");
-        return p.x + p.w < 0 || p.x > 960 || p.y + p.h < 0;
-      },
-    },
-  ],
+  lose: [offScreen],
   scripts: { Player: { stub: withNoteComment(stub), reference } },
 };

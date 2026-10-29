@@ -29,6 +29,13 @@ describe("checker", () => {
     check(at(10));
     expect(check(at(-1))).toEqual({ met: [false, false], passed: false, lost: "Fell" });
   });
+
+  it("passes the seconds since the Run started, one frame per call", () => {
+    const check = checker({ goals: [], lose: [{ message: "Too slow", test: (_, time) => time > 0.05 }] });
+    expect(check(at(0)).lost).toBeUndefined(); // 1/60 s
+    check(at(0)); check(at(0));
+    expect(check(at(0)).lost).toBe("Too slow"); // 4/60 s
+  });
 });
 
 describe("passed state", () => {

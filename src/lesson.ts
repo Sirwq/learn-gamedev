@@ -1,7 +1,7 @@
 import type { Box, CameraStart, World } from "./engine";
 
-/** A Goal or Lose event: `test` runs every frame against the game objects. */
-export type Check = { message: string; test: (world: World) => boolean };
+/** A Goal or Lose event: `test` runs every frame against the game objects and the seconds since the Run started. */
+export type Check = { message: string; test: (world: World, time: number) => boolean };
 
 export type Lesson = {
   title: string;
@@ -19,6 +19,15 @@ export const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w
 
 /** The first object with this tag. */
 export const find = (world: World, tag: string) => world.find((o) => o.tag === tag)!;
+
+/** The Lose event most Levels share: the Player left the 960×540 screen. */
+export const offScreen: Check = {
+  message: "You fell off the screen. Press Run to try again.",
+  test: (world) => {
+    const p = find(world, "Player");
+    return p.x + p.w < 0 || p.x > 960 || p.y + p.h < 0;
+  },
+};
 
 // The student's code, one entry per Script: carried over between Lessons.
 const codeKey = (script: string) => `code:${script}`;

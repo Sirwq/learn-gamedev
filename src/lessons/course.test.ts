@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { api, scriptSource, startGame, worldView, type MonoBehaviour } from "../engine";
+import { api, keyEvent, KeyCode, releaseAllKeys, scriptSource, startGame, worldView, type MonoBehaviour } from "../engine";
 import { transpile } from "../run-utils";
 import { checker } from "../check";
 
@@ -10,7 +10,14 @@ const load = (ts: string, name: string) =>
     ...Object.values(api),
   ) as new () => MonoBehaviour;
 
-describe.each(course.map((l) => [l.title, l] as const))("Lesson %s", (_, lesson) => {
+// Keys a player holds on each frame to pass a Lesson with its Reference code.
+const play: Record<string, (frame: number) => string[]> = {
+  "3. Steer": (f) => [f <= 60 ? KeyCode.LeftArrow : KeyCode.RightArrow],
+  "4. Gravity": () => [KeyCode.RightArrow],
+  "5. Jump": (f) => (f === 30 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+};
+
+describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, lesson, index) => {
   it("is complete", () => {
     expect(lesson.title).not.toBe("");
     expect(lesson.explanation).not.toBe("");
@@ -24,11 +31,17 @@ describe.each(course.map((l) => [l.title, l] as const))("Lesson %s", (_, lesson)
   });
 
   // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
-  const framesToPass = (code: "stub" | "reference") => {
-    const classes = Object.fromEntries(Object.entries(lesson.scripts).map(([n, s]) => [n, load(s[code], n)]));
+  const framesToPass = (code: Record<string, string>) => {
+    const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, load(s, n)]));
     const game = startGame(lesson.level.boxes, classes);
     const check = checker(lesson);
+    releaseAllKeys();
+    let held: string[] = [];
     for (let frame = 1; frame <= 600; frame++, game.step()) {
+      const keys = play[lesson.title]?.(frame) ?? [];
+      for (const k of held) if (!keys.includes(k)) keyEvent(k, false);
+      for (const k of keys) keyEvent(k, true);
+      held = keys;
       const result = check(worldView(game.objects));
       if (result.lost) break;
       if (result.passed) return frame;
@@ -36,8 +49,15 @@ describe.each(course.map((l) => [l.title, l] as const))("Lesson %s", (_, lesson)
     return 601;
   };
 
+  const code = (lessons: typeof course, kind: "stub" | "reference") =>
+    Object.fromEntries(lessons.flatMap((l) => Object.entries(l.scripts).map(([n, s]) => [n, s[kind]])));
+
   it("is passed by its Reference code within 10 simulated seconds, and not by the stub", () => {
-    expect(framesToPass("reference")).toBeLessThanOrEqual(600);
-    expect(framesToPass("stub")).toBe(601);
+    expect(framesToPass(code([lesson], "reference"))).toBeLessThanOrEqual(600);
+    expect(framesToPass(code([lesson], "stub"))).toBe(601);
+  });
+
+  it.runIf(index > 0)("is not passed by the previous Lesson's Reference code", () => {
+    expect(framesToPass({ ...code([lesson], "stub"), ...code(course.slice(0, index), "reference") })).toBe(601);
   });
 });
