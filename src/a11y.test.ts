@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 const tag = (id: string) => html.match(new RegExp(`<[a-z]+ id="${id}"[^>]*>`))?.[0] ?? "";
 
 describe("Lesson page accessibility", () => {
-  it("is a dark page in the browser chrome too", () => {
-    expect(html).toContain('<html lang="en" style="color-scheme: dark">');
+  it("tells the browser chrome which theme is on", () => {
+    expect(html).toContain('color-scheme: dark;');
+    expect(html).toContain(':root[data-theme="light"] {\n        color-scheme: light;');
     expect(html).toContain('<meta name="theme-color" content="#1e1e1e" />');
   });
   it("names icon-only buttons", () => {

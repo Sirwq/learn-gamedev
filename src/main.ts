@@ -104,19 +104,33 @@ function addModel(name: string, code: string) {
 for (const [name, code] of Object.entries(project?.scripts ?? loadScripts(course, lessonIndex))) addModel(name, code);
 // The editor and Compare use the page's palette, read from the CSS tokens in index.html.
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
-monaco.editor.defineTheme("night", {
-  base: "vs-dark", inherit: true, rules: [],
-  colors: {
-    "editor.background": token("surface-editor"),
-    "editor.lineHighlightBackground": token("surface-panel"),
-    "editorLineNumber.foreground": token("border-control"),
-    "editorLineNumber.activeForeground": token("ink-muted"),
-    "editorCursor.foreground": token("accent"),
-    "focusBorder": token("focus"),
-  },
-});
+const root = document.documentElement;
+function applyTheme() {
+  const light = root.dataset.theme === "light";
+  monaco.editor.defineTheme("page", {
+    base: light ? "vs" : "vs-dark", inherit: true, rules: [],
+    colors: {
+      "editor.background": token("surface-editor"),
+      "editor.lineHighlightBackground": token("surface-panel"),
+      "editorLineNumber.foreground": token("border-control"),
+      "editorLineNumber.activeForeground": token("ink-muted"),
+      "editorCursor.foreground": light ? token("accent-strong") : token("accent"),
+      "focusBorder": token("focus"),
+    },
+  });
+  monaco.editor.setTheme("page");
+  themeButton.textContent = light ? "☾" : "☀";
+  themeButton.title = themeButton.ariaLabel = light ? "Switch to dark theme" : "Switch to light theme";
+}
+const themeButton = document.getElementById("theme")!;
+themeButton.onclick = () => {
+  root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+  try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+  applyTheme();
+};
+applyTheme();
 const editor = monaco.editor.create(document.getElementById("editor")!, {
-  theme: "night",
+  theme: "page",
   automaticLayout: true,
   ariaLabel: "Code editor. Press Escape, then Tab to leave it.",
 });
@@ -574,7 +588,7 @@ if (project) {
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
 const compare = document.getElementById("compare")!;
 const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
-  theme: "night", readOnly: true, wordWrap: "on", automaticLayout: true,
+  theme: "page", readOnly: true, wordWrap: "on", automaticLayout: true,
 });
 let comparing = "";
 function openCompare(name: string) {
