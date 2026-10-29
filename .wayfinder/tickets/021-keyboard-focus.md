@@ -30,3 +30,8 @@ assignee:
 - Worker: `pause` stops frames (the next frame parks itself instead of running) and releases all keys, then answers `paused`; `resume` restarts the parked frame. No frames while paused, so no Goals or Lose events.
 - Page: the canvas posts `pause` on blur and `resume` on focus while a Run is live, and shows a "Click to play" overlay; clicking it focuses the game. Dim outline when unfocused, bright when focused. Run and the Run-after-Lose button focus the game; Ctrl/Cmd+Enter in the editor runs; Esc in the game returns focus to the editor (which pauses). Keys are `preventDefault`ed so arrows/Space don't scroll; Tab passes through so keyboard users can leave.
 - The watchdog skips paused time only after the worker confirms the pause, so a Script stuck in a loop is still caught.
+
+## Review follow-up
+
+- Fixed: a quick blur then focus let the late `paused` ack set `paused = true` for good, disabling the watchdog. The worker now acks resume too and the page uses the ack's value.
+- Not fixed: the pause/resume message flow in `main.ts`/`runner.worker.ts` has no automated test (needs a worker/DOM harness).

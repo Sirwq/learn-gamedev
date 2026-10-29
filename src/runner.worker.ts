@@ -24,13 +24,13 @@ self.onmessage = async (e: MessageEvent) => {
   if (e.data.type === "pause") {
     paused = true;
     releaseAllKeys();
-    return postMessage({ type: "paused" }); // a worker stuck in a loop never answers, so the watchdog still fires
+    return postMessage({ type: "paused", paused: true }); // a worker stuck in a loop never answers, so the watchdog still fires
   }
   if (e.data.type === "resume") {
     paused = false;
     if (pausedFrame) requestAnimationFrame(pausedFrame);
     pausedFrame = undefined;
-    return;
+    return postMessage({ type: "paused", paused: false }); // acks arrive in order, so a quick blur+focus can't leave the page thinking it's paused
   }
 
   const canvas: OffscreenCanvas = e.data.canvas;

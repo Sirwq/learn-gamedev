@@ -152,7 +152,7 @@ function run() {
   let lastTick = performance.now();
   worker.onmessage = (e) => {
     if (e.data.type === "tick") lastTick = performance.now();
-    if (e.data.type === "paused") paused = true;
+    if (e.data.type === "paused") paused = e.data.paused;
     if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "check") {
       showGoals(e.data.met);
