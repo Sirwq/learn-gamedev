@@ -36,6 +36,7 @@ if (!replaying && !project) restoreStash(); // before the editor loads the code
 const lesson = course[lessonIndex];
 const lessonTitle = document.getElementById("lesson-title")!;
 lessonTitle.textContent = project ? project.name : lesson.title;
+document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
 if (!project) explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
@@ -60,6 +61,7 @@ function showHints(opened: number) {
     return div;
   }));
   nextHint.textContent = `💡 Hint ${opened + 1} of ${hints.length}`;
+  nextHint.ariaLabel = `Hint ${opened + 1} of ${hints.length}`;
   nextHint.hidden = opened >= hints.length;
   stillStuck.hidden = !nextHint.hidden || !!project;
 }
@@ -74,10 +76,13 @@ function showProgress() {
   const done = progress(course);
   const label = document.createElement("span");
   label.textContent = `${done.filter(Boolean).length} / ${course.length}`;
-  document.getElementById("progress")!.replaceChildren(...done.map((d, i) => {
+  const button = document.getElementById("progress")!;
+  button.ariaLabel = `${label.textContent} Lessons passed, open the Course menu`;
+  button.replaceChildren(...done.map((d, i) => {
     const pip = document.createElement("i");
     pip.className = d ? "done" : "";
     pip.title = course[i].title;
+    pip.ariaHidden = "true";
     return pip;
   }), label);
 }
@@ -96,11 +101,22 @@ function addModel(name: string, code: string) {
   });
 }
 for (const [name, code] of Object.entries(project?.scripts ?? loadScripts(course, lessonIndex))) addModel(name, code);
-const editor = monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", automaticLayout: true });
+const editor = monaco.editor.create(document.getElementById("editor")!, {
+  theme: "vs-dark",
+  automaticLayout: true,
+  ariaLabel: "Code editor. Press Escape, then Tab to leave it.",
+});
+// Tab indents, so Esc turns on Monaco's "Tab moves focus" until the next other key or leaving the editor.
+editor.onKeyDown((e) => {
+  if (e.keyCode === monaco.KeyCode.Escape) editor.updateOptions({ tabFocusMode: true });
+  else if (e.keyCode !== monaco.KeyCode.Tab && e.keyCode !== monaco.KeyCode.Shift) editor.updateOptions({ tabFocusMode: false });
+});
+editor.onDidBlurEditorText(() => editor.updateOptions({ tabFocusMode: false }));
 function makeTab(label: string) {
   const tab = document.createElement("button");
   tab.role = "tab";
   tab.textContent = label;
+  if (label === "📖 Docs") tab.ariaLabel = "Docs";
   tab.onclick = () => (label === "📖 Docs" ? openDocs() : show(label.slice(0, -3)));
   return tab;
 }
@@ -210,7 +226,10 @@ function toast(text: string) {
 const earned = loadEarned();
 const trophies = document.getElementById("trophies")!;
 const map = document.getElementById("achievements")!;
-const showTrophies = () => (trophies.textContent = `🏆 ${earned.size} / ${achievements.length}`);
+function showTrophies() {
+  trophies.textContent = `🏆 ${earned.size} / ${achievements.length}`;
+  trophies.ariaLabel = `Achievements ${earned.size} / ${achievements.length}`;
+}
 showTrophies();
 function earn(ids: string[]) {
   for (const id of ids) {
@@ -242,7 +261,7 @@ function drawMap() {
   const tiles = achievements.map((a) => {
     const state = stateOf(a, earned), [x, y] = centre(a);
     const tip = state === "hidden" ? "???\nEarn the one before it first" : `${a.title}\n${a.message}${state === "earned" ? "\n✓ earned" : ""}`;
-    return `<i class="tile ${state}" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
+    return `<i class="tile ${state}" role="img" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
   });
   map.querySelector("#tree")!.innerHTML = `<svg width="${w}" height="${h}"><defs>${arrow("arrow")}${arrow("arrowlit")}</defs>${lines.join("")}</svg>${tiles.join("")}`;
   (map.querySelector("#tree") as HTMLElement).style.cssText = `width:${w}px;height:${h}px`;
@@ -535,7 +554,13 @@ function showGoals(met: boolean[]) {
   goalsMet = met;
   goalsList.replaceChildren(...goals.map((g, i) => {
     const li = document.createElement("li");
-    li.textContent = `${met[i] ? "✓" : "⬜"} ${g.message}`;
+    const mark = document.createElement("span");
+    mark.ariaHidden = "true";
+    mark.textContent = met[i] ? "✓ " : "⬜ ";
+    const state = document.createElement("span");
+    state.className = "sr-only";
+    state.textContent = met[i] ? "Done: " : "To do: ";
+    li.append(mark, state, g.message);
     return li;
   }));
 }
