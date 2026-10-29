@@ -148,8 +148,16 @@
       #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
       #menu .bar button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
       #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; font-variant-numeric: tabular-nums; }
-      #menu-count { margin: 0 auto; color: #aaa; font-variant-numeric: tabular-nums; }
-      #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; }
+      #menu-dots { margin: 0 auto; display: flex; }
+      #menu #menu-dots button { width: 20px; height: 32px; padding: 0; border: 0; border-radius: 6px; background: none; display: grid; place-items: center; }
+      #menu-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 4px; background: #fff5; transition: width .15s, background-color .15s; }
+      #menu-dots button:hover::before { background: #fffa; }
+      #menu-dots button[aria-current]::before { width: 16px; background: #b14cff; }
+      #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
+      #menu .nav { position: absolute; top: 42%; width: 44px; height: 44px; padding: 0; transform: translate(-50%, -50%); border-radius: 50%; background: #000a; border-color: #fff4; font-size: 20px; }
+      #menu .nav:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
+      #menu button { touch-action: manipulation; }
+      @media (pointer: coarse) { #menu .bar button, #menu #menu-dots button { min-height: 44px; } #menu #menu-dots button { width: 24px; } }
       .cover { position: absolute; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 10px 30px #0009; transition: left .22s, top .22s, width .22s, height .22s; }
       .cover canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
       .cover[aria-current] { outline: 3px solid #b14cff; outline-offset: 3px; box-shadow: 0 0 40px #b14cff8c, 0 10px 30px #0009; }
@@ -256,10 +264,12 @@
         <span id="menu-stats"></span>
       </div>
       <div id="rail"></div>
+      <button id="menu-prev" class="nav" aria-label="Previous Lesson"><span aria-hidden="true">‹</span></button>
+      <button id="menu-next" class="nav" aria-label="Next Lesson"><span aria-hidden="true">›</span></button>
       <div id="card-info"><h2 id="card-title"></h2><div id="card-meta"></div></div>
       <div class="bar bottom">
         <button id="menu-back" aria-keyshortcuts="Escape"><kbd aria-hidden="true">Esc</kbd> Back to Lesson</button>
-        <span id="menu-count" aria-hidden="true"></span>
+        <div id="menu-dots" role="group" aria-label="Lessons"></div>
         <button id="menu-achievements" aria-keyshortcuts="A"><kbd aria-hidden="true">A</kbd> <span aria-hidden="true">🏆</span> Achievements</button>
         <button id="menu-play" aria-keyshortcuts="Enter"><kbd aria-hidden="true">Enter</kbd> <b></b></button>
       </div>

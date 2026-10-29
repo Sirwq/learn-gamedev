@@ -15,6 +15,7 @@ import { tutorPrompt } from "./lessons/ai-note";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
+import { swipeStep } from "./swipe";
 import { createProject, deleteProject, duplicateProject, loadProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
 
 self.MonacoEnvironment = {
@@ -285,6 +286,9 @@ const replayBox = document.getElementById("replay") as HTMLDialogElement;
 const newBox = document.getElementById("new-project") as HTMLDialogElement;
 const chipCourse = document.getElementById("chip-course")!;
 const chipSandbox = document.getElementById("chip-sandbox")!;
+const prevBtn = document.getElementById("menu-prev") as HTMLButtonElement;
+const nextBtn = document.getElementById("menu-next") as HTMLButtonElement;
+const dots = document.getElementById("menu-dots")!;
 let mode: "course" | "sandbox" = "course";
 let focused = lessonIndex;
 let states = cardStates(course);
@@ -340,7 +344,8 @@ function layoutMenu() {
     const [w, h] = d ? [smallW, smallH] : [bigW, H];
     const x = d === 0 ? W / 2 - w / 2 : d > 0 ? W / 2 + bigW / 2 + gap + (d - 1) * (smallW + gap) : W / 2 - bigW / 2 - gap - smallW + (d + 1) * (smallW + gap);
     card.style.cssText = `left:${x}px;top:${(H - h) / 2}px;width:${w}px;height:${h}px`;
-    card.ariaCurrent = d ? null : "true";
+    card.ariaCurrent = dots.children[i].ariaCurrent = d ? null : "true";
+    (dots.children[i] as HTMLElement).tabIndex = d ? -1 : 0; // one Tab stop for the dots; ← → move along them
     if (mode === "sandbox") {
       card.className = i < projects.length ? "cover" : "cover new";
       card.ariaLabel = i < projects.length ? `Project ${projects[i].name}` : "New Project";
@@ -371,7 +376,11 @@ function layoutMenu() {
     span.append(t);
     return span;
   }));
-  document.getElementById("menu-count")!.textContent = `${focused + 1} / ${list.length}`;
+  prevBtn.style.left = `${W / 2 - bigW / 2 - gap / 2}px`;
+  nextBtn.style.left = `${W / 2 + bigW / 2 + gap / 2}px`;
+  prevBtn.disabled = focused === 0;
+  nextBtn.disabled = focused === list.length - 1;
+  if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
   document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
   const passed = states.filter((s) => s === "passed").length;
   document.getElementById("menu-stats")!.innerHTML =
@@ -385,12 +394,23 @@ function focusCard(i: number) {
   focused = Math.max(0, Math.min(cards().length - 1, i));
   layoutMenu();
   announce();
+  if (dots.contains(document.activeElement)) (dots.children[focused] as HTMLElement).focus();
 }
 function showMode(m: typeof mode) {
   mode = m;
   if (m === "sandbox") buildProjectCards();
   focused = m === "course" ? lessonIndex : Math.max(0, projects.findIndex((p) => p.id === project?.id));
   rail.replaceChildren(...cards());
+  const noun = m === "course" ? "Lesson" : "Project";
+  dots.ariaLabel = `${noun}s`;
+  prevBtn.ariaLabel = `Previous ${noun}`;
+  nextBtn.ariaLabel = `Next ${noun}`;
+  dots.replaceChildren(...cards().map((_, i) => {
+    const dot = document.createElement("button");
+    dot.ariaLabel = m === "course" ? course[i].title : projects[i]?.name ?? "New Project";
+    dot.onclick = () => focusCard(i);
+    return dot;
+  }));
   for (const [chip, on] of [[chipCourse, m === "course"], [chipSandbox, m === "sandbox"]] as const) {
     chip.classList.toggle("on", on);
     chip.ariaPressed = String(on);
@@ -490,6 +510,25 @@ if (project) {
 }
 document.getElementById("menu-achievements")!.onclick = () => trophies.click();
 document.getElementById("menu-play")!.onclick = () => pick(focused);
+prevBtn.onclick = () => focusCard(focused - 1);
+nextBtn.onclick = () => focusCard(focused + 1);
+// One wheel or trackpad gesture moves one card: the next move waits until the wheel has been still for 200 ms.
+let wheelQuiet = 0;
+menu.addEventListener("wheel", (e) => {
+  const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  if (!wheelQuiet && d) focusCard(focused + Math.sign(d));
+  clearTimeout(wheelQuiet);
+  wheelQuiet = setTimeout(() => (wheelQuiet = 0), 200);
+}, { passive: true });
+let touchStart: Touch | undefined;
+rail.addEventListener("touchstart", (e) => (touchStart = e.touches.length === 1 ? e.touches[0] : undefined), { passive: true });
+rail.addEventListener("touchend", (e) => {
+  const end = e.changedTouches[0];
+  const step = touchStart ? swipeStep(end.clientX - touchStart.clientX, end.clientY - touchStart.clientY) : 0;
+  if (!step) return;
+  e.preventDefault(); // no click on the card the swipe started on
+  focusCard(focused + step);
+});
 menuOpen.onclick = document.getElementById("progress")!.onclick = () => openMenu();
 window.addEventListener("resize", () => menu.hidden || layoutMenu());
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)

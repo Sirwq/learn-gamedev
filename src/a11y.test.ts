@@ -36,3 +36,12 @@ describe("Course menu accessibility", () => {
   it("gives the menu buttons the header's focus ring", () => expect(html).toContain("#menu .bar button:focus-visible { outline: 2px solid #9cf;"));
   it("uses tabular numbers in the stats", () => expect(html).toMatch(/#menu-stats \{[^}]*tabular-nums/));
 });
+
+describe("Course menu pointer navigation", () => {
+  it("has labelled previous / next buttons", () => {
+    expect(tag("menu-prev")).toContain('aria-label="Previous Lesson"');
+    expect(tag("menu-next")).toContain('aria-label="Next Lesson"');
+  });
+  it("replaces the 1 / 15 count with a group of dots", () => expect(tag("menu-dots")).toContain('role="group"'));
+  it("gives coarse pointers 44 px targets", () => expect(html).toMatch(/@media \(pointer: coarse\) \{[^@]*min-height: 44px/));
+});
