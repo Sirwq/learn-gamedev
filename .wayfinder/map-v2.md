@@ -27,6 +27,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [What do sound and animation add to the engine?](tickets/054-sound-animation.md): Sandbox only; the engine animates from the Kenney pack's own frames with no API (tags without frames and own sprites stay still); `this.audio.PlayOneShot("Jump")` with ten fixed clip names from one CC0 pixel pack; the worker sends clip names to the page's Web Audio; a labelled mute button.
 - [What on-screen UI text does the student write?](tickets/055-ui-text.md): Sandbox only, screen text only; Unity's `OnGUI()` + `GUI.Label(new Rect(...), text)` with top-left, y-down coordinates; `GUI.color`, `GUI.skin.label` fontSize / alignment / outline (on by default), reset every frame; one Kenney CC0 pixel font; not in the Level editor; a hidden label list for screen readers.
 - [Which Achievements reward extra Mechanics?](tickets/056-mechanic-achievements.md): Double jump (after First jump), Wall jump (after Bonk) and Dash (after Both ways), earned anywhere from day one and always on the map, so `🏆 n / 21`; tests get `keysDown` in `Run` and rule out stomp bounces, respawns and rides; "secret" reworded to "after the Course".
+- [What does the Player look like as a Claude sprite?](tickets/058-claude-player-sprite.md): an original orange critter (not Anthropic's mascot) in a Claude-like palette, 16×16 at 2× filling the 32×32 Player box, with idle / walk / jump frames for Sandbox; Enemy and other tags stay Kenney.
 
 ## Not yet specified
 
@@ -44,4 +45,5 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Lessons for extra Mechanics (double jump, wall jump, dash): they are Achievements instead ([What is in v2?](tickets/048-v2-scope.md)).
 - Ground pound, wall slide, glide and coyote time Achievements: only Double jump, Wall jump and Dash ([Which Achievements reward extra Mechanics?](tickets/056-mechanic-achievements.md)).
 - Authors' Lesson editor: no author mode and no saving back to `lesson.ts`; developers write Lessons in code ([Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md)).
+- A Player that looks like Anthropic's Claude mascot: only after Anthropic's brand terms are checked and allow it ([What does the Player look like as a Claude sprite?](tickets/058-claude-player-sprite.md)).
 - "Remix this Level", copying a Lesson's Level into a new Sandbox Project: new Projects start as Sandbox mode already decided ([Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md)).
