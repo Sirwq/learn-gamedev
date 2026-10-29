@@ -1,6 +1,6 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { animates, errorLine } from "./run-utils";
-import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
+import { api, type Box, Camera, findScript, keyEvent, keysDown, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { checker } from "./check";
 import { achievementChecker } from "./achievements";
@@ -74,7 +74,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
       game.step();
       const world = worldView(game.objects);
       result = check(world);
-      earned = achieve(world, logs.length > 0); // also on the frame the game stops
+      earned = achieve(world, { logged: logs.length > 0, keysDown: keysDown() }); // also on the frame the game stops
     } catch (err) {
       return report(err); // stop the loop: the game pauses on the error
     }

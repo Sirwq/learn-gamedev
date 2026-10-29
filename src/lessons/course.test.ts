@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { keyEvent, KeyCode, releaseAllKeys, startGame, worldView } from "../engine";
+import { keyEvent, KeyCode, keysDown, releaseAllKeys, startGame, worldView } from "../engine";
 import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
@@ -68,7 +68,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
   });
 
   // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
-  const framesToPass = (code: Record<string, string>, earned = new Set<string>()) => {
+  const framesToPass = (code: Record<string, string>, earned = new Set<string>(), keysOn = play[lesson.title] ?? (() => [])) => {
     const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, loadScript(s, n)]));
     const game = startGame(lesson.level.boxes, classes);
     const check = checker(lesson);
@@ -76,12 +76,12 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     releaseAllKeys();
     let held: string[] = [];
     for (let frame = 1; frame <= 600; frame++, game.step()) {
-      const keys = play[lesson.title]?.(frame) ?? [];
+      const keys = keysOn(frame);
       for (const k of held) if (!keys.includes(k)) keyEvent(k, false);
       for (const k of keys) keyEvent(k, true);
       held = keys;
       const result = check(worldView(game.objects));
-      checkAchievements(worldView(game.objects));
+      checkAchievements(worldView(game.objects), { keysDown: keysDown() });
       if (result.lost) break;
       if (result.passed) return frame;
     }
@@ -102,6 +102,20 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     const earned = new Set<string>();
     framesToPass({ ...earlier, ...code([lesson], "reference") }, earned);
     expect([...earned]).toEqual(expect.arrayContaining(earns[lesson.title]));
+  });
+
+  // The Course's Players stomp, respawn, ride and run, but have no Extra moves.
+  it("earns no Mechanic Achievement with its Reference code", () => {
+    const plan = play[lesson.title] ?? (() => []);
+    const mash = (f: number) => (f % 2 ? [...plan(f), KeyCode.Space] : plan(f));
+    const extras = (keys: typeof plan) => {
+      const earned = new Set<string>();
+      framesToPass({ ...earlier, ...code([lesson], "reference") }, earned, keys);
+      return ["doublejump", "walljump", "dash"].filter((id) => earned.has(id));
+    };
+    expect(extras(plan)).toEqual([]);
+    // Space every other frame: a Player whose onGround outlives a walk off a ledge can jump once in mid-air, a Double jump by the spec's test.
+    expect(extras(mash).filter((id) => id !== "doublejump")).toEqual([]);
   });
 
   it.runIf(index > 0)("is not passed by the previous Lesson's Reference code", () => {

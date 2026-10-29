@@ -57,6 +57,9 @@ export function nextFrame() {
   [down, up, pressed, released] = [pressed, released, new Set(), new Set()];
 }
 
+/** This frame's pressed keys, for the Achievement checker. */
+export const keysDown = (): ReadonlySet<string> => down;
+
 export class Input {
   static GetKey(code: string) {
     return held.has(code) || down.has(code); // a tap shorter than a frame still counts as held for that frame

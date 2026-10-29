@@ -267,10 +267,11 @@ function earn(ids: string[]) {
   if (!map.hidden) drawMap();
 }
 const CELL = 76;
+const EXTRA = "Extra: no Lesson teaches this. Build it in your own Player code, in any Lesson or a Sandbox Project.";
 const centre = (a: (typeof achievements)[number]) => [a.col * CELL + CELL / 2, a.row * CELL + CELL / 2];
 function drawMap() {
   map.querySelector("header span")!.textContent = `${earned.size} earned · gold = earned · grey = can earn now · ? = earn the one before it first`;
-  const [w, h] = [13 * CELL, 9 * CELL];
+  const [w, h] = [13 * CELL, 10 * CELL];
   // Right-angled arrows, each stopping at the edge of the tile it points to.
   const lines = achievements.filter((a) => a.after).map((a) => {
     const [x1, y1] = centre(achievements.find((p) => p.id === a.after)!), [x2, y2] = centre(a);
@@ -283,7 +284,7 @@ function drawMap() {
   const arrow = (id: string) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z"/></marker>`;
   const tiles = achievements.map((a) => {
     const state = stateOf(a, earned), [x, y] = centre(a);
-    const tip = state === "hidden" ? "???\nEarn the one before it first" : `${a.title}\n${a.message}${state === "earned" ? "\n✓ earned" : ""}`;
+    const tip = state === "hidden" ? "???\nEarn the one before it first" : `${a.title}\n${a.message}${a.extra ? `\n${EXTRA}` : ""}${state === "earned" ? "\n✓ earned" : ""}`;
     return `<i class="tile ${state}" role="img" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
   });
   map.querySelector("#tree")!.innerHTML = `<svg width="${w}" height="${h}"><defs>${arrow("arrow")}${arrow("arrowlit")}</defs>${lines.join("")}</svg>${tiles.join("")}`;

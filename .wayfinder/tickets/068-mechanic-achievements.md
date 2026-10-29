@@ -1,7 +1,7 @@
 ---
 title: Double jump, Wall jump and Dash Achievements
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -27,3 +27,12 @@ assignee:
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+Done. Double jump (⏫, after First jump, cell 7,4), Wall jump (🧗, after Bonk, cell 3,0) and Dash (💨, after Both ways, cell 3,9) are in `src/achievements.ts`, checked everywhere. The map grew one row (13 × 10 cells). Menu and map read `n / 21` from `achievements.length`.
+
+- **Checker shape**: `World` stays an array, so Lesson Goals don't change. The extra data goes on the Achievement `Run`: `keysDown` (this frame's pressed keys, from a new checker-only `keysDown()` in `engine.ts`) and `recent`, the last 72 frames as `{ world, keysDown }`, which the move tests need. The checker now takes `(world, { logged, keysDown })`. Chapter 2 adds `sounds` and `labels` to that object the same way.
+- **Tests as in the spec**: *airborne* means the Player stands on no box. Double jump also needs the Player airborne on every frame from the press to the kick ("still airborne"). Without that, a jump on the frame after landing counted.
+- **Tile detail**: an `extra` flag on the three adds the "Extra: no Lesson teaches this…" line to the tile's title/label in `main.ts`.
+- **Tests**: `achievements.test.ts` has a small reference Player plus one Extra per move. Each move is earned with its Extra and not without it. Holding a higher speed is not a Dash, and a double jump up a wall is not a Wall jump. `course.test.ts` checks that every Lesson's Reference playthrough, including stomp (12), respawn (14) and ride (15), earns none of the three. The same check, with Space pressed every other frame, earns no Wall jump or Dash.
+- **Known edge**: the Course Players keep `onGround` after walking off a ledge, so they can jump once in mid-air. The spec's Double jump test counts that, and it shows in Lessons 9 and 10 when Space is mashed. The test was left as written.
+
