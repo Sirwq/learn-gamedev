@@ -332,6 +332,11 @@ function buildProjectCards() {
   drawCover(projectCards[projects.length].querySelector("canvas")!, []);
 }
 
+// Tiny status icons: decoration only, the pill's words carry the meaning.
+const icon = (d: string) => `<svg aria-hidden="true" viewBox="0 0 12 12" width="10" height="10">${d}</svg>`;
+const CHECK = icon(`<path d="M2 6.5 5 9.5 10 3" fill="none" stroke="currentColor" stroke-width="2"/>`);
+const PLAY = icon(`<path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/>`);
+const LOCK = icon(`<rect x="2" y="5.5" width="8" height="6" rx="1" fill="currentColor"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`);
 const playLabel = (i: number) =>
   mode === "sandbox" ? (i === projects.length ? "Create" : "Open")
   : states[i] === "locked" ? "How to unlock" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
@@ -353,25 +358,23 @@ function layoutMenu() {
     card.querySelector(".tag")!.textContent = { passed: "✓ passed", current: "▶ next", locked: "🔒" }[states[i]];
   });
   drawBg();
-  let title, meta;
+  const meta = document.getElementById("card-meta")!;
+  const line = (cls: string, html: string) => `<div class="${cls}">${html}</div>`;
+  const files = (names: string[]) => line("meta-files", `Code in ${names.map((n) => `<code translate="no">${n.replace(/[&<]/g, (c) => (c === "&" ? "&amp;" : "&lt;"))}.ts</code>`).join(", ")}`);
+  let title;
   if (mode === "sandbox") {
     const p = projects[focused];
     title = p ? p.name : "New Project";
-    meta = p ? [["📄", Object.keys(p.scripts).map((n) => `${n}.ts`).join(", ")]] : [["", "Blank, or My platformer: a copy of your Course code"]];
+    meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", "Blank, or My platformer: a copy of your Course code");
   } else {
-    const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
-    const state = { passed: ["✓", "Passed"], current: ["▶", "Up next"], locked: ["🔒", `Pass Lesson ${menuCurrent + 1} to unlock`] }[states[focused]];
+    const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))];
+    const state = { passed: [CHECK, "Passed"], current: [PLAY, "Up next"], locked: [LOCK, `Pass Lesson ${menuCurrent + 1} to unlock`] }[states[focused]];
+    // Code words in the concept (Update(), Time.deltaTime, if, &&) get the inline-code look; "Script:" is a plain word.
+    const concept = course[focused].concept.replace(/else if|&&|\b(?:if|for)\b|[A-Z]\w*(?:\.\w+)*(?:\(\))?(?!:)/g, (c) => `<code translate="no">${c.replaceAll("&", "&amp;")}</code>`);
     title = course[focused].title;
-    meta = [["🧩", course[focused].concept], ["📄", scripts.join(", ")], state];
+    meta.innerHTML = line("meta-concept", `<span class="pill ${states[focused]}">${state[0]}${state[1]}</span> ${concept}`) + files(scripts);
   }
   document.getElementById("card-title")!.textContent = title;
-  // The icons are decoration: screen readers get only the words.
-  document.getElementById("card-meta")!.replaceChildren(...meta.map(([icon, t]) => {
-    const span = document.createElement("span");
-    span.innerHTML = `<span aria-hidden="true">${icon} </span>`;
-    span.append(t);
-    return span;
-  }));
   prevBtn.disabled = focused === 0;
   nextBtn.disabled = focused === list.length - 1;
   if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
