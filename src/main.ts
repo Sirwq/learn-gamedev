@@ -3,23 +3,23 @@ import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
+import type { Box } from "./engine";
+import engineApi from "./engine-api.d.ts?raw";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
 };
 
-monaco.typescript.typescriptDefaults.addExtraLib(
-  "declare const ctx: OffscreenCanvasRenderingContext2D;\ndeclare const keys: ReadonlySet<string>;",
-  "file:///globals.d.ts",
-);
+monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-const starter = `let x = 100;
+// shortcut: hard-coded Level, replace once the lesson loader (ticket 017) lands.
+const level: Box[] = [
+  { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },
+  { tag: "Ground", x: 0, y: 0, w: 960, h: 40, color: "#5a3" },
+];
 
-export function update(dt: number) {
-  if (keys.has("ArrowRight")) x += 200 * dt;
-  if (keys.has("ArrowLeft")) x -= 200 * dt;
-  ctx.fillStyle = "orange";
-  ctx.fillRect(x, 300, 32, 32);
+const starter = `class Player extends MonoBehaviour {
+  Update() {}
 }
 `;
 
@@ -61,13 +61,13 @@ function run() {
   old.replaceWith(canvas);
   canvas.onkeydown = canvas.onkeyup = (e) => {
     e.preventDefault();
-    worker?.postMessage({ type: "key", key: e.key, down: e.type === "keydown" });
+    worker?.postMessage({ type: "key", code: e.code, down: e.type === "keydown" });
   };
   canvas.focus();
 
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
-  worker.postMessage({ canvas: offscreen, js: transpile(model.getValue()) }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, level, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
