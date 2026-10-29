@@ -1,4 +1,4 @@
-// Prints the ticket frontier as JSON: open tickets with no assignee whose blocked_by tickets are all closed.
+// Prints the ticket frontier as JSON: open tickets with no assignee and no `## Blocked` note whose blocked_by tickets are all closed.
 // A ticket "opens up" for the agent as soon as the last ticket blocking it is closed.
 // Usage: node .sandcastle/tickets.mjs [tickets dir]
 import { readFileSync, readdirSync } from "node:fs";
@@ -14,7 +14,7 @@ export function frontier(files) {
   });
   const closed = new Set(tickets.filter((t) => t.status === "closed").map((t) => t.id));
   return tickets
-    .filter((t) => t.status === "open" && !t.assignee && t.blockedBy.every((b) => closed.has(b)))
+    .filter((t) => t.status === "open" && !t.assignee && !/^## Blocked/m.test(t.body) && t.blockedBy.every((b) => closed.has(b)))
     .map(({ id, body }) => ({ id, body }));
 }
 

@@ -5,7 +5,7 @@ import { limitWaitMs } from "./limit";
 
 // Run with: npm run afk
 // Each round: a worker does one ticket, then a reviewer (ponytail-review) checks and fixes its commits.
-// Rounds repeat until the worker says COMPLETE or commits nothing.
+// Rounds repeat until no ticket is left on the frontier or the worker commits nothing.
 
 const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
@@ -22,10 +22,11 @@ const shared = {
   // Required for copyToWorktree.
   branchStrategy: { type: "merge-to-head" },
 
-  // Copy node_modules into the worktree to skip a full install; npm install below is a safety net.
+  // Copy node_modules into the worktree to skip a full install; npm ci below is a safety net.
   copyToWorktree: ["node_modules"],
 
-  hooks: { sandbox: { onSandboxReady: [{ command: "npm install" }] } },
+  // npm ci, not npm install: the sandbox's npm would rewrite package-lock.json and leave every run dirty.
+  hooks: { sandbox: { onSandboxReady: [{ command: "npm ci" }] } },
 } satisfies Partial<RunOptions>;
 
 // Runs once, and after a usage limit sleeps until it resets (+5 min) and relaunches.
@@ -47,7 +48,10 @@ async function runPastLimits(options: RunOptions): Promise<RunResult> {
   }
 }
 
-while (true) {
+// The worker says COMPLETE after every ticket, so its signal can't end the loop; the frontier can.
+const ticketsLeft = () => JSON.parse(execSync("node .sandcastle/tickets.mjs").toString()).length;
+
+while (ticketsLeft() > 0) {
   const before = execSync("git rev-parse HEAD").toString().trim();
 
   const work = await runPastLimits({ ...shared, name: "worker", promptFile: "./.sandcastle/prompt.md" });
@@ -62,5 +66,6 @@ while (true) {
     });
   }
 
-  if (work.completionSignal || work.commits.length === 0) break;
+  // Nothing committed means the worker is stuck; stop instead of looping on the same ticket.
+  if (work.commits.length === 0) break;
 }

@@ -23,7 +23,7 @@ Work on issues in this order:
 3. **Polish** — improving existing functionality (error messages, UX, docs)
 4. **Refactors** — internal cleanups with no user-visible change
 
-Pick the highest-priority issue from the list that has no `## Blocked` note. The list already leaves out tickets whose `blocked_by` tickets are still open. View a ticket with `cat .wayfinder/tickets/<ID>.md`.
+Pick the highest-priority issue from the list. The list already leaves out tickets with a `## Blocked` note and tickets whose `blocked_by` tickets are still open. View a ticket with `cat .wayfinder/tickets/<ID>.md`.
 
 ## Workflow
 

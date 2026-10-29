@@ -22,3 +22,9 @@ test("closing a blocker opens the next ticket up", () => {
     .map((x: { id: string }) => x.id);
   expect(ids).toEqual(["003-c"]);
 });
+
+test("a ticket with a ## Blocked note leaves the frontier so the loop can stop", () => {
+  const ids = frontier({ "001-a.md": t("open") + "\n\n## Blocked\nneeds a browser", "002-b.md": t("open") })
+    .map((x: { id: string }) => x.id);
+  expect(ids).toEqual(["002-b"]);
+});

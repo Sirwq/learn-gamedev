@@ -21,8 +21,8 @@ You are the review agent. Another agent just finished one ticket. Review its com
 - Fix only real findings: bugs, missed **Done when** items, missing tests for risky logic, and code that can be deleted without losing behaviour. Leave style nitpicks alone.
 - Don't change what the code does unless it's a bug, and don't start the next ticket.
 - Run `npm run typecheck` and `npm run test`. Both must pass.
-- If you changed anything, make one commit starting with `RALPH: review:` that lists each finding and its fix. If nothing needs fixing, don't commit.
-- If a finding is too big to fix here, add it to the ticket file under `## Review follow-up` and commit that instead.
+- Every finding you don't fix (too big, or an edge case you left alone) goes in the ticket file under `## Review follow-up`.
+- Commit all your changes in one commit starting with `RALPH: review:` that lists each finding and what you did about it. Only uncommitted work is lost when you stop, so run `git status` and leave it clean. Skip the commit only if you found nothing at all.
 
 When done, output:
 
