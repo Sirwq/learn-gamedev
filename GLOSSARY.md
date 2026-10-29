@@ -28,6 +28,8 @@
 
 **Project**: One saved world the student builds in Sandbox mode: its Scripts and starting layout, with a name. A student can have many. Its code is separate from the Course code.
 
+**Level editor**: A screen where a Level's boxes are placed, moved and resized with the mouse instead of written in code. Planned for v2.
+
 **AI tutor**: The built-in assistant that helps a stuck student with hints and explanations, never with the solution.
 
 **Achievement**: A reward the student earns once, for doing something for the first time in the game (like a first jump). Passing a Lesson is not an Achievement. Shown on the achievement map, where each one is unlocked by the one before it.

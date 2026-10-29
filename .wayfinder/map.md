@@ -48,6 +48,8 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 
 ## Out of scope
 
+Everything below is charted for later on the [v2 map](map-v2.md).
+
 - C# and other language Courses: later effort, once the TypeScript Course works.
 - Accounts and server-side saves.
 - A Lesson editor for authors.
@@ -56,4 +58,5 @@ A build-ready spec for the MVP: a browser app with a game viewport (left) and co
 - On-screen UI / HUD text: scores and debug output go to the Console instead ([What is the first Course?](tickets/005-first-course.md)).
 - Built-in paid AI tutor (LLM API behind a proxy): the MVP uses the free copy-and-open button instead; [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md) holds the plan for when it's added.
 - Students loading their own artwork: later version ([What is the art style?](tickets/014-art-style.md)).
-- Construct-like Sandbox (drag-and-drop Level editor + own sprites): Sandbox v2, later effort; the MVP Sandbox is code-only ([How does Sandbox mode work?](tickets/015-sandbox-mode.md)).
+- Level editor: placing, moving and resizing a Level's boxes with the mouse instead of writing them in code. v2 ([How does the Level editor work?](tickets/049-level-editor.md)).
+- Construct-like Sandbox (Level editor + own sprites): Sandbox v2, later effort; the MVP Sandbox is code-only ([How does Sandbox mode work?](tickets/015-sandbox-mode.md)).
