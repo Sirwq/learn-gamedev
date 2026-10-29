@@ -1,6 +1,6 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine } from "./run-utils";
-import { api, type Box, findScript, flipY, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
+import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, toScreen, worldView } from "./engine";
 import { checker } from "./check";
 import { course } from "./lessons/course";
 
@@ -49,7 +49,7 @@ self.onmessage = async (e: MessageEvent) => {
       classes[name] = findScript(await import(/* @vite-ignore */ url), name);
     }
     Object.assign(globalThis, classes); // the editor type-checks Scripts against each other, so they see each other here too
-    game = startGame(level, classes);
+    game = startGame(level, classes, lesson.level.camera);
   } catch (err) {
     return report(err);
   }
@@ -72,8 +72,9 @@ self.onmessage = async (e: MessageEvent) => {
     last = json;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (const { transform: { position }, w, h, color } of game.objects) {
+      const r = toScreen(Camera.main, { ...position, w, h }, canvas.width, canvas.height);
       ctx.fillStyle = color;
-      ctx.fillRect(position.x, flipY(position.y, h, canvas.height), w, h);
+      ctx.fillRect(r.x, r.y, r.w, r.h);
     }
     if (!result.lost && !result.passed) requestAnimationFrame(frame);
   };

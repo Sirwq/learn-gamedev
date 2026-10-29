@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
-import { Destroy, findScript, flipY, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, Vector2 } from "./engine";
+import { Camera, Destroy, findScript, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, toScreen, Vector2 } from "./engine";
 
 describe("Vector2", () => {
   it("adds and scales into new vectors", () => {
@@ -82,10 +82,26 @@ describe("Instantiate, Destroy and FindGameObjectsWithTag", () => {
   });
 });
 
-describe("flipY", () => {
-  it("turns a bottom-left y-up box into a canvas top-left y", () => {
-    expect(flipY(0, 40, 540)).toBe(500);
-    expect(flipY(500, 40, 540)).toBe(0);
+describe("Camera", () => {
+  const box = { x: 0, y: 0, w: 40, h: 40 };
+  it("by default shows the 960×540 Level as is, flipping y so up is up", () => {
+    startGame([], {});
+    expect(toScreen(Camera.main, box, 960, 540)).toEqual({ x: 0, y: 500, w: 40, h: 40 });
+    expect(toScreen(Camera.main, { ...box, y: 500 }, 960, 540)).toEqual({ x: 0, y: 0, w: 40, h: 40 });
+  });
+  it("moving the camera right and up moves the world left and down on screen", () => {
+    startGame([], {}, { x: 580, y: 320, size: 270 });
+    expect(toScreen(Camera.main, box, 960, 540)).toEqual({ x: -100, y: 550, w: 40, h: 40 });
+  });
+  it("a smaller orthographicSize zooms in around the view centre", () => {
+    startGame([], {});
+    Camera.main.orthographicSize = 135;
+    expect(toScreen(Camera.main, { x: 480, y: 270, w: 40, h: 40 }, 960, 540)).toEqual({ x: 480, y: 190, w: 80, h: 80 });
+  });
+  it("startGame resets the camera a Script moved", () => {
+    Camera.main.transform.position = new Vector2(0, 0);
+    startGame([], {});
+    expect([Camera.main.transform.position, Camera.main.orthographicSize]).toEqual([new Vector2(480, 270), 270]);
   });
 });
 

@@ -84,8 +84,26 @@ export class Debug {
   }
 }
 
-/** Canvas top-left y for a box at bottom-left y. */
-export const flipY = (y: number, h: number, height: number) => height - y - h;
+/** A Level's start camera: view centre x, y and orthographicSize, in pixels. */
+export type CameraStart = { x: number; y: number; size: number };
+
+export class Camera {
+  static main: Camera;
+  orthographicSize: number;
+  readonly transform: Transform;
+  constructor({ x, y, size }: CameraStart = { x: 480, y: 270, size: 270 }) {
+    this.transform = new Transform(new Vector2(x, y));
+    this.orthographicSize = size;
+  }
+}
+Camera.main = new Camera();
+
+/** Canvas rect (top-left, y down) for a world box (bottom-left, y up) seen through the camera on a viewW×viewH canvas. */
+export function toScreen(camera: Camera, box: { x: number; y: number; w: number; h: number }, viewW: number, viewH: number) {
+  const scale = viewH / 2 / camera.orthographicSize;
+  const { x, y } = camera.transform.position;
+  return { x: viewW / 2 + (box.x - x) * scale, y: viewH / 2 - (box.y + box.h - y) * scale, w: box.w * scale, h: box.h * scale };
+}
 
 /** Appends (on a new last line, so error lines stay put) an export of the Script's class, so the stub needs no `export`. */
 export const scriptSource = (js: string, name: string) =>
@@ -136,10 +154,11 @@ export function Destroy(obj: GameObject) {
 const keep = <T>(list: T[], f: (t: T) => boolean) => void list.splice(0, list.length, ...list.filter(f));
 
 /** What a Script sees as globals. */
-export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug };
+export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug, Camera };
 
-/** Spawns the Level, attaches one new Script instance per scripted box and calls Start. */
-export function startGame(level: Box[], scripts: Scripts) {
+/** Spawns the Level, resets Camera.main, attaches one new Script instance per scripted box and calls Start. */
+export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) {
+  Camera.main = new Camera(camera);
   const g: NonNullable<typeof game> = (game = { objects: [], behaviours: [], fresh: [], scripts });
   // Start runs once, before a Script's first Update; Scripts made inside Start get started too.
   const startFresh = () => {

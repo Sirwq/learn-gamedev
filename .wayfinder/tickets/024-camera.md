@@ -1,7 +1,7 @@
 ---
 title: Add Camera.main
 label: build
-status: open
+status: closed
 blocked_by: [016-engine-core]
 assignee:
 ---
@@ -19,3 +19,10 @@ Unity-style camera: `Camera.main.transform.position` (a `Vector2`, the view cent
 - Tests cover the world-to-screen transform for position and zoom, including the y-flip.
 - Typings + doc comments for `Camera` added.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `Camera` class in `src/engine.ts` with `Camera.main` (a `transform` whose position is the view centre, plus `orthographicSize`); added to the Script globals. `startGame` resets `Camera.main` each Run from the Level's optional `camera: { x, y, size }`, default (480, 270, 270).
+- `toScreen` replaces `flipY`: it maps a world box (bottom-left, y up) to a canvas rect using camera position and zoom (`scale = viewH / 2 / orthographicSize`). The worker draws through it, and the canvas stays 960×540.
+- `Lesson.level.camera?` added; the typings and doc comments are in `src/engine-api.d.ts`.
+- Tests cover the default view with the y-flip, a moved camera, zoom around the centre, and the reset on Run.

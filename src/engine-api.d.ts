@@ -96,3 +96,13 @@ declare class Debug {
   /** Writes a red error line. The game keeps running. */
   static LogError(message: unknown): void;
 }
+
+/** What the player sees. There is one: `Camera.main`. It does not follow anything on its own; move it from a Script. */
+declare class Camera {
+  /** The game's camera, e.g. `Camera.main.transform.position = this.transform.position`. */
+  static readonly main: Camera;
+  /** Where it is: `position` is the centre of the view in pixels, starting at (480, 270). */
+  readonly transform: Transform;
+  /** Half the view height in pixels, 270 to start. Smaller zooms in, bigger zooms out. */
+  orthographicSize: number;
+}

@@ -1,4 +1,4 @@
-import type { Box, World } from "./engine";
+import type { Box, CameraStart, World } from "./engine";
 
 /** A Goal or Lose event: `test` runs every frame against the game objects. */
 export type Check = { message: string; test: (world: World) => boolean };
@@ -7,7 +7,7 @@ export type Lesson = {
   title: string;
   /** Markdown. */
   explanation: string;
-  level: { boxes: Box[]; width?: number; height?: number };
+  level: { boxes: Box[]; width?: number; height?: number; camera?: CameraStart };
   goals: Check[];
   lose: Check[];
   /** Scripts this Lesson adds, by name: starter stub and Reference code. */
