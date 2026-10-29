@@ -121,6 +121,8 @@ export type Prefab = Omit<Box, "x" | "y">;
 export class GameObject {
   readonly transform: Transform;
   destroyed = false;
+  /** 1 or -1: the way it last moved horizontally, so its sprite can face that way. */
+  facing = 1;
   constructor(readonly tag: string, readonly w: number, readonly h: number, readonly color: string, readonly script: string | undefined, position: Vector2) {
     this.transform = new Transform(position);
   }
@@ -176,7 +178,12 @@ export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) 
     step() {
       nextFrame();
       startFresh(); // objects made last frame
+      const before = new Map(g.objects.map((o) => [o, o.transform.position.x]));
       for (const b of g.behaviours) b.Update?.();
+      for (const o of g.objects) {
+        const dx = o.transform.position.x - (before.get(o) ?? o.transform.position.x);
+        if (dx) o.facing = Math.sign(dx);
+      }
       sweep();
     },
   };

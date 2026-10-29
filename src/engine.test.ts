@@ -106,6 +106,28 @@ describe("Camera", () => {
   });
 });
 
+describe("facing", () => {
+  it("flips after moving left and stays flipped while still", () => {
+    let dx = 0;
+    class Player extends MonoBehaviour {
+      Update() { this.transform.position = this.transform.position.Add(new Vector2(dx, 0)); }
+    }
+    const game = startGame([{ tag: "Player", x: 50, y: 0, w: 32, h: 48, color: "orange", script: "Player" }], { Player });
+    const player = game.objects[0];
+    expect(player.facing).toBe(1);
+    dx = -5;
+    game.step();
+    expect(player.facing).toBe(-1);
+    dx = 0;
+    game.step();
+    game.step();
+    expect(player.facing).toBe(-1);
+    dx = 3;
+    game.step();
+    expect(player.facing).toBe(1);
+  });
+});
+
 describe("findScript", () => {
   class Player extends MonoBehaviour {}
   it("returns the class the student defined", () => {

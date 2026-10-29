@@ -1,12 +1,14 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine } from "./run-utils";
-import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, toScreen, worldView } from "./engine";
+import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
+import { drawWorld, loadImages } from "./sprites";
 import { checker } from "./check";
 import { course } from "./lessons/course";
 
 const scriptOf: Record<string, string> = {}; // blob URL -> Script name
 let paused = false;
 let pausedFrame: (() => void) | undefined; // the frame a pause stopped, run again on resume
+const images = loadImages(); // one load per worker, i.e. per Run
 
 function flushLogs() {
   if (logs.length) postMessage({ type: "logs", lines: logs.splice(0) });
@@ -41,6 +43,7 @@ self.onmessage = async (e: MessageEvent) => {
   Object.assign(globalThis, api);
 
   let game: ReturnType<typeof startGame>;
+  const sprites = await images;
   try {
     const classes: Record<string, new () => MonoBehaviour> = {};
     for (const name in scripts) { // every Script, since Instantiate may attach one no box uses
@@ -70,12 +73,7 @@ self.onmessage = async (e: MessageEvent) => {
     const json = JSON.stringify(result);
     if (json !== last) postMessage({ type: "check", ...result });
     last = json;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (const { transform: { position }, w, h, color } of game.objects) {
-      const r = toScreen(Camera.main, { ...position, w, h }, canvas.width, canvas.height);
-      ctx.fillStyle = color;
-      ctx.fillRect(r.x, r.y, r.w, r.h);
-    }
+    drawWorld(ctx, sprites, Camera.main, game.objects);
     if (!result.lost && !result.passed) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
