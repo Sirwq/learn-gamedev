@@ -34,3 +34,9 @@ Phones are not a target (user decision): the editor is too hard to use there. On
 - The bars are padded with `max(…, env(safe-area-inset-*))` on the top, bottom, left and right.
 - Under 600px: a `role="note"` banner over the top of the menu says "learn-dev works best on a computer". "Got it" removes it and gives focus back to the menu. The menu works behind it.
 - Tests: "Course menu on small screens" in `src/a11y.test.ts`. No browser was available here, so the 768/1024/1280/2560 px and 375 px checks were reasoned from the CSS, not measured.
+
+## Review follow-up
+
+- Fixed: the note is a `div` placed before the top bar, so `.bar:first-of-type` stopped matching the top bar (it lost its `top`). Now `.bar:not(.bottom)`.
+- Fixed: the note covered the chips/stats at <600px. The top bar is pushed 110px down while the note exists.
+- Not fixed: the 110px offset is a guess for the note's height (no browser to measure); check at 375px.

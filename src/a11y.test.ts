@@ -88,5 +88,7 @@ describe("Course menu on small screens", () => {
     expect(tag("menu-phone")).toContain('role="note"');
     expect(html).toMatch(/#menu-phone \{ display: none; \}\s*@media \(max-width: 599px\)/);
     expect(main).toMatch(/menu-phone[^\n]*\n[^\n]*remove\(\)/);
+    expect(html).not.toContain(".bar:first-of-type"); // the note is a div before the bar
+    expect(html).toMatch(/#menu-phone ~ \.bar:not\(\.bottom\) \{ top: calc/);
   });
 });
