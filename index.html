@@ -107,14 +107,18 @@
       .cover.locked .tag { inset: 0; display: grid; place-items: center; background: none; font-size: 34px; }
       .cover .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; text-align: left; background: linear-gradient(#0000, #000d); font: 800 16px system-ui; color: #fff; }
       .cover .name small { display: block; color: #ccc; font-size: 11px; letter-spacing: .1em; }
+      .cover .tag:empty { display: none; }
+      .cover.new .name { inset: 0; display: grid; place-items: center; padding: 0; background: #0006; font-size: 28px; }
+      #project-actions { margin-left: 8px; font-size: 12px; font-weight: normal; }
+      #project-actions[hidden] { display: none; }
       #card-info { position: absolute; left: 0; right: 0; top: 75%; text-align: center; text-shadow: 0 2px 8px #000; }
       #card-info h2 { margin: 0; font-size: 24px; }
       #card-meta { display: flex; justify-content: center; gap: 22px; margin-top: 4px; color: #d8dbe2; }
-      #replay { width: min(460px, 92vw); background: #26282f; color: #ddd; border: 1px solid #353842; border-radius: 10px; }
-      #replay h3 { margin-top: 0; }
-      #replay button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
-      #replay button:focus { outline: 2px solid #b14cff; }
-      #replay small { display: block; color: #9aa0ab; }
+      #replay, #new-project { width: min(460px, 92vw); background: #26282f; color: #ddd; border: 1px solid #353842; border-radius: 10px; }
+      #replay h3, #new-project h3 { margin-top: 0; }
+      #replay button, #new-project button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
+      #replay button:focus, #new-project button:focus { outline: 2px solid #b14cff; }
+      #replay small, #new-project small { display: block; color: #9aa0ab; }
       #prompt-box { width: min(720px, 90vw); background: #252526; color: #ddd; border: 1px solid #444; border-radius: 6px; }
       #prompt-box textarea { width: 100%; height: 50vh; background: #1e1e1e; color: #ddd; font: 12px ui-monospace, monospace; }
     </style>
@@ -131,7 +135,8 @@
       <span id="status" role="status"></span>
     </header>
     <section id="lesson">
-      <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span></h1>
+      <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span>
+        <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="delete">Delete</button></span></h1>
       <div id="explanation"></div>
       <div id="hints"></div>
       <p><button id="next-hint"></button></p>
@@ -180,7 +185,8 @@
       <canvas id="menu-bg" width="240" height="320"></canvas>
       <div class="bar">
         <kbd>Q</kbd>
-        <button class="chip on" aria-pressed="true">TypeScript</button>
+        <button class="chip on" id="chip-course" aria-pressed="true">TypeScript</button>
+        <button class="chip" id="chip-sandbox" aria-pressed="false" hidden>Sandbox</button>
         <button class="chip" disabled title="A later Course">C# · soon</button>
         <kbd>E</kbd>
         <span id="menu-stats"></span>
@@ -199,6 +205,12 @@
       <button id="replay-keep" autofocus>Keep my current code<small>Play this Lesson's Level with everything you've written. Nothing changes.</small></button>
       <button id="replay-load">Load my code from when I passed it<small></small></button>
       <button id="replay-cancel">Cancel</button>
+    </dialog>
+    <dialog id="new-project" aria-label="New Project">
+      <h3>New Project</h3>
+      <button id="new-blank" autofocus>Blank<small>An empty world with one hidden box running Game.ts. Build everything with Instantiate.</small></button>
+      <button id="new-platformer">My platformer<small>A copy of your Course code in a big playground Level. Changes here never touch your Lessons.</small></button>
+      <button id="new-cancel">Cancel</button>
     </dialog>
     <div id="toasts" role="status"></div>
     <dialog id="prompt-box" aria-label="Tutor prompt">

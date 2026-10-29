@@ -17,24 +17,29 @@ Tutor rules:
 - If there's no question, read the Goals and the code and ask what they're stuck on.`;
 
 export type TutorState = {
-  title: string;
-  explanation: string;
-  goals: { message: string; met: boolean }[];
-  /** Only the Hints the student has opened. */
-  hints: string[];
+  /** The Lesson part; none in Sandbox mode. */
+  lesson?: {
+    title: string;
+    explanation: string;
+    goals: { message: string; met: boolean }[];
+    /** Only the Hints the student has opened. */
+    hints: string[];
+  };
   script: { name: string; code: string };
   /** Console lines as shown, oldest first. */
   console: string[];
 };
 
 /** What Ask DeepSeek copies: rules, Lesson, Goals, opened Hints, Script, the last 20 Console lines, then the question. */
-export const tutorPrompt = (s: TutorState) =>
+export const tutorPrompt = ({ lesson: l, ...s }: TutorState) =>
   [
     tutorRules,
-    `# Lesson: ${s.title}`,
-    `## Explanation\n\n${s.explanation.trim()}`,
-    `## Goals\n\n${s.goals.map((g) => `${g.met ? "✓" : "⬜"} ${g.message}`).join("\n")}`,
-    ...(s.hints.length ? [`## Hints I already opened\n\n${s.hints.map((h, i) => `Hint ${i + 1}: ${h}`).join("\n\n")}`] : []),
+    ...(l ? [
+      `# Lesson: ${l.title}`,
+      `## Explanation\n\n${l.explanation.trim()}`,
+      `## Goals\n\n${l.goals.map((g) => `${g.met ? "✓" : "⬜"} ${g.message}`).join("\n")}`,
+      ...(l.hints.length ? [`## Hints I already opened\n\n${l.hints.map((h, i) => `Hint ${i + 1}: ${h}`).join("\n\n")}`] : []),
+    ] : ["# Sandbox: free play, no Goals"]),
     `## My code: ${s.script.name}.ts\n\n\`\`\`ts\n${s.script.code.trimEnd()}\n\`\`\``,
     `## Console (last lines)\n\n${s.console.slice(-20).join("\n") || "(empty)"}`,
     "My question: ",

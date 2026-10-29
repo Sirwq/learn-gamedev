@@ -12,8 +12,9 @@ import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
-import { Camera, GameObject, Vector2 } from "./engine";
+import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
+import { createProject, deleteProject, duplicateProject, loadProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -21,17 +22,22 @@ self.MonacoEnvironment = {
 
 monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-// The Course menu picks a Lesson by reloading with ?lesson=N; without it the app opens on the menu, over the current Lesson.
-const asked = new URLSearchParams(location.search).get("lesson");
+// The Course menu picks a Lesson by reloading with ?lesson=N, a Sandbox Project with ?sandbox=id;
+// without either the app opens on the menu, over the current Lesson (?sandbox with no Project: on the Sandbox menu).
+const params = new URLSearchParams(location.search);
+const asked = params.get("lesson");
+const askedProject = sandboxUnlocked(course) ? params.get("sandbox") : null;
+const project: Project | undefined = loadProjects().find((p) => p.id === askedProject);
 const current = currentLesson(course);
 const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocked(course, Number(asked)) ? Number(asked) : current;
-const replaying = lessonIndex !== current;
-if (!replaying) restoreStash(); // before the editor loads the code
+const replaying = !project && lessonIndex !== current;
+if (!replaying && !project) restoreStash(); // before the editor loads the code
 const lesson = course[lessonIndex];
-document.getElementById("lesson-title")!.textContent = lesson.title;
+const lessonTitle = document.getElementById("lesson-title")!;
+lessonTitle.textContent = project ? project.name : lesson.title;
 document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
-explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
+if (!project) explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
 const pages = docPages(engineApi);
 // API names in the Explanation link to their Docs member.
 for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code"))) {
@@ -43,7 +49,7 @@ for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code")))
   a.append(code);
 }
 
-const hints = lesson.hints ?? [];
+const hints = project ? [] : (lesson.hints ?? []);
 const stillStuck = document.getElementById("still-stuck")!;
 const nextHint = document.getElementById("next-hint") as HTMLButtonElement;
 function showHints(opened: number) {
@@ -54,7 +60,7 @@ function showHints(opened: number) {
   }));
   nextHint.textContent = `💡 Hint ${opened + 1} of ${hints.length}`;
   nextHint.hidden = opened >= hints.length;
-  stillStuck.hidden = !nextHint.hidden;
+  stillStuck.hidden = !nextHint.hidden || !!project;
 }
 let opened = Math.min(openedHints(lesson.title), hints.length);
 nextHint.onclick = () => {
@@ -77,23 +83,47 @@ function showProgress() {
 showProgress();
 
 // One Monaco model per Script: models share one TS project, so each file type-checks against the others.
-const models = Object.fromEntries(Object.entries(loadScripts(course, lessonIndex)).map(([name, code]) => {
-  const model = monaco.editor.createModel(code, "typescript", monaco.Uri.parse(`file:///${name}.ts`));
+// A Project keeps its own copy of the code, so Sandbox and Course never write to each other.
+const models: Record<string, monaco.editor.ITextModel> = {};
+function addModel(name: string, code: string) {
+  const model = (models[name] = monaco.editor.createModel(code, "typescript", monaco.Uri.parse(`file:///${name}.ts`)));
   model.onDidChangeContent(() => {
     monaco.editor.setModelMarkers(model, "runtime", []);
-    saveScript(name, model.getValue());
+    if (!project) return saveScript(name, model.getValue());
+    project.scripts[name] = model.getValue();
+    saveProject(project);
   });
-  return [name, model];
-}));
+}
+for (const [name, code] of Object.entries(project?.scripts ?? loadScripts(course, lessonIndex))) addModel(name, code);
 const editor = monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", automaticLayout: true });
-const tabs = [...Object.keys(models).map((name) => `${name}.ts`), "📖 Docs"].map((label) => {
+function makeTab(label: string) {
   const tab = document.createElement("button");
   tab.role = "tab";
   tab.textContent = label;
   tab.onclick = () => (label === "📖 Docs" ? openDocs() : show(label.slice(0, -3)));
   return tab;
-});
+}
+const tabs = [...Object.keys(models).map((name) => `${name}.ts`), "📖 Docs"].map(makeTab);
 document.getElementById("tabs")!.append(...tabs);
+if (project) {
+  const addScript = document.createElement("button");
+  addScript.textContent = "+ Script";
+  addScript.title = "Add a new Script file";
+  addScript.onclick = () => {
+    const name = prompt("Name of the new Script (its class name, like Coin):")?.trim();
+    if (!name) return;
+    const error = scriptNameError(name, Object.keys(models));
+    if (error) return void toast(error);
+    addModel(name, scriptStub(name));
+    project.scripts[name] = scriptStub(name);
+    saveProject(project);
+    const tab = makeTab(`${name}.ts`);
+    tabs.splice(tabs.length - 1, 0, tab);
+    tabs[tabs.length - 1].before(tab);
+    show(name);
+  };
+  document.getElementById("tabs")!.append(addScript);
+}
 const selectTab = (label: string) => {
   for (const tab of tabs) tab.ariaSelected = String(tab.textContent === label);
 };
@@ -226,73 +256,127 @@ const closeMap = () => {
 document.getElementById("achievements-close")!.onclick = closeMap;
 map.onkeydown = (e) => e.key === "Escape" && closeMap();
 
-// Course menu: a cover carousel, one card per Lesson.
+// Course menu: a cover carousel, one card per Lesson. Once unlocked, a Sandbox tab: one card per Project, then "+ New".
 const menu = document.getElementById("menu")!;
 const rail = document.getElementById("rail")!;
 const replayBox = document.getElementById("replay") as HTMLDialogElement;
+const newBox = document.getElementById("new-project") as HTMLDialogElement;
+const chipCourse = document.getElementById("chip-course")!;
+const chipSandbox = document.getElementById("chip-sandbox")!;
+let mode: "course" | "sandbox" = "course";
 let focused = lessonIndex;
 let states = cardStates(course);
 let menuCurrent = current; // moves on when a Lesson is passed on this page
-const cards = course.map((l, i) => {
+let projects: Project[] = [];
+function coverCard(small: string, title: string, i: number) {
   const card = document.createElement("button");
   card.tabIndex = -1; // ← → move between cards
-  card.innerHTML = `<canvas width="240" height="320"></canvas><span class="tag"></span><span class="name"><small>LESSON ${i + 1}</small>${l.title.replace(/^\d+\.\s*/, "")}</span>`; // our own titles
+  card.innerHTML = `<canvas width="240" height="320"></canvas><span class="tag"></span><span class="name"><small></small></span>`;
+  card.querySelector("small")!.textContent = small;
+  card.querySelector(".name")!.append(title); // Project names are the student's own text
   card.onclick = () => (i === focused ? pick(i) : focusCard(i));
   return card;
-});
-rail.append(...cards);
-const coverOf = (i: number) => cards[i].querySelector("canvas")!;
+}
+const courseCards = course.map((l, i) => coverCard(`LESSON ${i + 1}`, l.title.replace(/^\d+\.\s*/, ""), i));
+let projectCards: HTMLButtonElement[] = [];
+const cards = () => (mode === "course" ? courseCards : projectCards);
+const coverOf = (i: number) => cards()[i].querySelector("canvas")!;
 const menuBg = document.getElementById("menu-bg") as HTMLCanvasElement;
 const drawBg = () => menuBg.getContext("2d")!.drawImage(coverOf(focused), 0, 0);
-// Cover art: the Lesson's Level in the game's pixel style, zoomed in around the Player and what's ahead of it.
-loadImages().then((images) => {
-  course.forEach((l, i) => {
-    const objects = l.level.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)));
-    const p = l.level.boxes.find((b) => b.tag === "Player")!;
+const images = loadImages();
+// Cover art: the Level in the game's pixel style, zoomed in around the Player and what's ahead of it (the start view without one).
+function drawCover(canvas: HTMLCanvasElement, boxes: Box[]) {
+  images.then((imgs) => {
+    const objects = boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)));
+    const p = boxes.find((b) => b.tag === "Player");
     const size = 180;
-    drawWorld(coverOf(i).getContext("2d")!, images, new Camera({ x: p.x + 90, y: Math.max(size, p.y + p.h / 2), size }), objects);
+    drawWorld(canvas.getContext("2d")!, imgs, p ? new Camera({ x: p.x + 90, y: Math.max(size, p.y + p.h / 2), size }) : new Camera(), objects);
+    drawBg();
   });
-  drawBg();
-});
+}
+course.forEach((l, i) => drawCover(courseCards[i].querySelector("canvas")!, l.level.boxes));
+function buildProjectCards() {
+  projects = loadProjects();
+  projectCards = [...projects.map((p, i) => coverCard("PROJECT", p.name, i)), coverCard("", "+ New", projects.length)];
+  projects.forEach((p, i) => drawCover(projectCards[i].querySelector("canvas")!, p.level.boxes));
+  drawCover(projectCards[projects.length].querySelector("canvas")!, []);
+}
 
-const playLabel = (i: number) => (states[i] === "locked" ? "Locked" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play");
+const playLabel = (i: number) =>
+  mode === "sandbox" ? (i === projects.length ? "Create" : "Open")
+  : states[i] === "locked" ? "Locked" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
 function layoutMenu() {
+  const list = cards();
   const W = rail.clientWidth, H = rail.clientHeight, gap = 22;
   const bigW = H * 0.75, smallH = H * 0.6, smallW = smallH * 0.75;
-  cards.forEach((card, i) => {
+  list.forEach((card, i) => {
     const d = i - focused;
     const [w, h] = d ? [smallW, smallH] : [bigW, H];
     const x = d === 0 ? W / 2 - w / 2 : d > 0 ? W / 2 + bigW / 2 + gap + (d - 1) * (smallW + gap) : W / 2 - bigW / 2 - gap - smallW + (d + 1) * (smallW + gap);
     card.style.cssText = `left:${x}px;top:${(H - h) / 2}px;width:${w}px;height:${h}px`;
-    card.className = `cover ${states[i]}`;
     card.ariaCurrent = d ? null : "true";
+    if (mode === "sandbox") {
+      card.className = i < projects.length ? "cover" : "cover new";
+      card.ariaLabel = i < projects.length ? `Project ${projects[i].name}` : "New Project";
+      card.querySelector(".tag")!.textContent = projects[i] && projects[i].id === project?.id ? "▶ open" : "";
+      return;
+    }
+    card.className = `cover ${states[i]}`;
     card.ariaLabel = `${course[i].title}, ${states[i]}`;
     card.querySelector(".tag")!.textContent = { passed: "✓ passed", current: "▶ next", locked: "🔒" }[states[i]];
   });
   drawBg();
-  const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
-  const state = { passed: "✓ Passed", current: "▶ Up next", locked: `🔒 Pass Lesson ${menuCurrent + 1} first` }[states[focused]];
-  document.getElementById("card-title")!.textContent = course[focused].title;
-  document.getElementById("card-meta")!.replaceChildren(...[`🧩 ${course[focused].concept}`, `📄 ${scripts.join(", ")}`, state].map((t) => {
+  let title, meta;
+  if (mode === "sandbox") {
+    const p = projects[focused];
+    title = p ? p.name : "New Project";
+    meta = p ? [`📄 ${Object.keys(p.scripts).map((n) => `${n}.ts`).join(", ")}`] : ["Blank, or My platformer: a copy of your Course code"];
+  } else {
+    const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
+    const state = { passed: "✓ Passed", current: "▶ Up next", locked: `🔒 Pass Lesson ${menuCurrent + 1} first` }[states[focused]];
+    title = course[focused].title;
+    meta = [`🧩 ${course[focused].concept}`, `📄 ${scripts.join(", ")}`, state];
+  }
+  document.getElementById("card-title")!.textContent = title;
+  document.getElementById("card-meta")!.replaceChildren(...meta.map((t) => {
     const span = document.createElement("span");
     span.textContent = t;
     return span;
   }));
-  document.getElementById("menu-count")!.textContent = `${focused + 1} / ${course.length}`;
+  document.getElementById("menu-count")!.textContent = `${focused + 1} / ${list.length}`;
   document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
   document.getElementById("menu-stats")!.textContent =
     `🏆 ${earned.size} / ${achievements.length}   ✓ ${states.filter((s) => s === "passed").length} / ${course.length} passed`;
 }
 function focusCard(i: number) {
-  focused = Math.max(0, Math.min(course.length - 1, i));
+  focused = Math.max(0, Math.min(cards().length - 1, i));
   layoutMenu();
 }
-function openMenu() {
+function showMode(m: typeof mode) {
+  mode = m;
+  if (m === "sandbox") buildProjectCards();
+  focused = m === "course" ? lessonIndex : Math.max(0, projects.findIndex((p) => p.id === project?.id));
+  rail.replaceChildren(...cards());
+  for (const [chip, on] of [[chipCourse, m === "course"], [chipSandbox, m === "sandbox"]] as const) {
+    chip.classList.toggle("on", on);
+    chip.ariaPressed = String(on);
+  }
+  layoutMenu();
+}
+/** Switches tab with the whole menu sliding sideways: Sandbox sits to the right of TypeScript. */
+function setMode(m: typeof mode) {
+  if (m === mode) return;
+  showMode(m);
+  for (const el of [rail, document.getElementById("card-info")!, menuBg])
+    el.animate([{ transform: `translateX(${m === "sandbox" ? "" : "-"}100%)` }, { transform: "none" }], { duration: 350, easing: "ease-out" });
+}
+const startMode = project || askedProject !== null ? "sandbox" : "course";
+function openMenu(m: typeof mode = startMode) {
   states = cardStates(course);
   menuCurrent = currentLesson(course);
-  focused = lessonIndex;
+  chipSandbox.hidden = !sandboxUnlocked(course);
   menu.hidden = false;
-  layoutMenu();
+  showMode(m);
   menu.focus();
 }
 function closeMenu() {
@@ -301,8 +385,13 @@ function closeMenu() {
 }
 const go = (i: number) => (location.search = `?lesson=${i}`);
 function pick(i: number) {
+  if (mode === "sandbox") {
+    if (i === projects.length) return newBox.showModal();
+    if (projects[i].id === project?.id) return closeMenu();
+    return void (location.search = `?sandbox=${projects[i].id}`);
+  }
   if (states[i] === "locked") return void toast(`Pass Lesson ${menuCurrent + 1} first`);
-  if (i === lessonIndex) return closeMenu();
+  if (i === lessonIndex && !project) return closeMenu();
   if (playLabel(i) === "Play" || !snapshot(course[i].title)) return go(i);
   replayBox.querySelector("h3")!.textContent = `Replay ${course[i].title}?`;
   replayBox.querySelector("#replay-load small")!.textContent =
@@ -315,37 +404,62 @@ function pick(i: number) {
   replayBox.showModal();
 }
 document.getElementById("replay-cancel")!.onclick = () => replayBox.close();
-replayBox.onclose = () => menu.focus();
-replayBox.onkeydown = (e) => {
+document.getElementById("new-cancel")!.onclick = () => newBox.close();
+const create = (kind: "blank" | "platformer") => () => (location.search = `?sandbox=${createProject(kind, course).id}`);
+document.getElementById("new-blank")!.onclick = create("blank");
+document.getElementById("new-platformer")!.onclick = create("platformer");
+replayBox.onclose = newBox.onclose = () => menu.focus();
+replayBox.onkeydown = newBox.onkeydown = (e) => {
   if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
   e.preventDefault();
-  const options = Array.from(replayBox.querySelectorAll("button"));
+  const options = Array.from((e.currentTarget as HTMLDialogElement).querySelectorAll("button"));
   const k = options.indexOf(document.activeElement as HTMLButtonElement);
   options[(k + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length].focus();
 };
 const soon = () => toast("TypeScript is the only Course for now. C# comes later.");
+chipCourse.onclick = () => setMode("course");
+chipSandbox.onclick = () => setMode("sandbox");
 const menuKeys: Record<string, () => void> = {
   ArrowLeft: () => focusCard(focused - 1),
   ArrowRight: () => focusCard(focused + 1),
   Escape: closeMenu,
   KeyA: () => trophies.click(),
-  KeyQ: soon,
-  KeyE: soon,
+  KeyQ: () => (chipSandbox.hidden ? soon() : setMode("course")),
+  KeyE: () => (chipSandbox.hidden ? soon() : setMode("sandbox")),
 };
 document.addEventListener("keydown", (e) => {
-  if (menu.hidden || !map.hidden || replayBox.open || map.contains(e.target as Node)) return;
+  if (menu.hidden || !map.hidden || replayBox.open || newBox.open || map.contains(e.target as Node)) return;
   // Enter on a focused button clicks it; on the menu itself it plays the focused card.
   const key = menuKeys[e.code] ?? (e.code === "Enter" && e.target === menu ? () => pick(focused) : undefined);
   if (!key) return;
   e.preventDefault();
   key();
 });
-document.getElementById("menu-back")!.onclick = closeMenu;
+const menuBack = document.getElementById("menu-back")!;
+menuBack.onclick = closeMenu;
+if (project) menuBack.lastChild!.textContent = " Back to Project";
 document.getElementById("menu-achievements")!.onclick = () => trophies.click();
 document.getElementById("menu-play")!.onclick = () => pick(focused);
-document.getElementById("menu-open")!.onclick = document.getElementById("progress")!.onclick = openMenu;
+document.getElementById("menu-open")!.onclick = document.getElementById("progress")!.onclick = () => openMenu();
 window.addEventListener("resize", () => menu.hidden || layoutMenu());
-if (asked === null) openMenu(); // the app opens on the Course menu
+if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
+
+// The Lesson strip of a Project: its name, Rename / Duplicate / Delete.
+if (project) {
+  document.getElementById("project-actions")!.hidden = false;
+  document.getElementById("rename")!.onclick = () => {
+    const name = prompt("Project name:", project.name)?.trim();
+    if (!name) return;
+    project.name = lessonTitle.textContent = name;
+    saveProject(project);
+  };
+  document.getElementById("duplicate")!.onclick = () => (location.search = `?sandbox=${duplicateProject(project).id}`);
+  document.getElementById("delete")!.onclick = () => {
+    if (!confirm(`Delete "${project.name}"? Its Scripts are gone for good.`)) return;
+    deleteProject(project.id);
+    location.search = "?sandbox";
+  };
+}
 
 // The Reference model is JavaScript so the TS project never sees a second `class Player`; its diagnostics are off.
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
@@ -378,9 +492,11 @@ document.getElementById("load-reference")!.onclick = () => {
 };
 
 let goalsMet: boolean[] = [];
+const goals = project ? [] : lesson.goals;
+goalsList.hidden = !goals.length;
 function showGoals(met: boolean[]) {
   goalsMet = met;
-  goalsList.replaceChildren(...lesson.goals.map((g, i) => {
+  goalsList.replaceChildren(...goals.map((g, i) => {
     const li = document.createElement("li");
     li.textContent = `${met[i] ? "✓" : "⬜"} ${g.message}`;
     return li;
@@ -476,7 +592,7 @@ function run() {
   running = true;
   paused = false;
   canvas.focus();
-  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, ...(project ? { level: project.level } : { lesson: lessonIndex }), earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
@@ -489,11 +605,19 @@ function run() {
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose
       if (e.data.lost) showOverlay(e.data.lost, true);
       if (e.data.passed) {
+        const wasUnlocked = sandboxUnlocked(course);
         markPassed(lesson.title);
         saveSnapshot(lesson.title, Object.fromEntries(Object.entries(models).map(([n, m]) => [n, m.getValue()])));
         showProgress();
         showOverlay("✓ Lesson passed", false, true);
         toast("Lesson passed");
+        if (!wasUnlocked && sandboxUnlocked(course)) {
+          toast("🔓 Sandbox unlocked");
+          setTimeout(() => {
+            openMenu("course");
+            setMode("sandbox");
+          }, 1500);
+        }
       }
     }
     if (e.data.type === "error") {
@@ -536,10 +660,12 @@ document.getElementById("prompt-select")!.onclick = () => promptText.select();
 document.getElementById("prompt-close")!.onclick = () => promptBox.close();
 document.getElementById("ask")!.onclick = async () => {
   const prompt = tutorPrompt({
-    title: lesson.title,
-    explanation: lesson.explanation,
-    goals: lesson.goals.map((g, i) => ({ message: g.message, met: !!goalsMet[i] })),
-    hints: hints.slice(0, opened),
+    lesson: project ? undefined : {
+      title: lesson.title,
+      explanation: lesson.explanation,
+      goals: goals.map((g, i) => ({ message: g.message, met: !!goalsMet[i] })),
+      hints: hints.slice(0, opened),
+    },
     script: { name: openScript, code: models[openScript].getValue() },
     console: consoleLines.map(lineText),
   });

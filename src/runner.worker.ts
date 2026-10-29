@@ -37,7 +37,8 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   const canvas: OffscreenCanvas = e.data.canvas;
-  const lesson = course[e.data.lesson]; // Goals and Lose events are functions, so the worker loads them itself
+  // Goals and Lose events are functions, so the worker loads a Lesson itself; a Sandbox Project sends its Level and has neither.
+  const lesson = e.data.level ? { level: e.data.level, goals: [], lose: [] } : course[e.data.lesson];
   const level: Box[] = lesson.level.boxes;
   const scripts: Record<string, string> = e.data.scripts;
   const ctx = canvas.getContext("2d")!;

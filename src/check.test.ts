@@ -19,6 +19,10 @@ describe("checker", () => {
     expect(check(at(20))).toEqual({ met: [true, true], passed: true });
   });
 
+  it("never passes without Goals, so a Sandbox Run plays until Stop", () => {
+    expect(checker({ goals: [], lose: [] })(at(0))).toEqual({ met: [], passed: false });
+  });
+
   it("does not pass on Goals met across two Runs", () => {
     checker(lesson)(at(10));
     expect(checker(lesson)(at(20))).toEqual({ met: [false, true], passed: false });

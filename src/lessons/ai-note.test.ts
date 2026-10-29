@@ -3,10 +3,12 @@ import { aiNote, tutorPrompt, tutorRules } from "./ai-note";
 
 describe("tutorPrompt", () => {
   const prompt = tutorPrompt({
-    title: "5. Jump",
-    explanation: "Press Space to jump.",
-    goals: [{ message: "Reach the flag", met: false }, { message: "Jump once", met: true }],
-    hints: ["Look at Input.GetKeyDown."],
+    lesson: {
+      title: "5. Jump",
+      explanation: "Press Space to jump.",
+      goals: [{ message: "Reach the flag", met: false }, { message: "Jump once", met: true }],
+      hints: ["Look at Input.GetKeyDown."],
+    },
     script: { name: "Player", code: "class Player {}" },
     console: Array.from({ length: 25 }, (_, i) => `line ${i}`),
   });
@@ -21,6 +23,12 @@ describe("tutorPrompt", () => {
   it("keeps only the last 20 Console lines", () => {
     expect(prompt).not.toContain("line 4\n");
     expect(prompt).toContain("line 5\n");
+  });
+
+  it("in Sandbox says free play instead of a Lesson", () => {
+    const sandbox = tutorPrompt({ script: { name: "Game", code: "class Game {}" }, console: [] });
+    expect(sandbox).toContain("# Sandbox: free play, no Goals\n\n## My code: Game.ts");
+    expect(sandbox).not.toContain("# Lesson");
   });
 
   it("grows out of the shared AI note", () => expect(tutorRules.startsWith(aiNote)).toBe(true));

@@ -1,7 +1,7 @@
 ---
 title: Build Sandbox mode
 label: build
-status: open
+status: closed
 blocked_by: [034-course-menu, 033-lessons-13-15, 031-achievements, 030-ask-deepseek]
 assignee:
 ---
@@ -24,3 +24,12 @@ assignee:
 
 - Tests cover: unlock only after Lesson 15, Project create / duplicate / delete in storage, My platformer copy not linked to Course code.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `src/sandbox.ts`: `sandboxUnlocked` (last Lesson passed), Projects as one JSON list under `sandbox:projects` (`loadProjects` / `saveProject` / `createProject` / `duplicateProject` / `deleteProject`), the Blank `Game` box + `Game.ts` stub, the `playground` Level (every Course tag, 2480 px wide, fits the Course's Reference code), and `scriptNameError` for **+ Script**.
+- `?sandbox=<id>` opens a Project in the same IDE; Lesson parts (Explanation, Hints, Still stuck, Goals) are hidden, the strip shows the Project name with Rename / Duplicate / Delete (confirm). Project code is saved inside the Project, never under the Course's `code:` keys. My platformer copies `loadScripts` once.
+- The worker takes a `level` instead of a Lesson index; `checker` never passes without Goals, so a Sandbox Run plays until Stop. Achievements run as before.
+- Menu: a Sandbox chip next to TypeScript, hidden until unlocked; Q / E and the chips switch with a sideways slide. Project carousel plus "+ New" (Blank / My platformer dialog). Passing Lesson 15 the first time toasts "🔓 Sandbox unlocked" and slides the menu to Sandbox.
+- `tutorPrompt` takes an optional `lesson`; without one it says "# Sandbox: free play, no Goals".
+- Not checked in a real browser.
