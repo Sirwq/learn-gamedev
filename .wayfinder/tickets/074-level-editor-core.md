@@ -1,7 +1,7 @@
 ---
 title: Level editor, part 1: the 🗺 Level tab, select, move, resize
 label: build
-status: open
+status: closed
 blocked_by: [071-project-storage]
 assignee:
 ---
@@ -36,3 +36,10 @@ The first usable slice of the Level editor, Sandbox only. Prototype: `prototypes
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+- **Pure parts** in `src/level-editor.ts` (tested in `level-editor.test.ts`): `moved` / `resized` snap positions to the 20 px grid, tiled tags' size to 20 and sprite tags' size to 4 px steps (Alt or Snap off: whole pixels, never below one step); `boxAt` / `handleAt` hit-test boxes (topmost first, zero-size boxes skipped) and the 8 handles; `levelEditor(level)` is the undo stack (`begin`/`commit` for a drag, `edit` for one inspector change, one step each), refusing edits, undo and redo while `running`; `levelCode` writes the `boxes: [...]` list in the Lesson format.
+- **Page side** in `src/level-view.ts`: the 🗺 Level tab (first, Projects only) moves `#stage` under the tabs and swaps `#lesson` for the `#inspector` section. The editor draws on `#game` (a fresh clone once a Run has transferred it): Level, grid + origin while snapping, Script labels, selection with handles and a tag / position / size label. Inspector: Tag and Script dropdowns, x / y / w / h, Duplicate, Delete, Snap, Undo / Redo, View Level as Code (dialog with Copy), and the object list (click selects and recentres the view if the box is off screen). Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z while the tab is open.
+- **Run**: `run()` locks the editor (`setRunning(true)`), `ended()` unlocks it and redraws the Level as the editor has it, so `Instantiate`d boxes vanish. The Run already gets a structured clone of `project.level`, so the engine never touches editor boxes (tested with a Script that moves and spawns).
+- **`main.ts`**: only the tab, `openLevel()` and the lock calls were added. The Lesson view / Run driver split from 064 wasn't needed for this slice.
+- Not checked in a real browser: there is no browser in this environment. Pan and zoom, the palette and keyboard moves are ticket 075, so a Level wider than the screen can only be reached through the object list for now.
+

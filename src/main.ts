@@ -20,6 +20,7 @@ import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { courseMenu } from "./menu";
+import { levelView } from "./level-view";
 import { toast } from "./toast";
 import { download } from "./backup";
 import { deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
@@ -158,10 +159,12 @@ function makeTab(label: string) {
   tab.role = "tab";
   tab.textContent = label;
   if (label === "📖 Docs") tab.ariaLabel = "Docs";
-  tab.onclick = () => (label === "📖 Docs" ? openDocs() : show(label.slice(0, -3)));
+  if (label === LEVEL) tab.ariaLabel = "Level";
+  tab.onclick = () => (label === "📖 Docs" ? openDocs() : label === LEVEL ? openLevel() : show(label.slice(0, -3)));
   return tab;
 }
-const tabs = [...Object.keys(models).map((name) => `${name}.ts`), "📖 Docs"].map(makeTab);
+const LEVEL = "🗺 Level";
+const tabs = [...(project ? [LEVEL] : []), ...Object.keys(models).map((name) => `${name}.ts`), "📖 Docs"].map(makeTab);
 document.getElementById("tabs")!.append(...tabs);
 if (project) {
   const addScript = document.createElement("button");
@@ -187,9 +190,11 @@ const selectTab = (label: string) => {
 };
 const editorEl = document.getElementById("editor")!;
 const docsEl = document.getElementById("docs")!;
-let openScript = ""; // stays the last one shown while Docs or Compare is open
+let openScript = ""; // stays the last one shown while Docs, Compare or the Level is open
+let level: ReturnType<typeof levelView> | undefined; // a Project's Level editor
 function show(name: string) {
   openScript = name;
+  level?.setOpen(false);
   editor.setModel(models[name]);
   editorEl.hidden = false;
   docsEl.hidden = true;
@@ -214,10 +219,16 @@ function openDocs(target = docsPage) {
     docsArticle.scrollTop = 0;
     for (const b of docsNav) b.ariaCurrent = b.textContent === page.title ? "page" : null;
   }
+  level?.setOpen(false);
   editorEl.hidden = true;
   docsEl.hidden = false;
   selectTab("📖 Docs");
   if (target !== page.title) document.getElementById(anchor(target))?.scrollIntoView();
+}
+function openLevel() {
+  editorEl.hidden = docsEl.hidden = true;
+  selectTab(LEVEL);
+  level!.setOpen(true);
 }
 document.addEventListener("click", (e) => {
   const link = (e.target as Element).closest?.("a[href^='#doc-']");
@@ -317,6 +328,7 @@ const images = loadImages();
 const startLevel = project ? project.level : course[lessonIndex].level;
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
+if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => saveProject(project) });
 // The Course menu and its Sandbox tab.
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus() });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
@@ -497,6 +509,7 @@ let paused = false; // the worker confirmed it stopped its frames
 /** The game loop ended (or will): the last frame stays on the canvas. */
 function ended() {
   running = false;
+  level?.setRunning(false);
   clearInterval(watchdog);
   const hadFocus = document.activeElement === stopBtn;
   stopBtn.hidden = true;
@@ -514,6 +527,7 @@ function stop() {
 function run() {
   if (hasTypeErrors()) return;
   stop();
+  level?.setRunning(true);
   for (const model of Object.values(models)) monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
   clearLines(consoleLines);
