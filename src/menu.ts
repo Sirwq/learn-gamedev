@@ -8,6 +8,7 @@ import { drawWorld, type Images } from "./sprites";
 import { swipeStep } from "./swipe";
 import { createProject, importProject, loadProjects, type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
 import { toast } from "./toast";
+import { backupFileName, backupReminder, download, exportEverything, type ImportPlan, lastBackup, planImport, snoozeReminder } from "./backup";
 
 type Page = {
   /** The Lesson this page shows (the open Project's page still has one). */
@@ -33,6 +34,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   const rail = document.getElementById("rail")!;
   const replayBox = document.getElementById("replay") as HTMLDialogElement;
   const newBox = document.getElementById("new-project") as HTMLDialogElement;
+  const savesBox = document.getElementById("saves") as HTMLDialogElement;
+  const reminder = document.getElementById("menu-reminder")!;
   const chipCourse = document.getElementById("chip-course")!;
   const chipSandbox = document.getElementById("chip-sandbox")!;
   const prevBtn = document.getElementById("menu-prev") as HTMLButtonElement;
@@ -186,6 +189,9 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     states = cardStates(course);
     menuCurrent = currentLesson(course);
     chipSandbox.hidden = !sandboxUnlocked(course);
+    const due = backupReminder(course);
+    reminder.hidden = !due;
+    reminder.querySelector("span")!.textContent = due;
     menu.hidden = false;
     showMode(m);
     menu.focus();
@@ -238,18 +244,87 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     if (fileInput.files?.[0]) importFile(fileInput.files[0]);
     fileInput.value = "";
   };
-  const dropsFile = (e: DragEvent) => mode === "sandbox" && !!e.dataTransfer?.types.includes("Files");
+
+  // 💾 Saves (spec 059): Export everything / Import everything, from Lesson 1.
+  async function backUp() {
+    download(await exportEverything(course), backupFileName());
+    reminder.hidden = true;
+  }
+  const savesMain = document.getElementById("saves-main")!;
+  const savesConfirm = document.getElementById("saves-confirm")!;
+  const showSaves = (confirming: boolean) => {
+    savesMain.hidden = confirming;
+    savesConfirm.hidden = !confirming;
+    if (!savesBox.open) savesBox.showModal();
+    (savesBox.querySelector(confirming ? "#saves-yes" : "#saves-export") as HTMLElement).focus();
+  };
+  document.getElementById("menu-saves")!.onclick = () => {
+    document.getElementById("saves-last")!.textContent = `Last backup: ${lastBackup()}.`;
+    savesBox.querySelector("#saves-export small")!.textContent = sandboxUnlocked(course)
+      ? "Your Lessons, code, Achievements and every Project, in one file."
+      : "Your Lessons, code and Achievements, in one file.";
+    document.getElementById("saves-safari")!.hidden = !/^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+    navigator.storage?.persisted?.().then((yes) => (document.getElementById("saves-persist")!.hidden = yes), () => {});
+    showSaves(false);
+  };
+  document.getElementById("saves-export")!.onclick = async () => {
+    await backUp();
+    document.getElementById("saves-last")!.textContent = `Last backup: ${lastBackup()}.`;
+  };
+  document.getElementById("saves-close")!.onclick = () => savesBox.close();
+  let plan: ImportPlan | undefined;
+  /** A backup or one Project: its one-line summary first, then Import / Cancel. */
+  async function openFile(file: File) {
+    try {
+      plan = await planImport(await file.text(), course);
+    } catch (e) {
+      savesBox.close();
+      newBox.close();
+      return void toast((e as Error).message);
+    }
+    newBox.close();
+    document.getElementById("saves-summary")!.textContent = plan.summary;
+    showSaves(true);
+  }
+  document.getElementById("saves-yes")!.onclick = async () => {
+    let done;
+    try {
+      done = await plan!.apply();
+    } catch (e) {
+      if ((e as Error).name === "QuotaExceededError") throw e; // main.ts's storage-full toast
+      savesBox.close();
+      return void toast((e as Error).message);
+    }
+    if (!plan!.single) return location.reload(); // progress and Projects changed under the whole page
+    if (sandboxUnlocked(course)) return void (location.search = `?sandbox=${(done as Project).id}`);
+    savesBox.close();
+    toast("Saved. This is a Sandbox Project; you'll find it in Sandbox after Lesson 15.");
+  };
+  document.getElementById("saves-no")!.onclick = () => savesBox.close();
+  const savesFile = document.getElementById("saves-file") as HTMLInputElement;
+  document.getElementById("saves-import")!.onclick = () => savesFile.click();
+  savesFile.onchange = () => {
+    if (savesFile.files?.[0]) openFile(savesFile.files[0]);
+    savesFile.value = "";
+  };
+  document.getElementById("reminder-backup")!.onclick = () => backUp().then(() => menu.focus());
+  document.getElementById("reminder-later")!.onclick = () => {
+    snoozeReminder();
+    reminder.hidden = true;
+    menu.focus();
+  };
+  const dropsFile = (e: DragEvent) => !!e.dataTransfer?.types.includes("Files");
   menu.addEventListener("dragover", (e) => dropsFile(e) && e.preventDefault());
   menu.addEventListener("drop", (e) => {
     if (!dropsFile(e) || !e.dataTransfer!.files[0]) return;
     e.preventDefault();
-    importFile(e.dataTransfer!.files[0]);
+    openFile(e.dataTransfer!.files[0]);
   });
-  replayBox.onclose = newBox.onclose = () => menu.focus();
-  replayBox.onkeydown = newBox.onkeydown = (e) => {
+  replayBox.onclose = newBox.onclose = savesBox.onclose = () => menu.focus();
+  replayBox.onkeydown = newBox.onkeydown = savesBox.onkeydown = (e) => {
     if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
     e.preventDefault();
-    const options = Array.from((e.currentTarget as HTMLDialogElement).querySelectorAll("button"));
+    const options = Array.from((e.currentTarget as HTMLDialogElement).querySelectorAll<HTMLButtonElement>("button")).filter((b) => b.offsetParent);
     const k = options.indexOf(document.activeElement as HTMLButtonElement);
     options[(k + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length].focus();
   };
@@ -278,7 +353,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     KeyE: () => (chipSandbox.hidden ? toast("Sandbox opens when you finish the Course") : setMode("sandbox")),
   };
   document.addEventListener("keydown", (e) => {
-    if (menu.hidden || !map.hidden || replayBox.open || newBox.open || map.contains(e.target as Node)) return;
+    if (menu.hidden || !map.hidden || replayBox.open || newBox.open || savesBox.open || map.contains(e.target as Node)) return;
     // Enter on a focused button clicks it; on the menu itself it plays the focused card.
     const key = menuKeys[e.code] ?? (e.code === "Enter" && e.target === menu ? () => pick(focused) : undefined);
     if (!key) return;

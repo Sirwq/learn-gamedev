@@ -1,7 +1,7 @@
 ---
 title: 💾 Saves dialog with Export / Import everything
 label: build
-status: open
+status: closed
 blocked_by: [072-project-export-import]
 assignee:
 ---
@@ -31,3 +31,11 @@ UI ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/design
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+**Done.** `src/backup.ts` holds the pure parts; `src/menu.ts` + `index.html` the 💾 Saves button, dialog and reminder line.
+
+- **Export everything**: `learn-dev-backup-YYYY-MM-DD.json` = `{format: "learn-dev-backup", version: 1, progress, projects}`. `progress` is a fixed list of known keys (`passed:`/`hints:`/`snapshot:` per Lesson, `code:` per Course Script, `achievement:` per Achievement, settings `theme`, `editor:fontSize`, `sound:muted`), so `dev:sandbox-unlocked` can never get in. `projects` are the single-Project export objects plus `id`. Any Projects that exist are included even before unlock (normally none; a single Project imported before unlock would otherwise be lost). Writes `backup:last`.
+- **Import everything** (`planImport`) reads and checks the whole file first, writes nothing, and returns the summary plus `apply`. A Lesson the file has passed and the browser doesn't brings in its `passed:`, `hints:`, `snapshot:`, and the `code:` of every Script up to the furthest such Lesson (code is stored per Script, not per Lesson). Achievements are the union. Settings only fill gaps. Projects: if the id isn't here, it's added under its own id, so importing the same file twice adds nothing. Same id + same content is skipped. Same id + different content comes in as "<name> (imported)" with a new id, unless that copy is already here. After a backup import the page reloads.
+- Single Project files go through the same Import, and so does a file dropped on the menu (now in either mode). Before unlock: "Saved. This is a Sandbox Project; you'll find it in Sandbox after Lesson 15." After unlock it opens the Project. `importProject` was split into `checkProjectFile` + `addProjectFile(…, id?)` so both paths share the checks.
+- **Reminder**: `saves:changed` is stamped by `markPassed`, `saveEarned` and every Project write. The line shows when the menu opens: 7+ days since `backup:last` with `saves:changed` newer, or "never backed up" once Lesson 1 is passed. "Not now" sets `backup:snoozed` 7 days ahead.
+- Safari line (UA test) and `navigator.storage.persisted()` line are in the dialog.
+- Not checked in a real browser (none in this environment).

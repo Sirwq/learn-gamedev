@@ -21,6 +21,7 @@ import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { courseMenu } from "./menu";
 import { toast } from "./toast";
+import { download } from "./backup";
 import { deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
 
 self.MonacoEnvironment = {
@@ -330,13 +331,7 @@ if (project) {
     saveProject(project);
   };
   document.getElementById("duplicate")!.onclick = async () => (location.search = `?sandbox=${(await duplicateProject(project)).id}`);
-  document.getElementById("export")!.onclick = async () => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([await exportProject(project)], { type: "application/json" }));
-    a.download = exportFileName(project.name);
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href));
-  };
+  document.getElementById("export")!.onclick = async () => download(await exportProject(project), exportFileName(project.name));
   document.getElementById("delete")!.onclick = () => {
     if (!confirm(`Delete "${project.name}"? Its Scripts are gone for good.`)) return;
     deleteProject(project.id).then(() => (location.search = "?sandbox"));

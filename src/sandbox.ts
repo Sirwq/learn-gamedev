@@ -72,8 +72,9 @@ const imageKeys = async (id: string) => (await keys<string>()).filter((k) => k.s
 const clean = (p: Project): Project => ({
   ...p, scripts: Object.fromEntries(Object.entries(p.scripts).map(([n, c]) => [n, withoutNoteComment(c)])),
 });
-/** Other tabs (and this tab's menu) refresh their Sandbox list. */
-function changed() {
+/** Other tabs (and this tab's menu) refresh their Sandbox list; the backup reminder sees something new. */
+function changed(store: Pick<Storage, "setItem">) {
+  store.setItem("saves:changed", String(Date.now()));
   const channel = new BroadcastChannel("projects");
   channel.postMessage("changed");
   channel.close();
@@ -125,14 +126,14 @@ export async function saveProject(project: Project, store: Local = localStorage)
     list.splice(i < 0 ? list.length : i, i < 0 ? 0 : 1, project);
     store.setItem(KEY, JSON.stringify(list));
   }
-  changed();
+  changed(store);
 }
 
 /** Removes the Project and its images. */
 export async function deleteProject(id: string, store: Local = localStorage) {
   if (onIdb(store)) await delMany([projectKey(id), ...(await imageKeys(id))]);
   else store.setItem(KEY, JSON.stringify(readLocal(store).filter((p) => p.id !== id)));
-  changed();
+  changed(store);
 }
 
 let lastTime = 0;
@@ -159,12 +160,12 @@ export async function duplicateProject(project: Project, store: Local = localSto
   const images = await imageKeys(project.id);
   const blobs = await getMany(images);
   await setMany([entry(copy), ...images.map((k, i): [string, unknown] => [k.replace(`image:${project.id}:`, `image:${copy.id}:`), blobs[i]])]);
-  changed();
+  changed(store);
   return copy;
 }
 
 // One Project as a file (spec 051): its JSON and its images as base64 PNG data URLs, to keep or to send to a friend.
-const FORMAT = "learn-dev-project";
+export const PROJECT_FORMAT = "learn-dev-project";
 const VERSION = 1;
 const MAX_IMAGE = 256;
 const PNG_URL = "data:image/png;base64,";
@@ -183,7 +184,7 @@ export async function exportProject(project: Project) {
     images[k.slice(`image:${project.id}:`.length)] = PNG_URL + btoa(bin);
   }
   const { id: _, ...rest } = project;
-  return JSON.stringify({ format: FORMAT, version: VERSION, project: rest, images });
+  return JSON.stringify({ format: PROJECT_FORMAT, version: VERSION, project: rest, images });
 }
 
 const isNum = (v: unknown) => typeof v === "number" && Number.isFinite(v);
@@ -207,16 +208,13 @@ function pngBytes(url: unknown): Uint8Array | string {
   return bytes;
 }
 
-/** Checks an exported file and adds it as a new Project; throws a plain message, having written nothing, for a bad file. */
-export async function importProject(text: string, store: Local = localStorage) {
+/** A checked Project file: the Project without its id, and its images as PNG Blobs by `<tag>[:top]`. */
+export type ProjectFile = { project: Omit<Project, "id">; pngs: [string, Blob][] };
+
+/** Checks one exported Project (the parsed file); throws a plain message for a bad one. */
+export function checkProjectFile(file: unknown): ProjectFile {
   const bad = (why: string) => new Error(`This file can't be opened: ${why}.`);
-  let file: unknown;
-  try {
-    file = JSON.parse(text);
-  } catch {
-    throw bad("it isn't a learn-dev Project file");
-  }
-  if (!isObj(file) || file.format !== FORMAT) throw bad("it isn't a learn-dev Project file");
+  if (!isObj(file) || file.format !== PROJECT_FORMAT) throw bad("it isn't a learn-dev Project file");
   if (!isNum(file.version) || (file.version as number) > VERSION) throw bad("it comes from a newer learn-dev. Reload the page and try again");
   const { project: p, images = {} } = file;
   const level = isObj(p) ? p.level : undefined;
@@ -233,13 +231,29 @@ export async function importProject(text: string, store: Local = localStorage) {
     if (typeof bytes === "string") throw bad(`it has ${bytes}`);
     pngs.push([k, new Blob([bytes as BlobPart], { type: "image/png" })]);
   }
-  const project: Project = { id: newId(), name: p.name, scripts: p.scripts as Project["scripts"], level: level as Project["level"] };
+  return { project: { name: p.name, scripts: p.scripts as Project["scripts"], level: level as Project["level"] }, pngs };
+}
+
+/** Writes a checked Project file under this id (a new one by default) with its images, in one transaction. */
+export async function addProjectFile({ project: p, pngs }: ProjectFile, store: Local = localStorage, id = newId()) {
+  const project: Project = { id, ...p };
   if (!onIdb(store)) {
     if (pngs.length) throw new Error("Projects with images can't be saved in this browser right now. Reload the page and try again.");
     return saveProject(project, store).then(() => project);
   }
   askPersist(store);
   await setMany([entry(project), ...pngs.map(([k, b]): [string, unknown] => [`image:${project.id}:${k}`, b])]);
-  changed();
+  changed(store);
   return project;
+}
+
+/** Checks an exported file and adds it as a new Project; throws a plain message, having written nothing, for a bad one. */
+export async function importProject(text: string, store: Local = localStorage) {
+  let file: unknown;
+  try {
+    file = JSON.parse(text);
+  } catch {
+    throw new Error("This file can't be opened: it isn't a learn-dev Project file.");
+  }
+  return addProjectFile(checkProjectFile(file), store);
 }

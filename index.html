@@ -330,6 +330,16 @@
       #card-meta .pill.current { background: var(--accent); color: var(--accent-on); }
       #card-meta .pill.passed { background: var(--passed-surface); color: var(--passed-ink); box-shadow: inset 0 0 0 1px var(--passed-line); }
       #card-meta .pill.locked { background: var(--locked-surface); color: var(--locked-ink); box-shadow: inset 0 0 0 1px var(--locked-line); }
+      #menu-reminder { flex-basis: 100%; margin: 0; text-align: right; font-size: 13px; color: var(--ink-menu-meta); text-shadow: 0 1px 4px #000; }
+      #menu-reminder[hidden] { display: none; }
+      #menu #menu-reminder button { display: inline; padding: 0 2px; border: 0; background: none; color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+      #saves { width: min(460px, 92vw); background: var(--surface-dialog); color: var(--ink); border: 1px solid var(--border-dialog); border-radius: 10px; }
+      #saves h3 { margin-top: 0; }
+      #saves p { margin: 0 0 10px; text-wrap: pretty; }
+      #saves .note, #saves-last { color: var(--ink-muted); font-size: 13px; }
+      #saves button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
+      #saves button:focus { outline: 2px solid var(--accent); }
+      #saves small { display: block; color: var(--ink-muted); }
       #replay, #new-project { width: min(460px, 92vw); background: var(--surface-dialog); color: var(--ink); border: 1px solid var(--border-dialog); border-radius: 10px; }
       #replay h3, #new-project h3 { margin-top: 0; }
       #replay button, #new-project button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
@@ -422,6 +432,8 @@
         <kbd aria-hidden="true">E</kbd>
         <span class="soon">C# — coming later</span>
         <span id="menu-stats"></span>
+        <button id="menu-saves" aria-haspopup="dialog"><span aria-hidden="true">💾</span> Saves</button>
+        <p id="menu-reminder" hidden><span></span> · <button id="reminder-backup">Back up now</button> · <button id="reminder-later">Not now</button></p>
       </div>
       <div id="rail"></div>
       <button id="menu-prev" class="nav" aria-label="Previous Lesson"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
@@ -447,6 +459,25 @@
       <button id="new-file">From a file…<small>A Project someone Exported, or your own. It comes in as a new Project.</small></button>
       <input id="new-file-input" type="file" accept=".json,application/json" hidden>
       <button id="new-cancel">Cancel</button>
+    </dialog>
+    <dialog id="saves" aria-labelledby="saves-title">
+      <div id="saves-main">
+        <h3 id="saves-title"><span aria-hidden="true">💾</span> Saves</h3>
+        <p>Your saves live only in this browser. A backup file keeps them safe if the browser clears them or you move to another computer.</p>
+        <p id="saves-last"></p>
+        <p id="saves-safari" class="note" hidden>Safari clears sites you haven't visited in 7 days. Back up regularly, or add learn-dev to your Home Screen (export first, then import there).</p>
+        <p id="saves-persist" class="note" hidden>Your browser may clear these saves if it runs low on space. A backup file keeps them safe.</p>
+        <button id="saves-export" autofocus>Export everything<small></small></button>
+        <button id="saves-import">Import everything…<small>A backup file, or one Project someone Exported. Nothing here is overwritten.</small></button>
+        <input id="saves-file" type="file" accept=".json,application/json" hidden>
+        <button id="saves-close">Close</button>
+      </div>
+      <div id="saves-confirm" hidden>
+        <h3>Import this file?</h3>
+        <p id="saves-summary" aria-live="polite"></p>
+        <button id="saves-yes">Import</button>
+        <button id="saves-no">Cancel</button>
+      </div>
     </dialog>
     <div id="toasts" role="status"></div>
     <dialog id="prompt-box" aria-label="Tutor prompt">

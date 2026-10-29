@@ -18,7 +18,10 @@ export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
 
 // Keyed by title: a pass stays saved even if later code breaks it.
 const key = (title: string) => `passed:${title}`;
-export const markPassed = (title: string, store: Pick<Storage, "setItem"> = localStorage) => store.setItem(key(title), "1");
+export function markPassed(title: string, store: Pick<Storage, "setItem"> = localStorage) {
+  store.setItem(key(title), "1");
+  store.setItem("saves:changed", String(Date.now())); // the backup reminder sees something new
+}
 export const isPassed = (title: string, store: Pick<Storage, "getItem"> = localStorage) => store.getItem(key(title)) === "1";
 
 /** One flag per Lesson, true if passed: the top bar's progress pips. */

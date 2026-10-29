@@ -194,6 +194,9 @@ export function achievementChecker(start: World, earned: Set<string>, list = ach
 }
 
 const key = (id: string) => `achievement:${id}`;
-export const saveEarned = (id: string, store: Pick<Storage, "setItem"> = localStorage) => store.setItem(key(id), "1");
+export function saveEarned(id: string, store: Pick<Storage, "setItem"> = localStorage) {
+  store.setItem(key(id), "1");
+  store.setItem("saves:changed", String(Date.now())); // the backup reminder sees something new
+}
 export const loadEarned = (store: Pick<Storage, "getItem"> = localStorage) =>
   new Set(achievements.filter((a) => store.getItem(key(a.id)) === "1").map((a) => a.id));
