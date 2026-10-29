@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { checker, isPassed, markPassed, progress } from "./check";
+import { checker, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
 import type { World } from "./engine";
+import type { Lesson } from "./lesson";
 
 const at = (x: number): World => [{ tag: "Player", x, y: 0, w: 1, h: 1, color: "" }];
 const lesson = {
@@ -47,5 +48,42 @@ describe("progress", () => {
     const s = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
     markPassed("Speed", s);
     expect(progress([{ title: "Move" }, { title: "Speed" }], s)).toEqual([false, true]);
+  });
+});
+
+const memStore = () => {
+  const m = new Map<string, string>();
+  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
+};
+const ref = (reference: string) => ({ stub: "", reference });
+const lessons: Pick<Lesson, "title" | "scripts">[] = [
+  { title: "1", scripts: { Player: ref("player 1") } },
+  { title: "2", scripts: { Bullet: ref("bullet 2") } },
+  { title: "3", scripts: { Player: ref("player 3"), Bullet: ref("bullet 3") } },
+];
+
+describe("referenceFor", () => {
+  it("is locked until a Lesson with that Script is passed", () => {
+    const s = memStore();
+    markPassed("2", s);
+    expect(referenceFor(lessons, "Player", s)).toBeUndefined();
+  });
+  it("loads the snapshot from the latest passed Lesson that has that Script", () => {
+    const s = memStore();
+    markPassed("1", s);
+    markPassed("2", s);
+    expect(referenceFor(lessons, "Player", s)).toBe("player 1");
+    expect(referenceFor(lessons, "Bullet", s)).toBe("bullet 2");
+    markPassed("3", s);
+    expect(referenceFor(lessons, "Player", s)).toBe("player 3");
+  });
+});
+
+describe("unlocked", () => {
+  it("opens Lesson 1, and the next Lesson only after passing the one before", () => {
+    const s = memStore();
+    expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, false, false]);
+    markPassed("1", s);
+    expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, true, false]);
   });
 });

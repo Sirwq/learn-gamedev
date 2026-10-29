@@ -6,7 +6,7 @@ import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
 import { loadScripts, saveScript } from "./lesson";
-import { markPassed, progress } from "./check";
+import { markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 
@@ -16,7 +16,8 @@ self.MonacoEnvironment = {
 
 monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-const lessonIndex = 0;
+const asked = Number(new URLSearchParams(location.search).get("lesson")); // shortcut: ?lesson=N until the Course menu picks Lessons
+const lessonIndex = Number.isInteger(asked) && unlocked(course, asked) ? asked : 0;
 const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
 document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
@@ -66,6 +67,59 @@ const goalsList = document.getElementById("goals")!;
 const overlay = document.getElementById("overlay")!;
 const overlayText = document.getElementById("overlay-text")!;
 const overlayRun = document.getElementById("overlay-run")!;
+const passBox = document.getElementById("pass")!;
+
+// Pass screen: one Compare per Script this Lesson touched, then Next Lesson (unlocked by this pass).
+passBox.append(...Object.keys(lesson.scripts).map((name) => {
+  const b = document.createElement("button");
+  b.textContent = `Compare ${name}.ts`;
+  b.onclick = () => openCompare(name);
+  return b;
+}));
+if (lessonIndex + 1 < course.length) {
+  const next = document.createElement("button");
+  next.id = "next";
+  next.textContent = "Next Lesson ▶";
+  next.onclick = () => (location.search = `?lesson=${lessonIndex + 1}`);
+  passBox.append(next);
+}
+
+function toast(text: string) {
+  const t = document.createElement("div");
+  t.textContent = text;
+  t.onanimationend = () => t.remove();
+  document.getElementById("toasts")!.append(t);
+}
+
+// The Reference model is JavaScript so the TS project never sees a second `class Player`; its diagnostics are off.
+monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
+const compare = document.getElementById("compare")!;
+const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
+  theme: "vs-dark", readOnly: true, wordWrap: "on", automaticLayout: true,
+});
+let comparing = "";
+function openCompare(name: string) {
+  const reference = referenceFor(course, name);
+  if (reference === undefined) return;
+  comparing = name;
+  diff.getModel()?.modified.dispose();
+  diff.setModel({ original: models[name], modified: monaco.editor.createModel(reference, "javascript") });
+  document.getElementById("compare-title")!.textContent = `Compare ${name}.ts`;
+  compare.hidden = false;
+  diff.getModifiedEditor().focus(); // so Esc closes it
+}
+function closeCompare() {
+  compare.hidden = true;
+  show(comparing);
+  editor.focus();
+}
+document.getElementById("compare-close")!.onclick = closeCompare;
+compare.onkeydown = (e) => e.key === "Escape" && closeCompare();
+document.getElementById("load-reference")!.onclick = () => {
+  const model = models[comparing];
+  // An edit, not setValue, so Ctrl+Z brings the student's code back.
+  model.pushEditOperations([], [{ range: model.getFullModelRange(), text: diff.getModel()!.modified.getValue() }], () => null);
+};
 
 function showGoals(met: boolean[]) {
   goalsList.replaceChildren(...lesson.goals.map((g, i) => {
@@ -75,9 +129,10 @@ function showGoals(met: boolean[]) {
   }));
 }
 
-function showOverlay(text: string, withRun: boolean) {
+function showOverlay(text: string, withRun: boolean, passed = false) {
   overlayText.textContent = text;
   overlayRun.hidden = !withRun;
+  passBox.hidden = !passed;
   overlay.hidden = !text;
 }
 showGoals([]);
@@ -177,7 +232,8 @@ function run() {
       if (e.data.passed) {
         markPassed(lesson.title);
         showProgress();
-        showOverlay("✓ Lesson passed", false);
+        showOverlay("✓ Lesson passed", false, true);
+        toast("Lesson passed");
       }
     }
     if (e.data.type === "error") {

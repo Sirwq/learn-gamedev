@@ -37,6 +37,17 @@
       #console { min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; border-top: 1px solid #333; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
       #console .warn { color: #fc6; }
       #console .error { color: #f66; }
+      #pass { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      #pass[hidden] { display: none; }
+      #next { background: #2f6b4c; }
+      /* Compare takes the whole window so both sides show full lines. */
+      #compare { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: #1e1e1e; }
+      #compare[hidden] { display: none; }
+      #compare header span { flex: 1; color: #999; }
+      #diff { flex: 1; min-height: 0; border: 1px solid #333; }
+      #toasts { position: fixed; top: 8px; right: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+      #toasts div { padding: 8px 14px; border-radius: 6px; background: #2f6b4c; color: #fff; animation: toast 4s forwards; }
+      @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
     </style>
   </head>
   <body>
@@ -56,7 +67,7 @@
         <div id="viewport">
           <canvas id="game" width="960" height="540" tabindex="0"></canvas>
           <ul id="goals" aria-label="Goals"></ul>
-          <div id="overlay" role="alert" hidden><span id="overlay-text"></span><button id="overlay-run">▶ Run</button></div>
+          <div id="overlay" role="alert" hidden><span id="overlay-text"></span><button id="overlay-run">▶ Run</button><div id="pass" hidden></div></div>
         </div>
       </div>
       <div id="code">
@@ -65,6 +76,16 @@
         <pre id="console" aria-label="Console" aria-live="polite"></pre>
       </div>
     </main>
+    <section id="compare" hidden aria-label="Compare">
+      <header>
+        <b id="compare-title"></b>
+        <span>Your code (left) and the Reference code (right)</span>
+        <button id="load-reference">Load reference code</button>
+        <button id="compare-close" aria-label="Close">✕</button>
+      </header>
+      <div id="diff"></div>
+    </section>
+    <div id="toasts" role="status"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
