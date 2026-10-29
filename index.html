@@ -156,11 +156,22 @@
       #menu-dots button:hover::before { background: #fffa; }
       #menu-dots button[aria-current]::before { width: 16px; background: #b14cff; }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
-      #menu .nav { position: absolute; top: 42%; width: 44px; height: 44px; padding: 0; transform: translate(-50%, -50%); border-radius: 50%; background: #000a; border-color: #fff4; font-size: 20px; }
-      /* The big card is 3 / 4 of the rail (60% of the menu) wide: 45cqh. The arrows sit in the gaps beside it. */
-      #menu-prev { left: calc(50% - 22.5cqh - 11px); }
-      #menu-next { left: calc(50% + 22.5cqh + 11px); }
-      #menu .nav:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
+      /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
+      #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
+      #menu-prev { left: calc(50% - 22.5cqh - 28px); background: #23252dee; color: #c7cbd4; box-shadow: inset 0 0 0 1px #464a56, 0 4px 14px #0009; }
+      #menu-next { left: calc(50% + 22.5cqh + 28px); background: #9a3be8; color: #fff; box-shadow: 0 0 18px #b14cff8c, 0 4px 14px #0009; }
+      #menu-prev:hover { background: #343744; color: #fff; box-shadow: inset 0 0 0 1px #7a7f8e, 0 4px 14px #0009; }
+      #menu-next:hover { background: #a94ff5; }
+      #menu .nav:hover { transform: translate(-50%, -50%) scale(1.08); }
+      #menu .nav:active { transform: translate(-50%, -50%) scale(.92); }
+      #menu .nav svg { width: 22px; height: 22px; transition: transform .15s; }
+      #menu-prev:hover svg { transform: translateX(-2px); }
+      #menu-next svg { translate: 1px; } /* optical centre: the point carries less weight than the arms */
+      #menu-prev svg { translate: -1px; }
+      #menu-next:hover svg { transform: translateX(2px); }
+      /* At the ends the arrow fades out but keeps its place. */
+      #menu .nav:disabled { opacity: 0; pointer-events: none; }
+      #menu .nav:focus-visible { outline: 2px solid #9cf; outline-offset: 3px; }
       #menu button { touch-action: manipulation; }
       @media (pointer: coarse) { #menu .bar button, #menu #menu-dots button { min-height: 44px; } #menu #menu-dots button { width: 24px; } #menu kbd { display: none; } }
       /* Under 900px: Back and Achievements keep only their icon, Play gets its own full-width row. */
@@ -191,6 +202,7 @@
       @keyframes toast-fade { from { opacity: 0; } 8%, 90% { opacity: 1; } to { opacity: 0; } }
       @media (prefers-reduced-motion: reduce) {
         .cover { transition: none; }
+        #menu .nav, #menu .nav svg { transition: none; }
         #toasts > div { animation-name: toast-fade; }
       }
       #project-actions { margin-left: 8px; font-size: 12px; font-weight: normal; }
@@ -295,8 +307,8 @@
         <span id="menu-stats"></span>
       </div>
       <div id="rail"></div>
-      <button id="menu-prev" class="nav" aria-label="Previous Lesson"><span aria-hidden="true">‹</span></button>
-      <button id="menu-next" class="nav" aria-label="Next Lesson"><span aria-hidden="true">›</span></button>
+      <button id="menu-prev" class="nav" aria-label="Previous Lesson"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+      <button id="menu-next" class="nav" aria-label="Next Lesson"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
       <div id="card-info"><h2 id="card-title"></h2><div id="card-meta"></div></div>
       <div class="bar bottom">
         <button id="menu-back" aria-keyshortcuts="Escape" aria-label="Back to Lesson" title="Back to Lesson"><kbd aria-hidden="true">Esc</kbd> <span aria-hidden="true">←</span><span> Back to Lesson</span></button>
