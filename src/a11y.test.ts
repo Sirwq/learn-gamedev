@@ -21,3 +21,18 @@ describe("Lesson page accessibility", () => {
   it("gives the Console a role that allows its label", () => expect(tag("console")).toContain('role="log"'));
   it("lets the progress name come from code, holding the visible count", () => expect(tag("progress")).not.toContain("aria-label"));
 });
+
+describe("Course menu accessibility", () => {
+  it("has a heading for screen readers", () => expect(html).toContain('<h1 id="menu-heading" class="sr-only">Choose a Lesson</h1>'));
+  it("announces the focused card in a polite live region", () => expect(tag("menu-live")).toContain('aria-live="polite"'));
+  it("hides the key hints and puts the shortcuts on the buttons", () => {
+    expect(html).not.toMatch(/<kbd>(Q|E|Esc|A|Enter)<\/kbd>/);
+    expect(tag("chip-course")).toContain('aria-keyshortcuts="Q"');
+    expect(tag("chip-sandbox")).toContain('aria-keyshortcuts="E"');
+    expect(tag("menu-back")).toContain('aria-keyshortcuts="Escape"');
+    expect(tag("menu-achievements")).toContain('aria-keyshortcuts="A"');
+    expect(tag("menu-play")).toContain('aria-keyshortcuts="Enter"');
+  });
+  it("gives the menu buttons the header's focus ring", () => expect(html).toContain("#menu .bar button:focus-visible { outline: 2px solid #9cf;"));
+  it("uses tabular numbers in the stats", () => expect(html).toMatch(/#menu-stats \{[^}]*tabular-nums/));
+});

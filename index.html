@@ -146,7 +146,8 @@
       #menu .chip.on { background: #b14cff; border-color: #b14cff; color: #fff; }
       #menu .chip:disabled { opacity: .45; }
       #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
-      #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; }
+      #menu .bar button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
+      #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; font-variant-numeric: tabular-nums; }
       #menu-count { margin: 0 auto; color: #aaa; font-variant-numeric: tabular-nums; }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; }
       .cover { position: absolute; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 10px 30px #0009; transition: left .22s, top .22s, width .22s, height .22s; }
@@ -244,21 +245,23 @@
     </section>
     <section id="menu" hidden aria-label="Course menu" tabindex="-1">
       <canvas id="menu-bg" width="240" height="320"></canvas>
+      <h1 id="menu-heading" class="sr-only">Choose a Lesson</h1>
+      <p id="menu-live" class="sr-only" aria-live="polite"></p>
       <div class="bar">
-        <kbd>Q</kbd>
-        <button class="chip on" id="chip-course" aria-pressed="true">TypeScript</button>
-        <button class="chip" id="chip-sandbox" aria-pressed="false" hidden>Sandbox</button>
+        <kbd aria-hidden="true">Q</kbd>
+        <button id="chip-course" class="chip on" aria-pressed="true" aria-keyshortcuts="Q">TypeScript</button>
+        <button id="chip-sandbox" class="chip" aria-pressed="false" aria-keyshortcuts="E" hidden>Sandbox</button>
         <button class="chip" disabled title="A later Course">C# · soon</button>
-        <kbd>E</kbd>
+        <kbd aria-hidden="true">E</kbd>
         <span id="menu-stats"></span>
       </div>
       <div id="rail"></div>
       <div id="card-info"><h2 id="card-title"></h2><div id="card-meta"></div></div>
       <div class="bar bottom">
-        <button id="menu-back"><kbd>Esc</kbd> Back to Lesson</button>
-        <span id="menu-count"></span>
-        <button id="menu-achievements"><kbd>A</kbd> <span aria-hidden="true">🏆</span> Achievements</button>
-        <button id="menu-play"><kbd>Enter</kbd> <b></b></button>
+        <button id="menu-back" aria-keyshortcuts="Escape"><kbd aria-hidden="true">Esc</kbd> Back to Lesson</button>
+        <span id="menu-count" aria-hidden="true"></span>
+        <button id="menu-achievements" aria-keyshortcuts="A"><kbd aria-hidden="true">A</kbd> <span aria-hidden="true">🏆</span> Achievements</button>
+        <button id="menu-play" aria-keyshortcuts="Enter"><kbd aria-hidden="true">Enter</kbd> <b></b></button>
       </div>
     </section>
     <dialog id="replay" aria-label="Replay a passed Lesson">

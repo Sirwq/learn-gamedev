@@ -1,7 +1,7 @@
 ---
 title: Course menu: keyboard and screen reader
 label: design
-status: open
+status: closed
 blocked_by: [042-sandbox-chip-hidden]
 assignee:
 ---
@@ -28,3 +28,15 @@ Found on the Course menu with a keyboard and in the accessibility tree:
 - A keyboard-only pass: Tab cycles only inside the menu. ← → and Enter play a Lesson. Esc goes back, and focus lands on the button that opened the menu.
 - VoiceOver (or the accessibility tree) reads the focused card when it changes.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- Opening the menu sets `inert` on the page header and `main`, and closing it removes that. Tab now stays inside the menu. On close, focus goes back to the element that opened the menu. If the app started on the menu, focus goes to the editor.
+- A polite live region (`#menu-live`) reads the focused card when it changes or the tab switches, e.g. "1. Move right, up next, Lesson 1 of 15". Card labels now say "up next" instead of "current". The visual `1 / 15` count is `aria-hidden` because the live region already says it.
+- Menu bar buttons get the header's `#9cf` `:focus-visible` ring.
+- All `<kbd>` hints in the menu are `aria-hidden`. The shortcuts are on the buttons as `aria-keyshortcuts` (Q, E, Escape, A, Enter).
+- Added a visually hidden `<h1 id="menu-heading">`: "Choose a Lesson", or "Choose a Project" on the Sandbox tab.
+- While the menu is open, `document.title` is "Lessons · learn-dev" or "Projects · learn-dev". Closing it restores the Lesson/Project title.
+- Stats: the visible text is `aria-hidden`, and a `.sr-only` copy reads "0 of 18 Achievements, 0 of 15 Lessons passed". The stats use tabular numbers.
+- Card meta icons are wrapped in `aria-hidden` spans.
+- Tests: static checks in `src/a11y.test.ts`. The inert, focus-return and live-region logic in `main.ts` has no DOM test harness, and I had no browser here to check it.

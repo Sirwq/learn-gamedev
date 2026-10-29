@@ -348,7 +348,7 @@ function layoutMenu() {
       return;
     }
     card.className = `cover ${states[i]}`;
-    card.ariaLabel = `${course[i].title}, ${states[i]}`;
+    card.ariaLabel = `${course[i].title}, ${{ passed: "passed", current: "up next", locked: "locked" }[states[i]]}`;
     card.querySelector(".tag")!.textContent = { passed: "✓ passed", current: "▶ next", locked: "🔒" }[states[i]];
   });
   drawBg();
@@ -356,27 +356,35 @@ function layoutMenu() {
   if (mode === "sandbox") {
     const p = projects[focused];
     title = p ? p.name : "New Project";
-    meta = p ? [`📄 ${Object.keys(p.scripts).map((n) => `${n}.ts`).join(", ")}`] : ["Blank, or My platformer: a copy of your Course code"];
+    meta = p ? [["📄", Object.keys(p.scripts).map((n) => `${n}.ts`).join(", ")]] : [["", "Blank, or My platformer: a copy of your Course code"]];
   } else {
     const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
-    const state = { passed: "✓ Passed", current: "▶ Up next", locked: `🔒 Pass Lesson ${menuCurrent + 1} first` }[states[focused]];
+    const state = { passed: ["✓", "Passed"], current: ["▶", "Up next"], locked: ["🔒", `Pass Lesson ${menuCurrent + 1} first`] }[states[focused]];
     title = course[focused].title;
-    meta = [`🧩 ${course[focused].concept}`, `📄 ${scripts.join(", ")}`, state];
+    meta = [["🧩", course[focused].concept], ["📄", scripts.join(", ")], state];
   }
   document.getElementById("card-title")!.textContent = title;
-  document.getElementById("card-meta")!.replaceChildren(...meta.map((t) => {
+  // The icons are decoration: screen readers get only the words.
+  document.getElementById("card-meta")!.replaceChildren(...meta.map(([icon, t]) => {
     const span = document.createElement("span");
-    span.textContent = t;
+    span.innerHTML = `<span aria-hidden="true">${icon} </span>`;
+    span.append(t);
     return span;
   }));
   document.getElementById("menu-count")!.textContent = `${focused + 1} / ${list.length}`;
   document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
-  document.getElementById("menu-stats")!.textContent =
-    `🏆 ${earned.size} / ${achievements.length}   ✓ ${states.filter((s) => s === "passed").length} / ${course.length} passed`;
+  const passed = states.filter((s) => s === "passed").length;
+  document.getElementById("menu-stats")!.innerHTML =
+    `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${passed} / ${course.length} passed</span>` +
+    `<span class="sr-only">${earned.size} of ${achievements.length} Achievements, ${passed} of ${course.length} Lessons passed</span>`;
 }
+const menuLive = document.getElementById("menu-live")!;
+const announce = () =>
+  (menuLive.textContent = `${cards()[focused].ariaLabel}, ${mode === "course" ? "Lesson " : ""}${focused + 1} of ${cards().length}`);
 function focusCard(i: number) {
   focused = Math.max(0, Math.min(cards().length - 1, i));
   layoutMenu();
+  announce();
 }
 function showMode(m: typeof mode) {
   mode = m;
@@ -387,7 +395,10 @@ function showMode(m: typeof mode) {
     chip.classList.toggle("on", on);
     chip.ariaPressed = String(on);
   }
+  document.getElementById("menu-heading")!.textContent = m === "course" ? "Choose a Lesson" : "Choose a Project";
+  document.title = `${m === "course" ? "Lessons" : "Projects"} · learn-dev`;
   layoutMenu();
+  announce();
 }
 /** Switches tab with the whole menu sliding sideways: Sandbox sits to the right of TypeScript. */
 function setMode(m: typeof mode) {
@@ -397,7 +408,12 @@ function setMode(m: typeof mode) {
     el.animate([{ transform: `translateX(${m === "sandbox" ? "" : "-"}100%)` }, { transform: "none" }], { duration: 350, easing: "ease-out" });
 }
 const startMode = project || askedProject !== null ? "sandbox" : "course";
+// While the menu is open the page behind it is out of reach: Tab stays in the menu.
+const behind = [document.querySelector("body > header")!, document.querySelector("main")!] as HTMLElement[];
+let opener: Element | null = null;
 function openMenu(m: typeof mode = startMode) {
+  if (menu.hidden) opener = document.activeElement;
+  for (const el of behind) el.inert = true;
   states = cardStates(course);
   menuCurrent = currentLesson(course);
   chipSandbox.hidden = !sandboxUnlocked(course);
@@ -407,7 +423,10 @@ function openMenu(m: typeof mode = startMode) {
 }
 function closeMenu() {
   menu.hidden = true;
-  editor.focus();
+  for (const el of behind) el.inert = false;
+  document.title = `${lessonTitle.textContent} · learn-dev`;
+  if (opener instanceof HTMLElement && opener !== document.body) opener.focus();
+  else editor.focus();
 }
 const go = (i: number) => (location.search = `?lesson=${i}`);
 function pick(i: number) {
