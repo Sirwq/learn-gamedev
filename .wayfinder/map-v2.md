@@ -24,6 +24,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [How do students bring their own sprites?](tickets/050-own-sprites.md): Sandbox only, one PNG/JPEG per tag per Project (at most 256×256), set in the inspector; Stretch or 20 px Tile with an optional Top image, Reset to the Kenney art, drawn shape = hitbox kept, no new code API.
 - [Where do Projects with images live?](tickets/051-project-storage.md): Projects and their image Blobs move to IndexedDB (`idb-keyval`), Course progress and settings stay in localStorage; `persist()` asked once on first save; backup is a one-file JSON Export / Import per Project plus Export everything; a one-time, locked, repeat-safe migration that keeps the old key.
 - [Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md): no, it's student-only. Authors keep writing `level.boxes` by hand, helped by a Copy button on "View Level as Code"; Goals, Lose events, Hints, the Explanation and Reference code stay code and Markdown.
+- [What do sound and animation add to the engine?](tickets/054-sound-animation.md): Sandbox only; the engine animates from the Kenney pack's own frames with no API (tags without frames and own sprites stay still); `this.audio.PlayOneShot("Jump")` with ten fixed clip names from one CC0 pixel pack; the worker sends clip names to the page's Web Audio; a labelled mute button.
 
 ## Not yet specified
 
@@ -35,6 +36,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Built-in paid AI tutor: Ask DeepSeek stays; the plan waits in [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md).
 - Accounts and server saves: backup is an export / import file instead ([Where do Projects with images live?](tickets/051-project-storage.md)).
 - Multiplayer.
+- Students' own sounds and background music: a later chapter of Lessons, "How to add your own sounds" ([What do sound and animation add to the engine?](tickets/054-sound-animation.md)).
 - In-app sprite editor: students import images only; 📖 Docs point to Piskel or Aseprite ([How do students bring their own sprites?](tickets/050-own-sprites.md)).
 - Lessons for extra Mechanics (double jump, wall jump, dash): they are Achievements instead ([What is in v2?](tickets/048-v2-scope.md)).
 - Authors' Lesson editor: no author mode and no saving back to `lesson.ts`; developers write Lessons in code ([Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md)).
