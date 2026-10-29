@@ -6,6 +6,7 @@ import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
 import { markPassed } from "./check";
+import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 
 self.MonacoEnvironment = {
@@ -45,6 +46,20 @@ function showOverlay(text: string, withRun: boolean) {
 }
 showGoals([]);
 
+const consoleEl = document.getElementById("console")!;
+const consoleLines: ConsoleLine[] = [];
+function log(batch: ConsoleLine[]) {
+  for (const l of batch) addLine(consoleLines, l.level, l.text, l.count);
+  const atBottom = consoleEl.scrollTop + consoleEl.clientHeight >= consoleEl.scrollHeight - 4;
+  consoleEl.replaceChildren(...consoleLines.map((l) => {
+    const div = document.createElement("div");
+    div.className = l.level;
+    div.textContent = lineText(l);
+    return div;
+  }));
+  if (atBottom) consoleEl.scrollTop = consoleEl.scrollHeight; // follow new lines unless the student scrolled up
+}
+
 // Type errors block Run; our own "runtime" markers don't.
 const hasTypeErrors = () =>
   monaco.editor
@@ -70,6 +85,8 @@ function run() {
   stop();
   monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
+  clearLines(consoleLines);
+  log([]);
   showGoals([]);
   showOverlay("", false);
 
@@ -90,6 +107,7 @@ function run() {
   let lastTick = performance.now();
   worker.onmessage = (e) => {
     if (e.data.type === "tick") lastTick = performance.now();
+    if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) clearInterval(watchdog); // the worker stopped its loop on purpose
@@ -101,7 +119,8 @@ function run() {
     }
     if (e.data.type === "error") {
       clearInterval(watchdog); // the worker already stopped its loop; terminating now would blank the last frame
-      status.textContent = `Error: ${e.data.message}`;
+      const where = e.data.script && e.data.line ? `${e.data.script}.ts:${e.data.line} ` : "";
+      log([{ level: "error", text: `${where}${e.data.message}`, count: 1 }]);
       if (e.data.line) {
         monaco.editor.setModelMarkers(model, "runtime", [{
           severity: monaco.MarkerSeverity.Error,

@@ -1,4 +1,5 @@
 // Runtime behind the student API. Student-facing types and docs live in engine-api.d.ts.
+import { addLine, type ConsoleLine } from "./console";
 
 /** A box in a Level: x, y is the bottom-left corner, y up. */
 export type Box = { tag: string; x: number; y: number; w: number; h: number; color: string; script?: string };
@@ -10,6 +11,9 @@ export class Vector2 {
   }
   Scale(n: number) {
     return new Vector2(this.x * n, this.y * n);
+  }
+  toString() {
+    return `(${this.x}, ${this.y})`;
   }
 }
 
@@ -59,6 +63,21 @@ export class Input {
   }
 }
 
+/** Debug lines written since the worker last sent them to the Console; collapsed and capped like the Console itself. */
+export const logs: ConsoleLine[] = [];
+
+export class Debug {
+  static Log(message: unknown) {
+    addLine(logs, "log", String(message));
+  }
+  static LogWarning(message: unknown) {
+    addLine(logs, "warn", String(message));
+  }
+  static LogError(message: unknown) {
+    addLine(logs, "error", String(message));
+  }
+}
+
 /** Canvas top-left y for a box at bottom-left y. */
 export const flipY = (y: number, h: number, height: number) => height - y - h;
 
@@ -73,7 +92,7 @@ export function findScript(mod: { __script?: unknown }, name: string): new () =>
 }
 
 /** What a Script sees as globals. */
-export const api = { MonoBehaviour, Vector2, Time, Input, KeyCode };
+export const api = { MonoBehaviour, Vector2, Time, Input, KeyCode, Debug };
 
 export type GameObject = Box & { transform: Transform };
 

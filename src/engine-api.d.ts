@@ -65,3 +65,13 @@ declare enum KeyCode {
   /** Space bar. */
   Space,
 }
+
+/** Writes to the Console under the editor. The same line many times in a row shows once with a count. */
+declare class Debug {
+  /** Writes a line, e.g. `Debug.Log("coins: " + coins)`. Anything works: numbers and Vector2s too. */
+  static Log(message: unknown): void;
+  /** Writes a yellow warning line. */
+  static LogWarning(message: unknown): void;
+  /** Writes a red error line. The game keeps running. */
+  static LogError(message: unknown): void;
+}

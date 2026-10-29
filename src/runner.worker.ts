@@ -1,12 +1,20 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine } from "./run-utils";
-import { api, type Box, findScript, flipY, keyEvent, type MonoBehaviour, scriptSource, startGame, worldView } from "./engine";
+import { api, type Box, findScript, flipY, keyEvent, logs, type MonoBehaviour, scriptSource, startGame, worldView } from "./engine";
 import { checker } from "./check";
 import { course } from "./lessons/course";
 
+const scriptOf: Record<string, string> = {}; // blob URL -> Script name
+
+function flushLogs() {
+  if (logs.length) postMessage({ type: "logs", lines: logs.splice(0) });
+}
+
 function report(err: unknown) {
+  flushLogs(); // lines logged before the error show above it
   const e = err instanceof Error ? err : new Error(String(err));
-  postMessage({ type: "error", message: e.message, ...errorLine(e.stack) });
+  const at = errorLine(e.stack);
+  postMessage({ type: "error", message: e.message, script: at && scriptOf[at.url], line: at?.line, col: at?.col });
 }
 
 self.onmessage = async (e: MessageEvent) => {
@@ -24,6 +32,7 @@ self.onmessage = async (e: MessageEvent) => {
     const classes: Record<string, new () => MonoBehaviour> = {};
     for (const name of new Set(level.flatMap((box) => box.script ?? []))) {
       const url = URL.createObjectURL(new Blob([scriptSource(scripts[name], name)], { type: "text/javascript" }));
+      scriptOf[url] = name;
       classes[name] = findScript(await import(/* @vite-ignore */ url), name);
     }
     game = startGame(level, classes);
@@ -42,6 +51,7 @@ self.onmessage = async (e: MessageEvent) => {
     } catch (err) {
       return report(err); // stop the loop: the game pauses on the error
     }
+    flushLogs();
     const json = JSON.stringify(result);
     if (json !== last) postMessage({ type: "check", ...result });
     last = json;

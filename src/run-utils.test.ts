@@ -22,10 +22,10 @@ describe("transpile", () => {
 describe("errorLine", () => {
   it("reads line and column from the first blob frame (Chrome)", () => {
     const stack = "Error: boom\n    at update (blob:http://localhost:5173/abc-123:6:9)\n    at loop (http://localhost:5173/src/runner.worker.ts:20:5)";
-    expect(errorLine(stack)).toEqual({ line: 6, col: 9 });
+    expect(errorLine(stack)).toEqual({ url: "blob:http://localhost:5173/abc-123", line: 6, col: 9 });
   });
   it("reads Firefox/Safari style frames", () => {
-    expect(errorLine("update@blob:http://localhost:5173/abc-123:12:3\nloop@http://x/w.js:1:1")).toEqual({ line: 12, col: 3 });
+    expect(errorLine("update@blob:http://localhost:5173/abc-123:12:3\nloop@http://x/w.js:1:1")).toEqual({ url: "blob:http://localhost:5173/abc-123", line: 12, col: 3 });
   });
   it("returns undefined when no blob frame exists", () => {
     expect(errorLine("Error\n    at http://x/w.js:1:1")).toBeUndefined();

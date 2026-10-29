@@ -5,7 +5,7 @@ export function transpile(ts: string): string {
   return transform(ts, { transforms: ["typescript"] }).code;
 }
 
-export function errorLine(stack: string | undefined): { line: number; col: number } | undefined {
-  const m = stack?.match(/blob:[^\s)]*:(\d+):(\d+)/);
-  return m ? { line: Number(m[1]), col: Number(m[2]) } : undefined;
+export function errorLine(stack: string | undefined): { url: string; line: number; col: number } | undefined {
+  const m = stack?.match(/(blob:[^\s)]*):(\d+):(\d+)/);
+  return m ? { url: m[1], line: Number(m[2]), col: Number(m[3]) } : undefined;
 }
