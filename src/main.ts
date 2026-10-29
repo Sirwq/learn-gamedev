@@ -5,6 +5,7 @@ import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
+import { loadScripts, saveScript } from "./lesson";
 import { markPassed, progress } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
@@ -33,13 +34,29 @@ function showProgress() {
 }
 showProgress();
 
-// shortcut: only the Player Script gets an editor and a tab, until many Scripts land (ticket 022).
-const tab = document.createElement("span");
-tab.role = "tab";
-tab.textContent = "Player.ts";
-document.getElementById("tabs")!.append(tab);
-const model = monaco.editor.createModel(lesson.scripts.Player.stub, "typescript", monaco.Uri.parse("file:///Player.ts"));
-const editor = monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dark", automaticLayout: true });
+// One Monaco model per Script: models share one TS project, so each file type-checks against the others.
+const models = Object.fromEntries(Object.entries(loadScripts(course, lessonIndex)).map(([name, code]) => {
+  const model = monaco.editor.createModel(code, "typescript", monaco.Uri.parse(`file:///${name}.ts`));
+  model.onDidChangeContent(() => {
+    monaco.editor.setModelMarkers(model, "runtime", []);
+    saveScript(name, model.getValue());
+  });
+  return [name, model];
+}));
+const editor = monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", automaticLayout: true });
+const tabs = Object.keys(models).map((name) => {
+  const tab = document.createElement("button");
+  tab.role = "tab";
+  tab.textContent = `${name}.ts`;
+  tab.onclick = () => show(name);
+  return tab;
+});
+document.getElementById("tabs")!.append(...tabs);
+function show(name: string) {
+  editor.setModel(models[name]);
+  for (const tab of tabs) tab.ariaSelected = String(tab.textContent === `${name}.ts`);
+}
+show(Object.keys(models)[0]);
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
@@ -81,15 +98,14 @@ function log(batch: ConsoleLine[]) {
 
 // Type errors block Run; our own "runtime" markers don't.
 const hasTypeErrors = () =>
-  monaco.editor
+  Object.values(models).some((model) => monaco.editor
     .getModelMarkers({ resource: model.uri })
-    .some((m) => m.owner !== "runtime" && m.severity === monaco.MarkerSeverity.Error);
+    .some((m) => m.owner !== "runtime" && m.severity === monaco.MarkerSeverity.Error));
 monaco.editor.onDidChangeMarkers(() => {
   const blocked = hasTypeErrors();
   if (blocked !== runBtn.disabled) status.textContent = blocked ? "Fix the red squiggles before running." : "";
   runBtn.disabled = blocked;
 });
-model.onDidChangeContent(() => monaco.editor.setModelMarkers(model, "runtime", []));
 
 let worker: Worker | undefined;
 let watchdog: number | undefined;
@@ -111,7 +127,7 @@ function stop() {
 function run() {
   if (hasTypeErrors()) return;
   stop();
-  monaco.editor.setModelMarkers(model, "runtime", []);
+  for (const model of Object.values(models)) monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
   clearLines(consoleLines);
   log([]);
@@ -147,7 +163,7 @@ function run() {
   running = true;
   paused = false;
   canvas.focus();
-  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
@@ -168,7 +184,9 @@ function run() {
       ended(); // the worker already stopped its loop; terminating now would blank the last frame
       const where = e.data.script && e.data.line ? `${e.data.script}.ts:${e.data.line} ` : "";
       log([{ level: "error", text: `${where}${e.data.message}`, count: 1 }]);
-      if (e.data.line) {
+      const model = models[e.data.script];
+      if (model && e.data.line) {
+        show(e.data.script);
         monaco.editor.setModelMarkers(model, "runtime", [{
           severity: monaco.MarkerSeverity.Error,
           message: e.data.message,

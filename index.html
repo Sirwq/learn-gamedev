@@ -31,7 +31,8 @@
       #game:focus { outline: 2px solid #4af; }
       #code { display: grid; grid-template-rows: auto 2fr 1fr; min-width: 0; min-height: 0; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
       #tabs { display: flex; gap: 2px; padding: 4px 6px 0; background: #252526; }
-      #tabs span { padding: 4px 10px; border-radius: 6px 6px 0 0; background: #1e1e1e; font-size: 12px; }
+      #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: #2d2d2d; color: #999; font-size: 12px; }
+      #tabs button[aria-selected="true"] { background: #1e1e1e; color: #ddd; }
       #editor { min-height: 0; }
       #console { min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; border-top: 1px solid #333; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
       #console .warn { color: #fc6; }

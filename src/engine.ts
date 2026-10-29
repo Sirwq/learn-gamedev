@@ -22,7 +22,8 @@ export class Transform {
 }
 
 export class MonoBehaviour {
-  transform!: Transform; // set by the engine right after construction
+  gameObject!: GameObject; // both set by the engine right after construction
+  transform!: Transform;
   Start?(): void;
   Update?(): void;
 }
@@ -96,25 +97,68 @@ export function findScript(mod: { __script?: unknown }, name: string): new () =>
   throw new Error(`${name}.ts must define class ${name} extends MonoBehaviour`);
 }
 
-/** What a Script sees as globals. */
-export const api = { MonoBehaviour, Vector2, Time, Input, KeyCode, Debug };
+/** What Instantiate copies: a Level box without the position. */
+export type Prefab = Omit<Box, "x" | "y">;
 
-export type GameObject = Box & { transform: Transform };
+export class GameObject {
+  readonly transform: Transform;
+  destroyed = false;
+  constructor(readonly tag: string, readonly w: number, readonly h: number, readonly color: string, readonly script: string | undefined, position: Vector2) {
+    this.transform = new Transform(position);
+  }
+  static FindGameObjectsWithTag(tag: string) {
+    return game!.objects.filter((o) => o.tag === tag);
+  }
+}
+
+type Scripts = Record<string, new () => MonoBehaviour>;
+let game: { objects: GameObject[]; behaviours: MonoBehaviour[]; fresh: MonoBehaviour[]; scripts: Scripts } | undefined;
+
+export function Instantiate({ tag, w, h, color, script }: Prefab, position: Vector2) {
+  const o = new GameObject(tag, w, h, color, script, position);
+  game!.objects.push(o);
+  if (script) {
+    const Script = game!.scripts[script];
+    if (!Script) throw new Error(`There is no Script named ${script}`);
+    const b = new Script();
+    b.gameObject = o;
+    b.transform = o.transform;
+    game!.fresh.push(b);
+  }
+  return o;
+}
+
+/** Marks the object; it is removed at the end of the frame, like Unity. */
+export function Destroy(obj: GameObject) {
+  obj.destroyed = true;
+}
+
+const keep = <T>(list: T[], f: (t: T) => boolean) => void list.splice(0, list.length, ...list.filter(f));
+
+/** What a Script sees as globals. */
+export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug };
 
 /** Spawns the Level, attaches one new Script instance per scripted box and calls Start. */
-export function startGame(level: Box[], scripts: Record<string, new () => MonoBehaviour>) {
-  const objects: GameObject[] = level.map((box) => ({ ...box, transform: new Transform(new Vector2(box.x, box.y)) }));
-  const behaviours = objects.filter((o) => o.script).map((o) => {
-    const b = new scripts[o.script!]();
-    b.transform = o.transform;
-    return b;
-  });
-  for (const b of behaviours) b.Start?.();
+export function startGame(level: Box[], scripts: Scripts) {
+  const g: NonNullable<typeof game> = (game = { objects: [], behaviours: [], fresh: [], scripts });
+  // Start runs once, before a Script's first Update; Scripts made inside Start get started too.
+  const startFresh = () => {
+    for (let b; (b = g.fresh.shift()); ) if (!b.gameObject.destroyed) (g.behaviours.push(b), b.Start?.());
+  };
+  const sweep = () => {
+    keep(g.objects, (o) => !o.destroyed);
+    keep(g.behaviours, (b) => !b.gameObject.destroyed);
+  };
+  for (const box of level) Instantiate(box, new Vector2(box.x, box.y));
+  startFresh();
+  sweep();
   return {
-    objects,
+    objects: g.objects,
     step() {
       nextFrame();
-      for (const b of behaviours) b.Update?.();
+      startFresh(); // objects made last frame
+      for (const b of g.behaviours) b.Update?.();
+      sweep();
     },
   };
 }

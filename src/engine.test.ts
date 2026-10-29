@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
-import { findScript, flipY, Input, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, Vector2 } from "./engine";
+import { Destroy, findScript, flipY, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, Vector2 } from "./engine";
 
 describe("Vector2", () => {
   it("adds and scales into new vectors", () => {
@@ -34,6 +34,51 @@ describe("Input", () => {
     nextFrame();
     expect([Input.GetKey("ArrowRight"), Input.GetKey("Space")]).toEqual([false, false]);
     expect([Input.GetKeyUp("ArrowRight"), Input.GetKeyUp("Space")]).toEqual([true, true]);
+  });
+});
+
+describe("Instantiate, Destroy and FindGameObjectsWithTag", () => {
+  const bullet = { tag: "Bullet", w: 8, h: 4, color: "white", script: "Bullet" };
+  const log: string[] = [];
+  class Bullet extends MonoBehaviour {
+    Start() { log.push("start"); }
+    Update() {
+      log.push("update");
+      this.transform.position = this.transform.position.Add(new Vector2(10, 0));
+      if (this.transform.position.x >= 20) Destroy(this.gameObject);
+    }
+  }
+  class Player extends MonoBehaviour {
+    Update() { if (Input.GetKeyDown("Space")) Instantiate(bullet, this.transform.position); }
+  }
+  const level = [{ tag: "Player", x: 0, y: 5, w: 32, h: 32, color: "orange", script: "Player" }];
+  const bullets = () => GameObject.FindGameObjectsWithTag("Bullet");
+
+  it("spawns a scripted object that starts next frame, and removes it at the end of the frame it is destroyed", () => {
+    log.length = 0;
+    const game = startGame(level, { Player, Bullet });
+    keyEvent("Space", true);
+    game.step();
+    keyEvent("Space", false);
+    expect(bullets()).toHaveLength(1);
+    expect(bullets()[0].transform.position).toEqual(new Vector2(0, 5));
+    expect(log).toEqual([]);
+    game.step();
+    expect(log).toEqual(["start", "update"]);
+    game.step();
+    expect(bullets()).toHaveLength(0);
+    expect(game.objects.map((o) => o.tag)).toEqual(["Player"]);
+    game.step();
+    expect(log).toEqual(["start", "update", "update"]);
+  });
+  it("finds only objects with the tag, Level ones too", () => {
+    startGame([...level, { tag: "Enemy", x: 0, y: 0, w: 1, h: 1, color: "red" }, { tag: "Enemy", x: 5, y: 0, w: 1, h: 1, color: "red" }], { Player, Bullet });
+    expect(GameObject.FindGameObjectsWithTag("Enemy").map((o) => o.transform.position.x)).toEqual([0, 5]);
+    expect(GameObject.FindGameObjectsWithTag("Coin")).toEqual([]);
+  });
+  it("names a missing Script", () => {
+    startGame([], {});
+    expect(() => Instantiate(bullet, new Vector2(0, 0))).toThrow("There is no Script named Bullet");
   });
 });
 
@@ -77,6 +122,15 @@ describe("student typings", () => {
     expect(errors(`class Player extends MonoBehaviour {
       Start() { if (Input.GetKey(KeyCode.Space)) this.transform.position = new Vector2(0, 0).Scale(2); }
       Update() { this.transform.position = this.transform.position.Add(new Vector2(100 * Time.deltaTime, 0)); }
+    }`)).toEqual([]);
+  });
+  it("accepts spawning, finding and destroying", () => {
+    expect(errors(`class Player extends MonoBehaviour {
+      Update() {
+        Instantiate({ tag: "Bullet", w: 8, h: 4, color: "white", script: "Bullet" }, this.transform.position);
+        for (const e of GameObject.FindGameObjectsWithTag("Enemy")) if (e.tag === "Enemy") Destroy(e);
+        Destroy(this.gameObject);
+      }
     }`)).toEqual([]);
   });
   it("rejects writing to position.x", () => {

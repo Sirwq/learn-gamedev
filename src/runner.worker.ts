@@ -43,11 +43,12 @@ self.onmessage = async (e: MessageEvent) => {
   let game: ReturnType<typeof startGame>;
   try {
     const classes: Record<string, new () => MonoBehaviour> = {};
-    for (const name of new Set(level.flatMap((box) => box.script ?? []))) {
+    for (const name in scripts) { // every Script, since Instantiate may attach one no box uses
       const url = URL.createObjectURL(new Blob([scriptSource(scripts[name], name)], { type: "text/javascript" }));
       scriptOf[url] = name;
       classes[name] = findScript(await import(/* @vite-ignore */ url), name);
     }
+    Object.assign(globalThis, classes); // the editor type-checks Scripts against each other, so they see each other here too
     game = startGame(level, classes);
   } catch (err) {
     return report(err);

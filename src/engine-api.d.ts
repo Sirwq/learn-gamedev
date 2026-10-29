@@ -20,6 +20,8 @@ declare class Transform {
 
 /** Base class for every Script: `class Player extends MonoBehaviour { ... }`. */
 declare class MonoBehaviour {
+  /** The game object this Script is attached to, e.g. `Destroy(this.gameObject)`. */
+  readonly gameObject: GameObject;
   /** The Transform of the game object this Script is attached to (C# leaves out `this.`). */
   readonly transform: Transform;
   /** Called once, before the first Update. */
@@ -27,6 +29,25 @@ declare class MonoBehaviour {
   /** Called once every frame, 60 times a second. */
   Update?(): void;
 }
+
+/** A box in the game, from the Level or made with `Instantiate`. */
+declare class GameObject {
+  /** The tag it was made with, e.g. `"Enemy"`. */
+  readonly tag: string;
+  /** Where it is. */
+  readonly transform: Transform;
+  /** Every object with this tag, e.g. `GameObject.FindGameObjectsWithTag("Enemy").length`. */
+  static FindGameObjectsWithTag(tag: string): GameObject[];
+}
+
+/** What `Instantiate` makes: a box's tag, width and height in pixels, color, and the Script to attach by file name. Unity C# uses a prefab made in the editor instead. */
+type Prefab = { tag: string; w: number; h: number; color: string; script?: string };
+
+/** Makes a new object at `position`, e.g. `Instantiate({ tag: "Bullet", w: 8, h: 4, color: "white", script: "Bullet" }, this.transform.position)`. Its Start runs before its first Update, on the next frame. */
+declare function Instantiate(original: Prefab, position: Vector2): GameObject;
+
+/** Removes an object from the game at the end of this frame, e.g. `Destroy(this.gameObject)`. Until then it still shows up in `FindGameObjectsWithTag`. */
+declare function Destroy(obj: GameObject): void;
 
 /** Game time. */
 declare class Time {
