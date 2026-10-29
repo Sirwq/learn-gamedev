@@ -46,6 +46,11 @@ export function keyEvent(code: string, isDown: boolean) {
   if (!isDown && held.delete(code)) released.add(code);
 }
 
+/** Lets go of every held key, as if each was released now. */
+export function releaseAllKeys() {
+  for (const code of held) keyEvent(code, false);
+}
+
 /** Call once at the start of each frame: key presses since the last frame become this frame's Down / Up. */
 export function nextFrame() {
   [down, up, pressed, released] = [pressed, released, new Set(), new Set()];

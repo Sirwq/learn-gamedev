@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
-import { findScript, flipY, Input, keyEvent, MonoBehaviour, nextFrame, scriptSource, Vector2 } from "./engine";
+import { findScript, flipY, Input, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, Vector2 } from "./engine";
 
 describe("Vector2", () => {
   it("adds and scales into new vectors", () => {
@@ -25,6 +25,15 @@ describe("Input", () => {
     expect([Input.GetKey("Space"), Input.GetKeyUp("Space")]).toEqual([false, true]);
     nextFrame();
     expect(Input.GetKeyUp("Space")).toBe(false);
+  });
+  it("releaseAllKeys lets go of every held key, so nothing stays stuck after a pause", () => {
+    keyEvent("ArrowRight", true);
+    keyEvent("Space", true);
+    nextFrame();
+    releaseAllKeys();
+    nextFrame();
+    expect([Input.GetKey("ArrowRight"), Input.GetKey("Space")]).toEqual([false, false]);
+    expect([Input.GetKeyUp("ArrowRight"), Input.GetKeyUp("Space")]).toEqual([true, true]);
   });
 });
 

@@ -39,7 +39,8 @@ tab.role = "tab";
 tab.textContent = "Player.ts";
 document.getElementById("tabs")!.append(tab);
 const model = monaco.editor.createModel(lesson.scripts.Player.stub, "typescript", monaco.Uri.parse("file:///Player.ts"));
-monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dark", automaticLayout: true });
+const editor = monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dark", automaticLayout: true });
+editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop")!;
@@ -92,9 +93,12 @@ model.onDidChangeContent(() => monaco.editor.setModelMarkers(model, "runtime", [
 
 let worker: Worker | undefined;
 let watchdog: number | undefined;
+let running = false; // a Run's game loop is live (maybe paused)
+let paused = false; // the worker confirmed it stopped its frames
 
 /** The game loop ended (or will): the last frame stays on the canvas. */
 function ended() {
+  running = false;
   clearInterval(watchdog);
   stopBtn.hidden = true;
 }
@@ -119,19 +123,36 @@ function run() {
   const canvas = old.cloneNode() as HTMLCanvasElement;
   old.replaceWith(canvas);
   canvas.onkeydown = canvas.onkeyup = (e) => {
-    e.preventDefault();
+    if (e.code === "Tab") return; // keep a way out for keyboard users; leaving pauses the game
+    e.preventDefault(); // arrows and Space don't scroll the page
+    if (e.code === "Escape") return editor.focus();
     worker?.postMessage({ type: "key", code: e.code, down: e.type === "keydown" });
   };
-  canvas.focus();
+  // Leaving the game pauses it, so no Goals or Lose events happen while the student isn't playing.
+  canvas.onblur = () => {
+    if (!running) return;
+    worker?.postMessage({ type: "pause" });
+    showOverlay("Click to play", false);
+  };
+  canvas.onfocus = () => {
+    if (!running) return;
+    paused = false;
+    worker?.postMessage({ type: "resume" });
+    showOverlay("", false);
+  };
 
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
   stopBtn.hidden = false;
+  running = true;
+  paused = false;
+  canvas.focus();
   worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
     if (e.data.type === "tick") lastTick = performance.now();
+    if (e.data.type === "paused") paused = true;
     if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "check") {
       showGoals(e.data.met);
@@ -160,7 +181,7 @@ function run() {
     }
   };
   watchdog = setInterval(() => {
-    if (document.hidden) lastTick = performance.now(); // hidden tabs pause animation frames, that's not a hang
+    if (document.hidden || paused) lastTick = performance.now(); // hidden tabs pause animation frames, that's not a hang
     else if (performance.now() - lastTick > 1000) {
       stop();
       status.textContent = "Your code ran forever. Look at your while / for loops.";
@@ -169,4 +190,7 @@ function run() {
 }
 
 runBtn.onclick = overlayRun.onclick = run;
+overlay.onclick = (e) => {
+  if (running && e.target !== overlayRun) document.getElementById("game")!.focus(); // "Click to play"
+};
 stopBtn.onclick = stop;

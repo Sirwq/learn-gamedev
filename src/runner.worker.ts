@@ -1,10 +1,12 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine } from "./run-utils";
-import { api, type Box, findScript, flipY, keyEvent, logs, type MonoBehaviour, scriptSource, startGame, worldView } from "./engine";
+import { api, type Box, findScript, flipY, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
 import { checker } from "./check";
 import { course } from "./lessons/course";
 
 const scriptOf: Record<string, string> = {}; // blob URL -> Script name
+let paused = false;
+let pausedFrame: (() => void) | undefined; // the frame a pause stopped, run again on resume
 
 function flushLogs() {
   if (logs.length) postMessage({ type: "logs", lines: logs.splice(0) });
@@ -19,6 +21,17 @@ function report(err: unknown) {
 
 self.onmessage = async (e: MessageEvent) => {
   if (e.data.type === "key") return keyEvent(e.data.code, e.data.down);
+  if (e.data.type === "pause") {
+    paused = true;
+    releaseAllKeys();
+    return postMessage({ type: "paused" }); // a worker stuck in a loop never answers, so the watchdog still fires
+  }
+  if (e.data.type === "resume") {
+    paused = false;
+    if (pausedFrame) requestAnimationFrame(pausedFrame);
+    pausedFrame = undefined;
+    return;
+  }
 
   const canvas: OffscreenCanvas = e.data.canvas;
   const lesson = course[e.data.lesson]; // Goals and Lose events are functions, so the worker loads them itself
@@ -43,6 +56,7 @@ self.onmessage = async (e: MessageEvent) => {
   const check = checker(lesson);
   let last = "";
   const frame = () => {
+    if (paused) return void (pausedFrame = frame);
     postMessage({ type: "tick" });
     let result;
     try {
