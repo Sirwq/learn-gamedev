@@ -22,7 +22,6 @@
       #hints > div, #still-stuck { margin: 8px 0; padding: 0 10px; border: 1px solid #554a22; border-radius: 6px; background: #2a2618; }
       #still-stuck { padding: 8px 10px; }
       #still-stuck[hidden] { display: none; }
-      #lesson blockquote { color: #999; margin-left: 0; padding-left: 8px; border-left: 3px solid #555; }
       main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
       /* The game is 960×540 and scales to fit the left half, keeping its shape. */
       #stage { container-type: size; display: flex; align-items: center; justify-content: center; background: #111; border-radius: 6px; min-width: 0; }
@@ -36,7 +35,18 @@
       #tabs { display: flex; gap: 2px; padding: 4px 6px 0; background: #252526; }
       #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: #2d2d2d; color: #999; font-size: 12px; }
       #tabs button[aria-selected="true"] { background: #1e1e1e; color: #ddd; }
-      #editor { min-height: 0; }
+      #editor, #docs { grid-row: 2; grid-column: 1; min-height: 0; }
+      #docs { display: flex; overflow: hidden; }
+      #docs[hidden] { display: none; }
+      #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid #333; overflow: auto; }
+      #docs nav button { text-align: left; border: 0; background: none; color: #999; font-size: 12px; }
+      #docs nav button[aria-current="page"] { background: #2d2d2d; color: #ddd; }
+      #docs article { flex: 1; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
+      #docs article h3 { margin: 20px 0 4px; font-size: 14px; }
+      #docs article blockquote, #lesson blockquote { color: #999; margin-left: 0; padding-left: 8px; border-left: 3px solid #555; }
+      #docs code { background: #2d2d2d; padding: 1px 4px; }
+      #docs pre { overflow: auto; }
+      a { color: #7bf; }
       #console { min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; border-top: 1px solid #333; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
       #console .warn { color: #fc6; }
       #console .error { color: #f66; }
@@ -86,6 +96,7 @@
       <div id="code">
         <div id="tabs" role="tablist"></div>
         <div id="editor"></div>
+        <div id="docs" hidden><nav aria-label="Docs pages"></nav><article></article></div>
         <pre id="console" aria-label="Console" aria-live="polite"></pre>
       </div>
     </main>

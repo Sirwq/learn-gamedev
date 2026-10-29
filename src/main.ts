@@ -9,6 +9,7 @@ import { loadScripts, openedHints, saveOpenedHints, saveScript } from "./lesson"
 import { markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
+import { anchor, docLink, docPages } from "./docs";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -20,7 +21,18 @@ const asked = Number(new URLSearchParams(location.search).get("lesson")); // sho
 const lessonIndex = Number.isInteger(asked) && unlocked(course, asked) ? asked : 0;
 const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
-document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
+const explanation = document.getElementById("explanation")!;
+explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
+const pages = docPages(engineApi);
+// API names in the Explanation link to their Docs member.
+for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code"))) {
+  const id = docLink(pages, code.textContent!);
+  if (!id) continue;
+  const a = document.createElement("a");
+  a.href = `#${anchor(id)}`;
+  code.replaceWith(a);
+  a.append(code);
+}
 
 const hints = lesson.hints ?? [];
 const stillStuck = document.getElementById("still-stuck")!;
@@ -65,18 +77,55 @@ const models = Object.fromEntries(Object.entries(loadScripts(course, lessonIndex
   return [name, model];
 }));
 const editor = monaco.editor.create(document.getElementById("editor")!, { theme: "vs-dark", automaticLayout: true });
-const tabs = Object.keys(models).map((name) => {
+const tabs = [...Object.keys(models).map((name) => `${name}.ts`), "📖 Docs"].map((label) => {
   const tab = document.createElement("button");
   tab.role = "tab";
-  tab.textContent = `${name}.ts`;
-  tab.onclick = () => show(name);
+  tab.textContent = label;
+  tab.onclick = () => (label === "📖 Docs" ? openDocs() : show(label.slice(0, -3)));
   return tab;
 });
 document.getElementById("tabs")!.append(...tabs);
+const selectTab = (label: string) => {
+  for (const tab of tabs) tab.ariaSelected = String(tab.textContent === label);
+};
+const editorEl = document.getElementById("editor")!;
+const docsEl = document.getElementById("docs")!;
 function show(name: string) {
   editor.setModel(models[name]);
-  for (const tab of tabs) tab.ariaSelected = String(tab.textContent === `${name}.ts`);
+  editorEl.hidden = false;
+  docsEl.hidden = true;
+  selectTab(`${name}.ts`);
 }
+
+// Docs tab: one page at a time; `#doc-…` links anywhere open the page holding that member.
+const docsArticle = docsEl.querySelector("article")!;
+const docsNav = pages.map((page) => {
+  const b = document.createElement("button");
+  b.textContent = page.title;
+  b.onclick = () => openDocs(page.title);
+  return b;
+});
+docsEl.querySelector("nav")!.append(...docsNav);
+let docsPage = pages[0].title;
+function openDocs(target = docsPage) {
+  const page = pages.find((p) => p.title === target || p.ids.includes(target))!;
+  if (page.title !== docsPage || !docsArticle.hasChildNodes()) {
+    docsPage = page.title;
+    docsArticle.innerHTML = marked.parse(page.markdown, { async: false }); // generated from our own typings
+    docsArticle.scrollTop = 0;
+    for (const b of docsNav) b.ariaCurrent = b.textContent === page.title ? "page" : null;
+  }
+  editorEl.hidden = true;
+  docsEl.hidden = false;
+  selectTab("📖 Docs");
+  if (target !== page.title) document.getElementById(anchor(target))?.scrollIntoView();
+}
+document.addEventListener("click", (e) => {
+  const link = (e.target as Element).closest?.("a[href^='#doc-']");
+  if (!link) return;
+  e.preventDefault();
+  openDocs(link.getAttribute("href")!.slice("#doc-".length));
+});
 show(Object.keys(models)[0]);
 editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
 
