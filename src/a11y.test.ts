@@ -16,6 +16,8 @@ describe("Lesson page accessibility", () => {
     expect(tag("menu-open")).toContain('title="Back to Lessons"');
     expect(html).not.toContain("☰");
   });
+  it("keeps hidden Course menu buttons hidden (the bar's display: flex must not beat [hidden])", () =>
+    expect(html).toContain("#menu .bar button[hidden] { display: none; }"));
   it("gives the Console a role that allows its label", () => expect(tag("console")).toContain('role="log"'));
   it("lets the progress name come from code, holding the visible count", () => expect(tag("progress")).not.toContain("aria-label"));
 });
