@@ -29,6 +29,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [Which Achievements reward extra Mechanics?](tickets/056-mechanic-achievements.md): Double jump (after First jump), Wall jump (after Bonk) and Dash (after Both ways), earned anywhere from day one and always on the map, so `🏆 n / 21`; tests get `keysDown` in `Run` and rule out stomp bounces, respawns and rides; "secret" reworded to "after the Course".
 - [What does the Player look like as a Claude sprite?](tickets/058-claude-player-sprite.md): an original orange critter (not Anthropic's mascot) in a Claude-like palette, 16×16 at 2× filling the 32×32 Player box, with idle / walk / jump frames for Sandbox; Enemy and other tags stay Kenney.
 - [How do students keep their saves safe?](tickets/059-backup-ux.md): a 💾 Saves dialog on the menu from Lesson 1 (Export / Import everything, last-backup line), Export in the Project strip, Import as "From a file…" under + New; one quiet menu reminder after 7+ days with new progress; no popups or private-window detection; Import everything merges per Lesson and never overwrites; `<name>.learn-dev.json` / `learn-dev-backup-YYYY-MM-DD.json`.
+- [How do students share a Project?](tickets/060-share-project.md): the Export file is the share, imported as an ordinary new Project; before unlock 💾 Saves Import keeps it until Sandbox opens; Sandbox only, no Share button; a dev-build-only toggle unlocks Sandbox for checking.
 
 ## Not yet specified
 
@@ -40,6 +41,8 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Built-in paid AI tutor: Ask DeepSeek stays; the plan waits in [Which LLM and proxy power the AI tutor?](tickets/009-ai-tutor-provider.md).
 - Accounts and server saves: backup is an export / import file instead ([Where do Projects with images live?](tickets/051-project-storage.md)).
 - Multiplayer.
+- Share links and a gallery: a Project travels as its Export file only; a link can't hold a Project with images and a gallery needs a server ([How do students share a Project?](tickets/060-share-project.md)).
+- Sharing Lesson code: sharing is Sandbox only ([How do students share a Project?](tickets/060-share-project.md)).
 - Text placed in the world (signs, labels over an Enemy): v2 UI text is screen only ([What on-screen UI text does the student write?](tickets/055-ui-text.md)).
 - Students' own sounds and background music: a later chapter of Lessons, "How to add your own sounds" ([What do sound and animation add to the engine?](tickets/054-sound-animation.md)).
 - In-app sprite editor: students import images only; 📖 Docs point to Piskel or Aseprite ([How do students bring their own sprites?](tickets/050-own-sprites.md)).
