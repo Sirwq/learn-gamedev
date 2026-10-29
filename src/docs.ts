@@ -1,5 +1,4 @@
 // The 📖 Docs tab, generated from the doc comments in engine-api.d.ts (spec 007), so docs and Monaco hover can't drift.
-import { aiNote } from "./lessons/ai-note";
 
 export type Doc = { id: string; signature: string; text: string; example?: string; unity?: string };
 export type Page = { title: string; markdown: string; ids: string[] };
@@ -51,7 +50,6 @@ const docMarkdown = (d: Doc) =>
 /** One page per class, then the TypeScript vs Unity C# page listing every `@unity` note. */
 export function docPages(source: string): Page[] {
   const classes = apiClasses(source);
-  const note = `> ${aiNote}`;
   const pages = classes.map((c) => ({
     title: c.id,
     ids: [c.id, ...c.members.map((m) => m.id)],
@@ -59,7 +57,6 @@ export function docPages(source: string): Page[] {
       `<h2 id="${anchor(c.id)}">${c.id}</h2>`,
       docMarkdown(c),
       ...c.members.map((m) => `<h3 id="${anchor(m.id)}">${m.id}</h3>\n\n${docMarkdown(m)}`),
-      note,
     ].join("\n\n"),
   }));
   const differences = classes.flatMap((c) => [c, ...c.members]).filter((d) => d.unity);
@@ -70,7 +67,6 @@ export function docPages(source: string): Page[] {
       "## TypeScript vs Unity C#",
       "Everything here works like Unity C#, except:",
       differences.map((d) => `- [${d.id}](#${anchor(d.id)}): ${d.unity}`).join("\n"),
-      note,
     ].join("\n\n"),
   });
   return pages;

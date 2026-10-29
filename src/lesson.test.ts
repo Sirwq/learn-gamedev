@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type Lesson, loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot, splitHints } from "./lesson";
-import { aiNote } from "./lessons/ai-note";
+import { legacyAiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
 import { memoryStore } from "./test-helpers";
 
@@ -26,14 +26,14 @@ describe("saved Scripts", () => {
   });
   it("lose the old AI note comment on line 1, and only an exact match of it", () => {
     const s = memoryStore();
-    saveScript("Player", `// ${aiNote}\n\nclass Player {}`, s);
-    saveScript("Bullet", `// ${aiNote} (mine)\n\nclass Bullet {}`, s);
-    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "class Player {}", Bullet: `// ${aiNote} (mine)\n\nclass Bullet {}` });
-    saveScript("Player", `class Player {}\n// ${aiNote}\n`, s);
-    expect(loadScripts(lessons, 1, s).Player).toBe(`class Player {}\n// ${aiNote}\n`);
+    saveScript("Player", `// ${legacyAiNote}\n\nclass Player {}`, s);
+    saveScript("Bullet", `// ${legacyAiNote} (mine)\n\nclass Bullet {}`, s);
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "class Player {}", Bullet: `// ${legacyAiNote} (mine)\n\nclass Bullet {}` });
+    saveScript("Player", `class Player {}\n// ${legacyAiNote}\n`, s);
+    expect(loadScripts(lessons, 1, s).Player).toBe(`class Player {}\n// ${legacyAiNote}\n`);
   });
   it("Lesson stubs carry no AI note", () => {
-    for (const l of course) for (const { stub } of Object.values(l.scripts)) expect(stub).not.toContain(aiNote);
+    for (const l of course) for (const { stub } of Object.values(l.scripts)) expect(stub).not.toContain(legacyAiNote);
   });
 });
 

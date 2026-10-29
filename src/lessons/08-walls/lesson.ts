@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../07-platforms/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -9,7 +8,7 @@ import reference from "./reference/Player.ts?raw";
 export const lesson: Lesson = {
   title: "8. Walls",
   concept: "else if",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },

@@ -1,7 +1,6 @@
 import type { World } from "../../engine";
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../02-speed/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -12,7 +11,7 @@ const flag = (world: World, side: number) => world.filter((o) => o.tag === "Flag
 export const lesson: Lesson = {
   title: "3. Steer",
   concept: "if and Input.GetKey",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", x: 464, y: 40, w: 32, h: 32, color: "orange", script: "Player" },

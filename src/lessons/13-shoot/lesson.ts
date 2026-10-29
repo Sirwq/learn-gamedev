@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../12-stomp/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -11,7 +10,7 @@ import bulletReference from "./reference/Bullet.ts?raw";
 export const lesson: Lesson = {
   title: "13. Shooting",
   concept: "Instantiate and Bullet",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },

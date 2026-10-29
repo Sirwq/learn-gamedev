@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiNote, tutorPrompt, tutorRules } from "./ai-note";
+import { tutorPrompt, tutorRules } from "./ai-note";
 
 describe("tutorPrompt", () => {
   const prompt = tutorPrompt({
@@ -31,5 +31,5 @@ describe("tutorPrompt", () => {
     expect(sandbox).not.toContain("# Lesson");
   });
 
-  it("starts with the shared AI note", () => expect(prompt.startsWith(aiNote)).toBe(true));
+  it("starts with tutor rules", () => expect(prompt.startsWith("Tutor rules:")).toBe(true));
 });

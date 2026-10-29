@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { offScreen, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../09-camera/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -9,7 +8,7 @@ import reference from "./reference/Player.ts?raw";
 export const lesson: Lesson = {
   title: "10. Coins",
   concept: "Destroy and Debug.Log",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     width: 2400,
     boxes: [

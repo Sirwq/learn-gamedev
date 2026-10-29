@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../06-land/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -9,7 +8,7 @@ import reference from "./reference/Player.ts?raw";
 export const lesson: Lesson = {
   title: "7. Many platforms",
   concept: "arrays and for",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },

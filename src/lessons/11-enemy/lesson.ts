@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "./stub/Enemy.ts?raw";
@@ -9,7 +8,7 @@ import reference from "./reference/Enemy.ts?raw";
 export const lesson: Lesson = {
   title: "11. Enemy patrol",
   concept: "a second Script: Enemy",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },

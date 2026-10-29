@@ -1,7 +1,6 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import { Time } from "../../engine";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../13-shoot/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
@@ -13,7 +12,7 @@ let lastX = start.x; // the Player's x on the previous frame of this Run
 export const lesson: Lesson = {
   title: "14. Health and respawn",
   concept: "Start()",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     boxes: [
       { tag: "Player", ...start, w: 32, h: 32, color: "orange", script: "Player" },

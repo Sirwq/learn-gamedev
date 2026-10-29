@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createProject, deleteProject, duplicateProject, loadProjects, playground, sandboxUnlocked, saveProject, scriptNameError } from "./sandbox";
 import { markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
-import { aiNote } from "./lessons/ai-note";
+import { legacyAiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
 import { api, keyEvent, KeyCode, releaseAllKeys, startGame, worldView } from "./engine";
 import { loadScript, memoryStore } from "./test-helpers";
@@ -49,7 +49,7 @@ describe("Projects", () => {
   it("saved Projects lose the old AI note comment on line 1", () => {
     const s = memoryStore();
     const p = createProject("blank", course, s);
-    saveProject({ ...p, scripts: { Game: `// ${aiNote}\n\nclass Game {}` } }, s);
+    saveProject({ ...p, scripts: { Game: `// ${legacyAiNote}\n\nclass Game {}` } }, s);
     expect(loadProjects(s)[0].scripts.Game).toBe("class Game {}");
   });
 

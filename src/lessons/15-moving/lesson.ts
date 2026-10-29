@@ -1,6 +1,5 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
-import { withNoteBox } from "../ai-note";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "./stub/MovingPlatform.ts?raw";
@@ -9,7 +8,7 @@ import reference from "./reference/MovingPlatform.ts?raw";
 export const lesson: Lesson = {
   title: "15. Moving platforms",
   concept: "another object's motion",
-  explanation: withNoteBox(explanation),
+  explanation,
   level: {
     width: 2000,
     boxes: [

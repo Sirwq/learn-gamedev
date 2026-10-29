@@ -2,7 +2,6 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
-import { aiNote } from "./lessons/ai-note";
 
 const pages = docPages(api);
 
@@ -24,11 +23,10 @@ describe("Docs", () => {
     expect(missing).toEqual([]);
   });
 
-  it("has one page per class plus the C# page, each with the AI note", () => {
+  it("has one page per class plus the C# page", () => {
     expect(pages.map((p) => p.title)).toEqual(
       ["Vector2", "Transform", "MonoBehaviour", "GameObject", "Time", "Input", "KeyCode", "Debug", "Camera", "TypeScript vs Unity C#"],
     );
-    for (const p of pages) expect(p.markdown).toContain(aiNote);
     expect(pages.find((p) => p.title === "GameObject")!.ids).toEqual(expect.arrayContaining(["Instantiate", "Destroy", "Prefab"]));
   });
 
