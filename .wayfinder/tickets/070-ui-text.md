@@ -1,7 +1,7 @@
 ---
 title: Screen text with OnGUI and GUI.Label
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -26,3 +26,10 @@ assignee:
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+- **Engine** (`src/engine.ts`): `OnGUI?()` on MonoBehaviour, called for every live Script after Update and the end-of-frame sweep. `GUI.Label` pushes onto the exported `labels` array (emptied each frame). `GUI.color` and `GUI.skin.label` (`fontSize` 32, `UpperLeft`, `outline` true) reset before each Script's `OnGUI`. fontSize rounds to a multiple of 16 (Kenney Pixel's outlines sit on a 1/16 em grid), minimum 16. `Rect`, `Color` (Unity's values, including yellow 1/0.92/0.016) and a string-valued `TextAnchor` are now globals. `startGame` takes a `gui` flag; the worker passes `v2Features`, so Lessons 1–15 never call OnGUI.
+- **Typings/Docs**: `GUI`, `GUISkin`, `GUIStyle`, `Rect`, `Color` and `TextAnchor` are in `engine-api.d.ts` with @unity notes (y-down vs world y-up, style kept between frames in Unity, `Outline` component). They get their own 📖 Docs pages.
+- **Runtime**: a new `{ type: "labels" }` FromWorker message, sent only when the frame's labels change, so pause freezes them for free. `src/gui.ts` lays out each line by TextAnchor, draws the 1 px dark outline in 8 directions, and draws onto a 960×540 `#gui` overlay canvas (pixelated, pointer-events none) over the game. `stop()` (and so each new Run) clears it.
+- **Screen readers**: a `.sr-only` `#gui-text` list, not a live region. `textList` only rewrites it when the texts change.
+- **Font**: `public/fonts/KenneyPixel.ttf` from Kenney Fonts, with its CC0 `LICENSE.txt` copied unchanged plus a README. It is loaded with `FontFace` only in Sandbox / Chapter 2 (`DOM.Iterable` added to tsconfig for `document.fonts.add`).
+- Not checked in a real browser (none in this environment), so glyph crispness and the outline look were not seen.

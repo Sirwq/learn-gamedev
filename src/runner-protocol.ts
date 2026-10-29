@@ -1,7 +1,7 @@
 // Messages between the page (main.ts) and the Run worker (runner.worker.ts): every one either side may send.
 import type { CheckResult } from "./check";
 import type { ConsoleLine } from "./console";
-import type { Clip } from "./engine";
+import type { Clip, Label } from "./engine";
 import type { Project } from "./sandbox";
 
 export type ToWorker =
@@ -19,6 +19,8 @@ export type FromWorker =
   | { type: "achievements"; ids: string[] }
   /** The clips played this frame, each once; only in Sandbox and Chapter 2. */
   | { type: "sounds"; names: Clip[] }
+  /** This frame's GUI.Label text, sent when it changes; only in Sandbox and Chapter 2. */
+  | { type: "labels"; labels: Label[] }
   /** Sent when the result changes. */
   | ({ type: "check" } & CheckResult)
   /** The loop has stopped; `script` and `line` are set when the error points into a Script. */

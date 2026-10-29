@@ -2,7 +2,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
 import { course } from "./lessons/course";
-import { Camera, CLIPS, Destroy, findScript, GameObject, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, takeSounds, toScreen, Vector2 } from "./engine";
+import { Camera, CLIPS, Color, Destroy, findScript, GameObject, GUI, labels, Rect, TextAnchor, Input, Instantiate, keyEvent, MonoBehaviour, nextFrame, releaseAllKeys, scriptSource, startGame, takeSounds, toScreen, Vector2 } from "./engine";
 
 describe("Vector2", () => {
   it("adds and scales into new vectors", () => {
@@ -103,6 +103,49 @@ describe("audio", () => {
       Start() { this.audio.PlayOneShot("Boing" as "Jump"); }
     }
     expect(() => startGame([{ tag: "Player", x: 0, y: 0, w: 32, h: 32, color: "orange", script: "Player" }], { Player })).toThrow("There is no sound named Boing");
+  });
+});
+
+describe("OnGUI", () => {
+  const player = (Player: new () => MonoBehaviour, gui?: boolean) =>
+    startGame([{ tag: "Player", x: 0, y: 0, w: 32, h: 32, color: "orange", script: "Player" }], { Player }, undefined, gui);
+  it("collects each frame's labels after Update, with the style reset for every OnGUI", () => {
+    let coins = 0;
+    class Player extends MonoBehaviour {
+      Update() { coins++; }
+      OnGUI() {
+        GUI.Label(new Rect(16, 16, 300, 30), "Coins: " + coins);
+        GUI.color = Color.yellow;
+        GUI.skin.label.fontSize = 40;
+        GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+        GUI.skin.label.outline = false;
+        GUI.Label(new Rect(0, 0, 960, 540), "Go!");
+      }
+    }
+    const game = player(Player);
+    game.step();
+    game.step();
+    expect(labels).toEqual([
+      { x: 16, y: 16, w: 300, h: 30, text: "Coins: 2", color: "rgb(255, 255, 255)", size: 32, anchor: "UpperLeft", outline: true },
+      { x: 0, y: 0, w: 960, h: 540, text: "Go!", color: "rgb(255, 235, 4)", size: 48, anchor: "MiddleCenter", outline: false },
+    ]);
+  });
+  it("rounds fontSize to a whole multiple of the font's 16 px, never below one", () => {
+    let fontSize = 0;
+    class Player extends MonoBehaviour {
+      OnGUI() { GUI.skin.label.fontSize = fontSize; GUI.Label(new Rect(0, 0, 1, 1), ""); }
+    }
+    const game = player(Player);
+    for (const [asked, got] of [[0, 16], [23, 16], [24, 32], [64, 64]]) {
+      fontSize = asked;
+      game.step();
+      expect(labels[0].size).toBe(got);
+    }
+  });
+  it("is not called with gui off, as in Lessons 1–15", () => {
+    class Player extends MonoBehaviour { OnGUI() { GUI.Label(new Rect(0, 0, 1, 1), "hi"); } }
+    player(Player, false).step();
+    expect(labels).toEqual([]);
   });
 });
 
@@ -209,6 +252,19 @@ describe("student typings", () => {
   it("autocompletes the ten clip names and rejects any other", () => {
     for (const clip of CLIPS) expect(errors(`class Player extends MonoBehaviour { Start() { this.audio.PlayOneShot("${clip}"); } }`)).toEqual([]);
     expect(errors(`class Player extends MonoBehaviour { Start() { this.audio.PlayOneShot("Boing"); } }`).join()).toContain(`"Boing"`);
+  });
+  it("accepts the screen text example", () => {
+    expect(errors(`class HUD extends MonoBehaviour {
+      coins = 0;
+      OnGUI() {
+        GUI.color = Color.yellow;
+        GUI.color = new Color(1, 0.5, 0);
+        GUI.skin.label.fontSize = 32;
+        GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+        GUI.skin.label.outline = false;
+        GUI.Label(new Rect(16, 16, 300, 30), "Coins: " + this.coins);
+      }
+    }`)).toEqual([]);
   });
   it("rejects writing to position.x", () => {
     expect(errors(`class Player extends MonoBehaviour { Update() { this.transform.position.x += 5; } }`).join())

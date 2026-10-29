@@ -5,6 +5,8 @@ import RunnerWorker from "./runner.worker?worker";
 import type { FromWorker, ToWorker } from "./runner-protocol";
 import { modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
 import { loadMuted, playClips, saveMuted, stopSounds, unlockAudio } from "./sound";
+import { drawLabels, loadFont, textList } from "./gui";
+import type { Label } from "./engine";
 import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
 import { marked } from "marked";
 import { course } from "./lessons/course";
@@ -454,15 +456,15 @@ monaco.editor.onDidChangeMarkers(() => {
   runBtn.disabled = blocked;
 });
 
-// Mute: only shown where sounds can play.
-const hasSound = v2Features(project ? { level: project.level } : { lesson: lessonIndex });
+// Sound and screen text exist only in Sandbox and Chapter 2; so does the mute button.
+const v2 = v2Features(project ? { level: project.level } : { lesson: lessonIndex });
 const muteBtn = document.getElementById("mute") as HTMLButtonElement;
 let muted = loadMuted(localStorage);
 const showMute = () => {
   muteBtn.textContent = muted ? "🔇" : "🔊";
   muteBtn.setAttribute("aria-pressed", String(muted));
 };
-muteBtn.hidden = !hasSound;
+muteBtn.hidden = !v2;
 showMute();
 muteBtn.onmousedown = (e) => e.preventDefault(); // keep focus on the game, so clicking doesn't pause it
 muteBtn.onclick = () => {
@@ -471,6 +473,13 @@ muteBtn.onclick = () => {
   try { saveMuted(localStorage, muted); } catch {}
   showMute();
 };
+
+// Screen text: the page draws the worker's labels over the game and lists them for screen readers.
+const guiCtx = (document.getElementById("gui") as HTMLCanvasElement).getContext("2d")!;
+const guiList = document.getElementById("gui-text")!;
+const listTexts = textList((texts) => guiList.replaceChildren(...texts.map((t) => Object.assign(document.createElement("li"), { textContent: t }))));
+const showLabels = (labels: Label[]) => (drawLabels(guiCtx, labels), listTexts(labels));
+if (v2) loadFont().catch(() => {}); // the fallback font still shows the text
 
 let worker: Worker | undefined;
 const post = (message: ToWorker, transfer: Transferable[] = []) => worker?.postMessage(message, transfer);
@@ -491,6 +500,7 @@ function ended() {
 function stop() {
   worker?.terminate();
   stopSounds();
+  showLabels([]);
   ended();
 }
 
@@ -528,7 +538,7 @@ function run() {
     showOverlay("", false);
   };
 
-  if (hasSound) unlockAudio(); // run() only ever follows a click or Ctrl+Enter, which may start audio
+  if (v2) unlockAudio(); // run() only ever follows a click or Ctrl+Enter, which may start audio
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
   stopBtn.hidden = false;
@@ -545,6 +555,7 @@ function run() {
     if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "achievements") earn(e.data.ids);
     if (e.data.type === "sounds" && !muted) playClips(e.data.names);
+    if (e.data.type === "labels") showLabels(e.data.labels);
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose

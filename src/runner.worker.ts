@@ -1,6 +1,6 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine, v2Features } from "./run-utils";
-import { api, type Box, Camera, findScript, keyEvent, keysDown, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, takeSounds, worldView } from "./engine";
+import { api, type Box, Camera, findScript, keyEvent, keysDown, labels, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, takeSounds, worldView } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { checker } from "./check";
 import { achievementChecker } from "./achievements";
@@ -47,6 +47,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   Object.assign(globalThis, api);
 
   let game: ReturnType<typeof startGame>;
+  const v2 = v2Features(data); // Lessons 1–15 don't animate, play sounds or call OnGUI
   const sprites = await images;
   try {
     const classes: Record<string, new () => MonoBehaviour> = {};
@@ -56,7 +57,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
       classes[name] = findScript(await import(/* @vite-ignore */ url), name);
     }
     Object.assign(globalThis, classes); // the editor type-checks Scripts against each other, so they see each other here too
-    game = startGame(level, classes, lesson.level.camera);
+    game = startGame(level, classes, lesson.level.camera, v2);
   } catch (err) {
     return report(err);
   }
@@ -64,8 +65,8 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   const check = checker(lesson);
   const achieve = achievementChecker(level, new Set(data.earned));
   let last = "";
+  let lastLabels = "[]";
   let frames = 0; // drawn so far: the animation clock, which stops while paused
-  const v2 = v2Features(data); // Lessons 1–15 neither animate nor play sounds
   const frame = () => {
     if (paused) return void (pausedFrame = frame);
     send({ type: "tick" });
@@ -85,6 +86,9 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     const json = JSON.stringify(result);
     if (json !== last) send({ type: "check", ...result });
     last = json;
+    const gui = JSON.stringify(labels);
+    if (gui !== lastLabels) send({ type: "labels", labels });
+    lastLabels = gui;
     drawWorld(ctx, sprites, Camera.main, game.objects, v2 ? frames++ / 60 : undefined);
     if (!result.lost && !result.passed) requestAnimationFrame(frame);
   };

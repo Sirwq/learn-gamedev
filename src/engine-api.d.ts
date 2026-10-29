@@ -82,6 +82,12 @@ declare class MonoBehaviour {
    * @unity C# writes `void Update()`; TypeScript leaves out the return type.
    */
   Update?(): void;
+  /**
+   * Called every frame after Update, to draw screen text with `GUI.Label`. Shows in Sandbox and Chapter 2 Lessons; Lessons 1–15 draw nothing.
+   * @example OnGUI() { GUI.Label(new Rect(16, 16, 300, 30), "Coins: " + this.coins); }
+   * @unity C# writes `void OnGUI()`; TypeScript leaves out the return type.
+   */
+  OnGUI?(): void;
 }
 
 /**
@@ -281,4 +287,221 @@ declare class Camera {
    * @example Camera.main.orthographicSize = 200;
    */
   orthographicSize: number;
+}
+
+/**
+ * Draws text over the game, from `OnGUI`. It stays put when `Camera.main` moves.
+ * @example GUI.Label(new Rect(16, 16, 300, 30), "Coins: " + this.coins);
+ */
+declare class GUI {
+  /**
+   * Draws `text` in `position` for this frame. `\n` starts a new line; long text is not wrapped or cut off.
+   * @example GUI.Label(new Rect(16, 16, 300, 30), "Coins: " + this.coins);
+   */
+  static Label(position: Rect, text: string): void;
+  /**
+   * Colour of the next labels; white at the start of every `OnGUI`.
+   * @example GUI.color = Color.yellow;
+   * @unity Unity keeps `GUI.color` from one frame to the next; here it goes back to white at the start of every `OnGUI`.
+   */
+  static color: Color;
+  /**
+   * The label style: `GUI.skin.label`.
+   * @example GUI.skin.label.fontSize = 32;
+   */
+  static readonly skin: GUISkin;
+}
+
+/**
+ * Holds the label style. There is one: `GUI.skin`.
+ * @example GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+ */
+declare class GUISkin {
+  /**
+   * The style `GUI.Label` draws with.
+   * @example GUI.skin.label.fontSize = 32;
+   */
+  readonly label: GUIStyle;
+}
+
+/**
+ * How labels look. Every setting goes back to its default at the start of every `OnGUI`.
+ * @example GUI.skin.label.fontSize = 32;
+ * @unity Unity keeps the style from one frame to the next and lets you make new GUIStyles; here there is only `GUI.skin.label`, reset every `OnGUI`.
+ */
+declare class GUIStyle {
+  /**
+   * Text size in pixels, 32 to start. Rounds to a multiple of 16 so the pixel font stays crisp.
+   * @example GUI.skin.label.fontSize = 48;
+   */
+  fontSize: number;
+  /**
+   * Where the text sits inside its Rect, `TextAnchor.UpperLeft` to start.
+   * @example GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+   */
+  alignment: TextAnchor;
+  /**
+   * A thin dark outline that keeps text readable on any background, on to start.
+   * @example GUI.skin.label.outline = false;
+   * @unity Not in Unity: C# adds an `Outline` component to a UI Text instead.
+   */
+  outline: boolean;
+}
+
+/**
+ * A rectangle on the screen in pixels: x, y is the top-left corner of the 960×540 view, y grows down.
+ * @example new Rect(16, 16, 300, 30)
+ * @unity Same as Unity's GUI Rect. Mind that it is the other way up from the world, where y starts at the bottom and grows up.
+ */
+declare class Rect {
+  /**
+   * Makes a rectangle: left, top, width, height.
+   * @example new Rect(16, 16, 300, 30)
+   */
+  constructor(x: number, y: number, width: number, height: number);
+  /**
+   * Left edge, from the left of the view.
+   * @example new Rect(16, 16, 300, 30).x
+   */
+  x: number;
+  /**
+   * Top edge, from the top of the view; grows downward.
+   * @example new Rect(16, 16, 300, 30).y
+   */
+  y: number;
+  /**
+   * Width; only matters for alignment.
+   * @example new Rect(0, 0, 960, 540).width
+   */
+  width: number;
+  /**
+   * Height; only matters for alignment.
+   * @example new Rect(0, 0, 960, 540).height
+   */
+  height: number;
+}
+
+/**
+ * A colour from red, green and blue, each 0 to 1.
+ * @example new Color(1, 0.5, 0)
+ */
+declare class Color {
+  /**
+   * Makes a colour: red, green and blue from 0 to 1.
+   * @example GUI.color = new Color(1, 0.5, 0);
+   * @unity C# writes `new Color(1f, 0.5f, 0f)`; TypeScript numbers need no `f`.
+   */
+  constructor(r: number, g: number, b: number);
+  /**
+   * Red, 0 to 1.
+   * @example GUI.color.r
+   */
+  readonly r: number;
+  /**
+   * Green, 0 to 1.
+   * @example GUI.color.g
+   */
+  readonly g: number;
+  /**
+   * Blue, 0 to 1.
+   * @example GUI.color.b
+   */
+  readonly b: number;
+  /**
+   * White, the default.
+   * @example GUI.color = Color.white;
+   */
+  static readonly white: Color;
+  /**
+   * Black.
+   * @example GUI.color = Color.black;
+   */
+  static readonly black: Color;
+  /**
+   * Gray.
+   * @example GUI.color = Color.gray;
+   */
+  static readonly gray: Color;
+  /**
+   * Red.
+   * @example GUI.color = Color.red;
+   */
+  static readonly red: Color;
+  /**
+   * Green.
+   * @example GUI.color = Color.green;
+   */
+  static readonly green: Color;
+  /**
+   * Blue.
+   * @example GUI.color = Color.blue;
+   */
+  static readonly blue: Color;
+  /**
+   * Yellow.
+   * @example GUI.color = Color.yellow;
+   */
+  static readonly yellow: Color;
+  /**
+   * Cyan.
+   * @example GUI.color = Color.cyan;
+   */
+  static readonly cyan: Color;
+  /**
+   * Magenta.
+   * @example GUI.color = Color.magenta;
+   */
+  static readonly magenta: Color;
+}
+
+/**
+ * Where text sits inside its Rect.
+ * @example GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+ */
+declare enum TextAnchor {
+  /**
+   * Top left, the default.
+   * @example GUI.skin.label.alignment = TextAnchor.UpperLeft;
+   */
+  UpperLeft,
+  /**
+   * Top centre.
+   * @example GUI.skin.label.alignment = TextAnchor.UpperCenter;
+   */
+  UpperCenter,
+  /**
+   * Top right.
+   * @example GUI.skin.label.alignment = TextAnchor.UpperRight;
+   */
+  UpperRight,
+  /**
+   * Middle left.
+   * @example GUI.skin.label.alignment = TextAnchor.MiddleLeft;
+   */
+  MiddleLeft,
+  /**
+   * Middle centre.
+   * @example GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+   */
+  MiddleCenter,
+  /**
+   * Middle right.
+   * @example GUI.skin.label.alignment = TextAnchor.MiddleRight;
+   */
+  MiddleRight,
+  /**
+   * Bottom left.
+   * @example GUI.skin.label.alignment = TextAnchor.LowerLeft;
+   */
+  LowerLeft,
+  /**
+   * Bottom centre.
+   * @example GUI.skin.label.alignment = TextAnchor.LowerCenter;
+   */
+  LowerCenter,
+  /**
+   * Bottom right.
+   * @example GUI.skin.label.alignment = TextAnchor.LowerRight;
+   */
+  LowerRight,
 }

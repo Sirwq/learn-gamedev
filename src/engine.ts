@@ -48,6 +48,59 @@ export class MonoBehaviour {
   readonly audio = new AudioSource();
   Start?(): void;
   Update?(): void;
+  OnGUI?(): void;
+}
+
+export class Rect {
+  constructor(public x: number, public y: number, public width: number, public height: number) {}
+}
+
+export class Color {
+  constructor(readonly r: number, readonly g: number, readonly b: number) {}
+  static readonly white = new Color(1, 1, 1);
+  static readonly black = new Color(0, 0, 0);
+  static readonly gray = new Color(0.5, 0.5, 0.5);
+  static readonly red = new Color(1, 0, 0);
+  static readonly green = new Color(0, 1, 0);
+  static readonly blue = new Color(0, 0, 1);
+  static readonly yellow = new Color(1, 0.92, 0.016);
+  static readonly cyan = new Color(0, 1, 1);
+  static readonly magenta = new Color(1, 0, 1);
+}
+
+export const TextAnchor = {
+  UpperLeft: "UpperLeft", UpperCenter: "UpperCenter", UpperRight: "UpperRight",
+  MiddleLeft: "MiddleLeft", MiddleCenter: "MiddleCenter", MiddleRight: "MiddleRight",
+  LowerLeft: "LowerLeft", LowerCenter: "LowerCenter", LowerRight: "LowerRight",
+} as const;
+export type TextAnchor = keyof typeof TextAnchor;
+
+/** One font pixel of Kenney Pixel at fontSize 16; sizes round to a multiple so the text stays crisp. */
+export const FONT_PIXEL = 16;
+
+/** One GUI.Label call, in 960×540 view pixels from the top-left, y down; `color` is CSS. */
+export type Label = { x: number; y: number; w: number; h: number; text: string; color: string; size: number; anchor: TextAnchor; outline: boolean };
+
+/** This frame's labels; emptied before the OnGUI calls of each frame. */
+export const labels: Label[] = [];
+
+const labelStyle = () => ({ fontSize: 32, alignment: TextAnchor.UpperLeft as TextAnchor, outline: true });
+const channel = (v: number) => Math.round(Math.min(1, Math.max(0, v)) * 255);
+
+export class GUI {
+  static color = Color.white;
+  static readonly skin = { label: labelStyle() };
+  static Label({ x, y, width, height }: Rect, text: string) {
+    const { color: c, skin: { label: s } } = GUI;
+    const size = Math.max(FONT_PIXEL, Math.round(s.fontSize / FONT_PIXEL) * FONT_PIXEL || FONT_PIXEL);
+    labels.push({ x, y, w: width, h: height, text: String(text), color: `rgb(${channel(c.r)}, ${channel(c.g)}, ${channel(c.b)})`, size, anchor: s.alignment, outline: s.outline });
+  }
+}
+
+/** Unlike Unity, the style starts fresh for every OnGUI call. */
+function resetGUI() {
+  GUI.color = Color.white;
+  Object.assign(GUI.skin.label, labelStyle());
 }
 
 export class Time {
@@ -183,12 +236,13 @@ export function Destroy(obj: GameObject) {
 const keep = <T>(list: T[], f: (t: T) => boolean) => void list.splice(0, list.length, ...list.filter(f));
 
 /** What a Script sees as globals. */
-export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug, Camera };
+export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug, Camera, GUI, Rect, Color, TextAnchor };
 
-/** Spawns the Level, resets Camera.main, attaches one new Script instance per scripted box and calls Start. */
-export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) {
+/** Spawns the Level, resets Camera.main, attaches one new Script instance per scripted box and calls Start. `gui` off skips OnGUI. */
+export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart, gui = true) {
   Camera.main = new Camera(camera);
   sounds.clear();
+  labels.length = 0;
   const g: NonNullable<typeof game> = (game = { objects: [], behaviours: [], fresh: [], scripts });
   // Start runs once, before a Script's first Update; Scripts made inside Start get started too.
   const startFresh = () => {
@@ -214,6 +268,8 @@ export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) 
         if (o.moved.x) o.facing = Math.sign(o.moved.x);
       }
       sweep();
+      labels.length = 0;
+      if (gui) for (const b of g.behaviours) if (b.OnGUI) (resetGUI(), b.OnGUI());
     },
   };
 }
