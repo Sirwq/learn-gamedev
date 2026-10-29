@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { achievementChecker, achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import type { World } from "./engine";
+import { memoryStore } from "./test-helpers";
 
 const at = (x: number): World => [{ tag: "Player", x, y: 40, w: 32, h: 32, color: "" }];
 
@@ -53,8 +54,7 @@ describe("achievements", () => {
   });
 
   it("saves earned Achievements", () => {
-    const data: Record<string, string> = {};
-    const store = { getItem: (k: string) => data[k] ?? null, setItem: (k: string, v: string) => void (data[k] = v) };
+    const store = memoryStore();
     saveEarned("steps", store);
     expect(loadEarned(store)).toEqual(new Set(["steps"]));
   });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cardStates, checker, currentLesson, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
 import type { World } from "./engine";
 import type { Lesson } from "./lesson";
+import { memoryStore } from "./test-helpers";
 
 const at = (x: number): World => [{ tag: "Player", x, y: 0, w: 1, h: 1, color: "" }];
 const lesson = {
@@ -44,8 +45,7 @@ describe("checker", () => {
 
 describe("passed state", () => {
   it("is saved and reloaded", () => {
-    const data = new Map<string, string>();
-    const store = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) };
+    const store = memoryStore();
     expect(isPassed("1. Move right", store)).toBe(false);
     markPassed("1. Move right", store);
     expect(isPassed("1. Move right", { getItem: store.getItem })).toBe(true);
@@ -55,17 +55,12 @@ describe("passed state", () => {
 
 describe("progress", () => {
   it("marks the passed Lessons, in Course order", () => {
-    const store = new Map<string, string>();
-    const s = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
+    const s = memoryStore();
     markPassed("Speed", s);
     expect(progress([{ title: "Move" }, { title: "Speed" }], s)).toEqual([false, true]);
   });
 });
 
-const memStore = () => {
-  const m = new Map<string, string>();
-  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
-};
 const ref = (reference: string) => ({ stub: "", reference });
 const lessons: Pick<Lesson, "title" | "scripts">[] = [
   { title: "1", scripts: { Player: ref("player 1") } },
@@ -75,12 +70,12 @@ const lessons: Pick<Lesson, "title" | "scripts">[] = [
 
 describe("referenceFor", () => {
   it("is locked until a Lesson with that Script is passed", () => {
-    const s = memStore();
+    const s = memoryStore();
     markPassed("2", s);
     expect(referenceFor(lessons, "Player", s)).toBeUndefined();
   });
   it("loads the snapshot from the latest passed Lesson that has that Script", () => {
-    const s = memStore();
+    const s = memoryStore();
     markPassed("1", s);
     markPassed("2", s);
     expect(referenceFor(lessons, "Player", s)).toBe("player 1");
@@ -92,7 +87,7 @@ describe("referenceFor", () => {
 
 describe("unlocked", () => {
   it("opens Lesson 1, and the next Lesson only after passing the one before", () => {
-    const s = memStore();
+    const s = memoryStore();
     expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, false, false]);
     expect([-1, 3].map((i) => unlocked(lessons, i, s))).toEqual([false, false]);
     markPassed("1", s);
@@ -102,7 +97,7 @@ describe("unlocked", () => {
 
 describe("Course menu cards", () => {
   it("are passed, current (the first not passed) or locked", () => {
-    const s = memStore();
+    const s = memoryStore();
     expect(cardStates(lessons, s)).toEqual(["current", "locked", "locked"]);
     expect(currentLesson(lessons, s)).toBe(0);
     markPassed("1", s);
@@ -110,7 +105,7 @@ describe("Course menu cards", () => {
     expect(currentLesson(lessons, s)).toBe(1);
   });
   it("are all passed at the end, the last Lesson staying current", () => {
-    const s = memStore();
+    const s = memoryStore();
     for (const l of lessons) markPassed(l.title, s);
     expect(cardStates(lessons, s)).toEqual(["passed", "passed", "passed"]);
     expect(currentLesson(lessons, s)).toBe(2);

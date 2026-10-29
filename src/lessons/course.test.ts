@@ -1,15 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { api, keyEvent, KeyCode, releaseAllKeys, scriptSource, startGame, worldView, type MonoBehaviour } from "../engine";
-import { transpile } from "../run-utils";
+import { keyEvent, KeyCode, releaseAllKeys, startGame, worldView } from "../engine";
+import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
 
-// Headless stand-in for the worker's blob import: evaluate the Script with the student API in scope.
-const load = (ts: string, name: string) =>
-  new Function(...Object.keys(api), scriptSource(transpile(ts), name).replace("export const __script =", "return"))(
-    ...Object.values(api),
-  ) as new () => MonoBehaviour;
 
 // Keys a player holds on each frame to pass a Lesson with its Reference code.
 const play: Record<string, (frame: number) => string[]> = {
@@ -74,7 +69,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
 
   // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
   const framesToPass = (code: Record<string, string>, earned = new Set<string>()) => {
-    const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, load(s, n)]));
+    const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, loadScript(s, n)]));
     const game = startGame(lesson.level.boxes, classes);
     const check = checker(lesson);
     const checkAchievements = achievementChecker(lesson.level.boxes, earned, achievements.map((a) => ({ ...a, after: null })));

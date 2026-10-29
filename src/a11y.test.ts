@@ -1,6 +1,10 @@
 import html from "../index.html?raw";
-import main from "./main.ts?raw";
+import mainTs from "./main.ts?raw";
+import menuTs from "./menu.ts?raw";
 import { describe, expect, it } from "vitest";
+
+// The page's own code, wherever it lives.
+const main = mainTs + menuTs;
 
 const tag = (id: string) => html.match(new RegExp(`<[a-z]+ id="${id}"[^>]*>`))?.[0] ?? "";
 

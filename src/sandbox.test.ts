@@ -4,22 +4,13 @@ import { markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { aiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
-import { api, keyEvent, KeyCode, releaseAllKeys, scriptSource, startGame, worldView, type MonoBehaviour } from "./engine";
-import { transpile } from "./run-utils";
+import { api, keyEvent, KeyCode, releaseAllKeys, startGame, worldView } from "./engine";
+import { loadScript, memoryStore } from "./test-helpers";
 
-const load = (ts: string, name: string) =>
-  new Function(...Object.keys(api), scriptSource(transpile(ts), name).replace("export const __script =", "return"))(
-    ...Object.values(api),
-  ) as new () => MonoBehaviour;
-
-const store = () => {
-  const m = new Map<string, string>();
-  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) };
-};
 
 describe("Sandbox unlock", () => {
   it("stays secret until the last Lesson is passed", () => {
-    const s = store();
+    const s = memoryStore();
     for (const l of course.slice(0, -1)) markPassed(l.title, s);
     expect(sandboxUnlocked(course, s)).toBe(false);
     markPassed(course[course.length - 1].title, s);
@@ -29,7 +20,7 @@ describe("Sandbox unlock", () => {
 
 describe("Projects", () => {
   it("are created, duplicated and deleted in storage", () => {
-    const s = store();
+    const s = memoryStore();
     expect(loadProjects(s)).toEqual([]);
     const blank = createProject("blank", course, s);
     expect(blank.level.boxes).toEqual([expect.objectContaining({ tag: "Game", script: "Game", w: 0, h: 0 })]);
@@ -44,7 +35,7 @@ describe("Projects", () => {
   });
 
   it("My platformer copies the Course code once, and the two never touch again", () => {
-    const s = store();
+    const s = memoryStore();
     saveScript("Player", "my course player", s);
     const p = createProject("platformer", course, s);
     expect(p.scripts).toEqual(loadScripts(course, course.length - 1, s));
@@ -56,7 +47,7 @@ describe("Projects", () => {
   });
 
   it("saved Projects lose the old AI note comment on line 1", () => {
-    const s = store();
+    const s = memoryStore();
     const p = createProject("blank", course, s);
     saveProject({ ...p, scripts: { Game: `// ${aiNote}\n\nclass Game {}` } }, s);
     expect(loadProjects(s)[0].scripts.Game).toBe("class Game {}");
@@ -73,7 +64,7 @@ describe("the playground", () => {
   it("runs the Course's Reference code without errors", () => {
     const latest: Record<string, string> = {};
     for (const l of course) for (const [name, { reference }] of Object.entries(l.scripts)) latest[name] = reference;
-    const classes = Object.fromEntries(Object.entries(latest).map(([n, ts]) => [n, load(ts, n)]));
+    const classes = Object.fromEntries(Object.entries(latest).map(([n, ts]) => [n, loadScript(ts, n)]));
     Object.assign(globalThis, api, classes);
     const game = startGame(playground.boxes, classes, playground.camera);
     keyEvent(KeyCode.RightArrow, true);
