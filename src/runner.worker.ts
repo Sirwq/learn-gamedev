@@ -1,5 +1,5 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
-import { errorLine } from "./run-utils";
+import { animates, errorLine } from "./run-utils";
 import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { checker } from "./check";
@@ -64,6 +64,8 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   const check = checker(lesson);
   const achieve = achievementChecker(level, new Set(data.earned));
   let last = "";
+  let frames = 0; // drawn so far: the animation clock, which stops while paused
+  const animate = animates(data);
   const frame = () => {
     if (paused) return void (pausedFrame = frame);
     send({ type: "tick" });
@@ -81,7 +83,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     const json = JSON.stringify(result);
     if (json !== last) send({ type: "check", ...result });
     last = json;
-    drawWorld(ctx, sprites, Camera.main, game.objects);
+    drawWorld(ctx, sprites, Camera.main, game.objects, animate ? frames++ / 60 : undefined);
     if (!result.lost && !result.passed) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

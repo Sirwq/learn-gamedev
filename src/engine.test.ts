@@ -126,6 +126,14 @@ describe("facing", () => {
     game.step();
     expect(player.facing).toBe(1);
   });
+  it("records how far each object moved this frame", () => {
+    class Player extends MonoBehaviour {
+      Update() { this.transform.position = this.transform.position.Add(new Vector2(2, 5)); }
+    }
+    const game = startGame([{ tag: "Player", x: 0, y: 0, w: 32, h: 32, color: "orange", script: "Player" }, { tag: "Coin", x: 0, y: 0, w: 12, h: 12, color: "gold" }], { Player });
+    game.step();
+    expect(game.objects.map((o) => o.moved)).toEqual([{ x: 2, y: 5 }, { x: 0, y: 0 }]);
+  });
 });
 
 describe("findScript", () => {

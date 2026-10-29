@@ -123,6 +123,8 @@ export class GameObject {
   destroyed = false;
   /** 1 or -1: the way it last moved horizontally, so its sprite can face that way. */
   facing = 1;
+  /** How far it moved during the last frame's Updates, so the engine can pick its animation frame. */
+  moved = { x: 0, y: 0 };
   constructor(readonly tag: string, readonly w: number, readonly h: number, readonly color: string, readonly script: string | undefined, position: Vector2) {
     this.transform = new Transform(position);
   }
@@ -178,11 +180,12 @@ export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart) 
     step() {
       nextFrame();
       startFresh(); // objects made last frame
-      const before = new Map(g.objects.map((o) => [o, o.transform.position.x]));
+      const before = new Map(g.objects.map((o) => [o, { ...o.transform.position }]));
       for (const b of g.behaviours) b.Update?.();
       for (const o of g.objects) {
-        const dx = o.transform.position.x - (before.get(o) ?? o.transform.position.x);
-        if (dx) o.facing = Math.sign(dx);
+        const { x, y } = before.get(o) ?? o.transform.position;
+        o.moved = { x: o.transform.position.x - x, y: o.transform.position.y - y };
+        if (o.moved.x) o.facing = Math.sign(o.moved.x);
       }
       sweep();
     },

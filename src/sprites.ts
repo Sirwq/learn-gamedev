@@ -2,8 +2,11 @@
 import Brick from "./sprites/Brick.png";
 import Bullet from "./sprites/Bullet.png";
 import Coin from "./sprites/Coin.png";
+import CoinSpin from "./sprites/CoinSpin.png";
 import Enemy from "./sprites/Enemy.png";
+import EnemyWalk from "./sprites/EnemyWalk.png";
 import Flag from "./sprites/Flag.png";
+import FlagWave from "./sprites/FlagWave.png";
 import GrassTop from "./sprites/GrassTop.png";
 import Dirt from "./sprites/Dirt.png";
 import PlayerIdle from "./sprites/PlayerIdle.png";
@@ -19,8 +22,26 @@ import { type Camera, type GameObject, toScreen } from "./engine";
 const sprites = { Player: PlayerIdle, Enemy, Coin, Flag, Bullet };
 /** The Player critter's frames (16×16, drawn at 2× on its 32×32 box); Lessons draw idle only. */
 export const playerFrames = { PlayerIdle, PlayerWalk1, PlayerWalk2, PlayerJump };
-export const urls = { ...sprites, ...playerFrames, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
+export const urls = { ...sprites, ...playerFrames, EnemyWalk, CoinSpin, FlagWave, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
 type Tile = keyof typeof urls;
+
+/** Animation frames per tag: only frames the art really has. A missing walk or jump falls back to idle. */
+const animations: Record<keyof typeof sprites, { idle: Tile[]; walk?: Tile[]; jump?: Tile[] }> = {
+  Player: { idle: ["PlayerIdle"], walk: ["PlayerWalk1", "PlayerWalk2"], jump: ["PlayerJump"] },
+  Enemy: { idle: ["Enemy"], walk: ["Enemy", "EnemyWalk"] },
+  Coin: { idle: ["Coin", "CoinSpin"] },
+  Flag: { idle: ["Flag", "FlagWave"] },
+  Bullet: { idle: ["Bullet"] },
+};
+const FPS = 8;
+
+/** The frame a sprite tag draws: jump while moving up, walk while moving sideways, idle otherwise, cycling at 8 fps. undefined for a tag with no sprite. */
+export function frameOf(tag: string, moved: { x: number; y: number }, time: number): Tile | undefined {
+  if (!Object.hasOwn(animations, tag)) return undefined;
+  const a = animations[tag as keyof typeof animations];
+  const list = (moved.y > 0 && a.jump) || (moved.x !== 0 && a.walk) || a.idle;
+  return list[Math.floor(time * FPS) % list.length];
+}
 /** Tags drawn as repeated tiles instead of one stretched sprite: the top row, then the fill below it. oneRow: a single row stretched to the box's height. */
 const tiled: Record<string, { top: Tile; fill: Tile; oneRow?: boolean }> = {
   Ground: { top: "GrassTop", fill: "Dirt" },
@@ -51,8 +72,8 @@ export async function loadImages(): Promise<Images> {
   return Object.fromEntries(await Promise.all(entries));
 }
 
-/** Draws the sky, then every object: its tag's sprite, or a plain box in its color when the tag has none. */
-export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, images: Images, camera: Camera, objects: GameObject[]) {
+/** Draws the sky, then every object: its tag's sprite, or a plain box in its color when the tag has none. With `time` (seconds) sprites animate from movement; without it they stay on their still frame. */
+export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, images: Images, camera: Camera, objects: GameObject[], time?: number) {
   const { width: W, height: H } = ctx.canvas;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(images.Sky, 0, 0, W, H);
@@ -75,7 +96,7 @@ export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderi
       ctx.fillRect(r.x, r.y, r.w, r.h);
       continue;
     }
-    const img = images[o.tag as keyof typeof sprites];
+    const img = images[time === undefined ? (o.tag as keyof typeof sprites) : frameOf(o.tag, o.moved, time)!];
     if (o.facing < 0) {
       ctx.save();
       ctx.translate(r.x * 2 + r.w, 0);
