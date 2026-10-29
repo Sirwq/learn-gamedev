@@ -11,7 +11,7 @@ const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
   sandbox: docker(),
 
-  // The agent provider. Switch to claude-sonnet-5-5 to use less of your plan's limits.
+  // The worker's agent; the reviewer overrides it with Sonnet below.
   agent: claudeCode("claude-opus-5-5"),
 
   // One agent invocation per run, so each finished ticket is merged before a usage
@@ -56,6 +56,7 @@ while (true) {
     await runPastLimits({
       ...shared,
       name: "reviewer",
+      agent: claudeCode("claude-sonnet-5-5"),
       promptFile: "./.sandcastle/review-prompt.md",
       promptArgs: { RANGE: `${before}..HEAD` },
     });
