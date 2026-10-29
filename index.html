@@ -150,11 +150,17 @@
       #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
       #menu .bar button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
       #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; font-variant-numeric: tabular-nums; }
-      #menu-dots { margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; min-width: 0; }
-      #menu #menu-dots button { width: 20px; height: 32px; padding: 0; border: 0; border-radius: 6px; background: none; display: grid; place-items: center; }
-      #menu-dots button::before { content: ""; width: 8px; height: 8px; border-radius: 4px; background: #fff5; transition: width .15s, background-color .15s; }
-      #menu-dots button:hover::before { background: #fffa; }
-      #menu-dots button[aria-current]::before { width: 16px; background: #b14cff; }
+      /* Bottom bar: equal side columns keep the Lesson track centred on the screen, whatever the buttons' widths. */
+      #menu .bar.bottom { display: grid; grid-template-columns: 1fr minmax(0, min(640px, 100% - 740px)) 1fr; /* 740px: room for the widest right side ("How to unlock") on both sides */ }
+      #menu-back { justify-self: start; }
+      #menu .bar .end { justify-self: end; display: flex; gap: 10px; white-space: nowrap; }
+      /* One segment per Lesson filling the middle column: passed bright, locked dim, the focused one purple and thicker. */
+      #menu-dots { display: flex; gap: 4px; min-width: 0; }
+      #menu #menu-dots button { flex: 1; min-width: 0; height: 32px; padding: 0; border: 0; border-radius: 4px; background: none; display: grid; align-items: center; }
+      #menu-dots button::before { content: ""; height: 4px; border-radius: 2px; background: #ffffff38; transition: height .15s, background-color .15s; }
+      #menu-dots button.passed::before { background: #ffffffb3; }
+      #menu-dots button:hover::before { background: #fffd; }
+      #menu-dots button[aria-current]::before { height: 6px; background: #b14cff; box-shadow: 0 0 10px #b14cff8c; }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
       /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
       #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
@@ -313,8 +319,8 @@
       <div class="bar bottom">
         <button id="menu-back" aria-keyshortcuts="Escape" aria-label="Back to Lesson" title="Back to Lesson"><kbd aria-hidden="true">Esc</kbd> <span aria-hidden="true">←</span><span> Back to Lesson</span></button>
         <div id="menu-dots" role="group" aria-label="Lessons"></div>
-        <button id="menu-achievements" aria-keyshortcuts="A" aria-label="Achievements" title="Achievements"><kbd aria-hidden="true">A</kbd> <span aria-hidden="true">🏆</span><span> Achievements</span></button>
-        <button id="menu-play" aria-keyshortcuts="Enter"><kbd aria-hidden="true">Enter</kbd> <b></b></button>
+        <span class="end"><button id="menu-achievements" aria-keyshortcuts="A" aria-label="Achievements" title="Achievements"><kbd aria-hidden="true">A</kbd> <span aria-hidden="true">🏆</span><span> Achievements</span></button>
+        <button id="menu-play" aria-keyshortcuts="Enter"><kbd aria-hidden="true">Enter</kbd> <b></b></button></span>
       </div>
     </section>
     <dialog id="replay" aria-label="Replay a passed Lesson">

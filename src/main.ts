@@ -347,6 +347,7 @@ function layoutMenu() {
     card.style.cssText = `--d:${d};--s:${Math.sign(d)}`; // CSS places and sizes the card
     card.ariaCurrent = dots.children[i].ariaCurrent = d ? null : "true";
     (dots.children[i] as HTMLElement).tabIndex = d ? -1 : 0; // one Tab stop for the dots; ← → move along them
+    dots.children[i].className = mode === "course" ? states[i] : "";
     if (mode === "sandbox") {
       card.className = i < projects.length ? "cover" : "cover new";
       card.ariaLabel = i < projects.length ? `Project ${projects[i].name}` : "New Project";
