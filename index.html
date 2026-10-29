@@ -61,6 +61,8 @@
       #toasts { position: fixed; top: 8px; right: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
       #toasts div { padding: 8px 14px; border-radius: 6px; background: #2f6b4c; color: #fff; animation: toast 4s forwards; }
       @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
+      #prompt-box { width: min(720px, 90vw); background: #252526; color: #ddd; border: 1px solid #444; border-radius: 6px; }
+      #prompt-box textarea { width: 100%; height: 50vh; background: #1e1e1e; color: #ddd; font: 12px ui-monospace, monospace; }
     </style>
   </head>
   <body>
@@ -69,6 +71,7 @@
       <div id="progress" aria-label="Course progress"></div>
       <button id="run">▶ Run</button>
       <button id="stop" hidden>■ Stop</button>
+      <button id="ask">Ask DeepSeek</button>
       <span id="status" role="status"></span>
     </header>
     <section id="lesson">
@@ -110,6 +113,11 @@
       <div id="diff"></div>
     </section>
     <div id="toasts" role="status"></div>
+    <dialog id="prompt-box" aria-label="Tutor prompt">
+      <p>Copying didn't work. Select all, copy it, and paste it into <a href="https://chat.deepseek.com" target="_blank">DeepSeek</a>.</p>
+      <textarea readonly></textarea>
+      <p><button id="prompt-select">Select all</button> <button id="prompt-close">Close</button></p>
+    </dialog>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

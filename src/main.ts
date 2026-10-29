@@ -10,6 +10,7 @@ import { markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
+import { tutorPrompt } from "./lessons/ai-note";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -90,7 +91,9 @@ const selectTab = (label: string) => {
 };
 const editorEl = document.getElementById("editor")!;
 const docsEl = document.getElementById("docs")!;
+let openScript = ""; // stays the last one shown while Docs or Compare is open
 function show(name: string) {
+  openScript = name;
   editor.setModel(models[name]);
   editorEl.hidden = false;
   docsEl.hidden = true;
@@ -190,7 +193,9 @@ document.getElementById("load-reference")!.onclick = () => {
   model.pushEditOperations([], [{ range: model.getFullModelRange(), text: diff.getModel()!.modified.getValue() }], () => null);
 };
 
+let goalsMet: boolean[] = [];
 function showGoals(met: boolean[]) {
+  goalsMet = met;
   goalsList.replaceChildren(...lesson.goals.map((g, i) => {
     const li = document.createElement("li");
     li.textContent = `${met[i] ? "✓" : "⬜"} ${g.message}`;
@@ -337,3 +342,33 @@ overlay.onclick = (e) => {
   if (running && e.target !== overlayRun) document.getElementById("game")!.focus(); // "Click to play"
 };
 stopBtn.onclick = stop;
+
+// Ask DeepSeek: copy the Tutor prompt, open a plain chat (no ?q= prefill, spec 010).
+const promptBox = document.getElementById("prompt-box") as HTMLDialogElement;
+const promptText = promptBox.querySelector("textarea")!;
+document.getElementById("prompt-select")!.onclick = () => promptText.select();
+document.getElementById("prompt-close")!.onclick = () => promptBox.close();
+document.getElementById("ask")!.onclick = async () => {
+  const prompt = tutorPrompt({
+    title: lesson.title,
+    explanation: lesson.explanation,
+    goals: lesson.goals.map((g, i) => ({ message: g.message, met: !!goalsMet[i] })),
+    hints: hints.slice(0, opened),
+    script: { name: openScript, code: models[openScript].getValue() },
+    console: consoleLines.map(lineText),
+  });
+  try {
+    await navigator.clipboard.writeText(prompt);
+  } catch {
+    promptText.value = prompt;
+    promptBox.showModal();
+    promptText.select();
+    return;
+  }
+  window.open("https://chat.deepseek.com", "_blank"); // after copying: a focused new tab would make the copy fail
+  toast("Prompt copied. In DeepSeek: Ctrl/Cmd+V, type your question at the end, Enter.");
+  if (!localStorage.getItem("asked-deepseek")) {
+    localStorage.setItem("asked-deepseek", "1");
+    toast("You need a free DeepSeek account.");
+  }
+};
