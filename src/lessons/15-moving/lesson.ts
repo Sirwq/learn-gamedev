@@ -15,9 +15,9 @@ export const lesson: Lesson = {
     boxes: [
       { tag: "Player", x: 160, y: 40, w: 32, h: 32, color: "orange", script: "Player" },
       { tag: "Wall", x: -80, y: 40, w: 80, h: 300, color: "#888" },
-      { tag: "Platform", x: 300, y: 40, w: 120, h: 20, color: "#a86", script: "MovingPlatform" },
-      // Higher than the ground, so standing anywhere above it touches the water.
+      // Higher than the ground, so standing anywhere above it touches the water. Listed before the Platform so it draws behind it.
       { tag: "Water", x: 300, y: 0, w: 1000, h: 50, color: "#36c" },
+      { tag: "Platform", x: 300, y: 40, w: 120, h: 20, color: "#a86", script: "MovingPlatform" },
       { tag: "Flag", x: 1500, y: 40, w: 24, h: 64, color: "gold" },
       { tag: "Ground", x: -480, y: 0, w: 780, h: 40, color: "#5a3" },
       { tag: "Ground", x: 1300, y: 0, w: 700, h: 40, color: "#5a3" },

@@ -1,4 +1,4 @@
-Two grey walls stand in the way, and the flag is on top of the tall one. Walk into a wall now and you go right through it: that loses.
+Two brick walls stand in the way, and the flag is on top of the tall one. Walk into a wall now and you go right through it: that loses.
 
 Walls are solid from the side, so stop yourself at their edge. Right after your arrow-key code, loop over every `"Wall"` like you did with the platforms. When you overlap one:
 

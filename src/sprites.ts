@@ -1,28 +1,39 @@
-// Pixel-art look of the game: one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
+// Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
 import Brick from "./sprites/Brick.png";
 import Bullet from "./sprites/Bullet.png";
 import Coin from "./sprites/Coin.png";
 import Enemy from "./sprites/Enemy.png";
 import Flag from "./sprites/Flag.png";
-import Grass from "./sprites/Grass.png";
+import GrassTop from "./sprites/GrassTop.png";
+import Dirt from "./sprites/Dirt.png";
 import Player from "./sprites/Player.png";
 import Sky from "./sprites/Sky.png";
+import Spikes from "./sprites/Spikes.png";
+import Water from "./sprites/Water.png";
+import WaterTop from "./sprites/WaterTop.png";
 import { type Camera, type GameObject, toScreen } from "./engine";
 
 const sprites = { Player, Enemy, Coin, Flag, Bullet };
-const urls = { ...sprites, Grass, Brick, Sky };
-/** Tags drawn as a repeated 8×8 tile instead of one stretched sprite. */
-const tiled: Record<string, keyof typeof urls> = { Ground: "Grass", Platform: "Grass", Wall: "Brick" };
-const TILE = 24; // world pixels per tile: 3 per sprite pixel
+const urls = { ...sprites, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
+type Tile = keyof typeof urls;
+/** Tags drawn as repeated tiles instead of one stretched sprite: the top row, then the fill below it. oneRow: a single row stretched to the box's height. */
+const tiled: Record<string, { top: Tile; fill: Tile; oneRow?: boolean }> = {
+  Ground: { top: "GrassTop", fill: "Dirt" },
+  Platform: { top: "GrassTop", fill: "Dirt" },
+  Wall: { top: "Brick", fill: "Brick" },
+  Water: { top: "WaterTop", fill: "Water" },
+  Spikes: { top: "Spikes", fill: "Spikes", oneRow: true },
+};
+const TILE = 20; // world pixels per tile: Level boxes are multiples of 20
 
 type Rect = { x: number; y: number; w: number; h: number };
 
-/** Splits a world box (bottom-left, y up) into tiles of size, rows hanging from the top edge so grass stays on top; edge tiles are cut short. */
-export function tiles(box: Rect, size = TILE): Rect[] {
+/** Splits a world box (bottom-left, y up) into tiles of size (rows rowH tall), rows hanging from the top edge so the top tile stays on top; edge tiles are cut short. */
+export function tiles(box: Rect, size = TILE, rowH = size): Rect[] {
   const out: Rect[] = [];
-  for (let top = box.y + box.h; top > box.y; top -= size)
+  for (let top = box.y + box.h; top > box.y; top -= rowH)
     for (let x = box.x; x < box.x + box.w; x += size) {
-      const h = Math.min(size, top - box.y);
+      const h = Math.min(rowH, top - box.y);
       out.push({ x, y: top - h, w: Math.min(size, box.x + box.w - x), h });
     }
   return out;
@@ -35,7 +46,7 @@ export async function loadImages(): Promise<Images> {
   return Object.fromEntries(await Promise.all(entries));
 }
 
-/** Draws the night sky, then every object: its tag's sprite, or a plain box in its color when the tag has none. */
+/** Draws the sky, then every object: its tag's sprite, or a plain box in its color when the tag has none. */
 export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, images: Images, camera: Camera, objects: GameObject[]) {
   const { width: W, height: H } = ctx.canvas;
   ctx.imageSmoothingEnabled = false;
@@ -44,9 +55,12 @@ export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderi
     const box = { ...o.transform.position, w: o.w, h: o.h };
     const tile = Object.hasOwn(tiled, o.tag) && tiled[o.tag];
     if (tile) {
-      for (const t of tiles(box)) {
+      const top = box.y + box.h;
+      const rowH = tile.oneRow ? box.h : TILE;
+      for (const t of tiles(box, TILE, rowH)) {
+        const img = images[t.y + t.h === top ? tile.top : tile.fill];
         const r = toScreen(camera, t, W, H);
-        ctx.drawImage(images[tile], 0, 0, (8 * t.w) / TILE, (8 * t.h) / TILE, r.x, r.y, r.w, r.h);
+        ctx.drawImage(img, 0, 0, (img.width * t.w) / TILE, (img.height * t.h) / rowH, r.x, r.y, r.w, r.h);
       }
       continue;
     }

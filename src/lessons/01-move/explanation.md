@@ -1,4 +1,4 @@
-Your player is the orange box. Get it to the yellow flag.
+Your player is the green alien. Get it to the red flag.
 
 `Update()` runs once every frame, 60 times a second. Code you put inside it runs again and again, so a small step each frame becomes smooth movement.
 

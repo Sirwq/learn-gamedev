@@ -12,4 +12,9 @@ describe("tiles", () => {
     expect(t[2]).toEqual({ x: 58, y: 6, w: 12, h: 24 });
     expect(t[5]).toEqual({ x: 58, y: 0, w: 12, h: 6 });
   });
+  it("makes one row the box's height when rows are that tall", () => {
+    const t = tiles({ x: 0, y: 40, w: 80, h: 16 }, 20, 16);
+    expect(t).toHaveLength(4);
+    expect(t[3]).toEqual({ x: 60, y: 40, w: 20, h: 16 });
+  });
 });
