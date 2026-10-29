@@ -15,7 +15,7 @@ The MVP put a list of things off for later (Out of scope on the [MVP map](../map
 **v2 is a Construct-like Sandbox for the same student, after the Course.**
 
 - **Student**: the same total beginner, once the 15-Lesson Course is passed. The Course itself does not change.
-- **Secret**: everything new lives inside Sandbox mode, behind the secret Lesson-15 unlock ([How does Sandbox mode work?](015-sandbox-mode.md)). No hint of it before then.
+- **After the Course**: everything new lives inside Sandbox mode, unlocked after the Course (Lesson 15) ([How does Sandbox mode work?](015-sandbox-mode.md)). It is what comes after the basic Course, not a secret: the Mechanic Achievements show and count from the start ([Which Achievements reward extra Mechanics?](056-mechanic-achievements.md)).
 - **In v2**:
   - The Level editor ([How does the Level editor work?](049-level-editor.md)).
   - Students' own sprites ([How do students bring their own sprites?](050-own-sprites.md)), with storage to match ([Where do Projects with images live?](051-project-storage.md)).
