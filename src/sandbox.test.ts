@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clear, get, keys, set, setMany } from "idb-keyval";
-import { createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
+import { addScript, createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
 import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
@@ -215,5 +215,17 @@ describe("+ Script names", () => {
     expect(scriptNameError("coin", [])).toMatch(/capital/);
     expect(scriptNameError("My Coin", [])).toMatch(/capital/);
     expect(scriptNameError("Camera", [])).toMatch(/API/);
+  });
+});
+
+describe("addScript", () => {
+  it("adds a Start() / Update() stub under a valid name, or says what is wrong", () => {
+    const p = { scripts: { Game: "" } } as unknown as Project;
+    expect(addScript(p, "Coin")).toBe("");
+    expect(p.scripts.Coin).toBe(scriptStub("Coin"));
+    expect(p.scripts.Coin).toMatch(/Start\(\)[\s\S]*Update\(\)/);
+    expect(addScript(p, "Coin")).toMatch(/already/);
+    expect(addScript(p, "coin")).toMatch(/capital/);
+    expect(Object.keys(p.scripts)).toEqual(["Game", "Coin"]);
   });
 });

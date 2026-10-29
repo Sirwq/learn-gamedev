@@ -34,6 +34,13 @@ export function scriptNameError(name: string, existing: string[]) {
   return "";
 }
 
+/** "+ Script" and "+ New Script…": a Start() / Update() stub under a valid name; returns what is wrong with the name, or "". */
+export function addScript(project: Pick<Project, "scripts">, name: string) {
+  const error = scriptNameError(name, Object.keys(project.scripts));
+  if (!error) project.scripts[name] = scriptStub(name);
+  return error;
+}
+
 /** "My platformer"'s hand-made Level: every tag, wider than the screen, fit for the Course's Reference code. */
 export const playground: Lesson["level"] = {
   width: 2480,

@@ -1,7 +1,7 @@
 ---
 title: Level editor, part 2: palette, new tags and Scripts, pan, zoom, keyboard
 label: build
-status: open
+status: closed
 blocked_by: [074-level-editor-core]
 assignee:
 ---
@@ -31,3 +31,7 @@ The rest of the Level editor from the spec, on top of part 1:
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+- **Pure parts** in `src/level-editor.ts` (tested): `zoomed` (zoom by a factor about a world point, clamped to 25–200 %, 100 % = size 270), `fitView` (every sized box on a 16:9 view, 10 % margin), `cameraStart` (the view in whole pixels), `nudged` (arrows move by 20 onto the grid, Alt by 1; Shift resizes from the top-right corner in the tag's size steps; snap off moves freely), `paletteTags` (art tags, then the Level's own tags in their first box's colour) and `dropped` (a box centred on a point, on the grid, Player / Enemy with their Script when the Project has it). `addScript` in `sandbox.ts` (tested) validates with `scriptNameError` and adds the `Start()` / `Update()` stub; both "+ Script" and "+ New Script…" use it via `newScript` in `main.ts`.
+- **Page side** in `src/level-view.ts` and `index.html`: a `#level-area` (palette bar, view bar with − / % / + / Fit Level / Set camera start here, the stage, the minimap strip) replaces the editor while the 🗺 Level tab is open. Palette buttons draw their tag with `drawWorld`; press or Enter drops at the view centre, a pointer drag drops where released on the game view. Drag empty sky pans, wheel pans (Shift: sideways), Ctrl+wheel zooms about the cursor. Minimap: click or drag to recentre. Keys (only when focus is on the page, the Level area or the inspector, never in inputs, selects or dialogs): arrows, Shift / Alt arrows, Del, Ctrl+D, Esc; arrows pan with nothing selected. "+ New tag…" opens a small dialog (name + colour) and gives the selected box that tag and colour; own tags then show in the palette and Tag list because they are read from the boxes.
+- Not checked in a real browser (none here). The camera start is not an undo step (the spec lists undo for box changes only).

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boxAt, handleAt, levelCode, levelEditor, moved, resized, sizeStep } from "./level-editor";
+import { ART_TAGS, boxAt, cameraStart, dropped, fitView, handleAt, levelCode, levelEditor, moved, nudged, paletteTags, resized, sizeStep, zoomed, zoomOf } from "./level-editor";
 import { type Box, startGame } from "./engine";
 import { playground } from "./sandbox";
 import { loadScript } from "./test-helpers";
@@ -118,5 +118,55 @@ describe("View Level as Code", () => {
   it("reads back as the same boxes", () => {
     const code = levelCode(playground.boxes);
     expect(new Function(`return { ${code} }`)().boxes).toEqual(playground.boxes);
+  });
+});
+
+describe("moving around", () => {
+  it("zooms 25 %–200 %, keeping the world point under the cursor still", () => {
+    expect(zoomOf(270)).toBe(1);
+    expect(zoomed({ x: 0, y: 0, size: 270 }, 100, { x: 0, y: 0 })).toEqual({ x: 0, y: 0, size: 135 });
+    expect(zoomed({ x: 0, y: 0, size: 270 }, 1 / 100, { x: 0, y: 0 }).size).toBe(1080);
+    expect(zoomed({ x: 0, y: 0, size: 270 }, 2, { x: 100, y: 0 })).toEqual({ x: 50, y: 0, size: 135 });
+  });
+  it("fits the Level's boxes, skipping zero-size ones", () => {
+    const v = fitView([box({ x: 0, y: 0, w: 960, h: 40 }), box({ x: 5000, w: 0, h: 0 })]);
+    expect(v).toMatchObject({ x: 480, y: 20 });
+    expect(v.size).toBeCloseTo(270 * 1.1);
+    expect(fitView([])).toEqual({ x: 480, y: 270, size: 270 });
+  });
+  it("saves the view as the camera start in whole pixels", () => {
+    expect(cameraStart({ x: 10.4, y: 20.6, size: 300.2 })).toEqual({ x: 10, y: 21, size: 300 });
+  });
+});
+
+describe("keyboard", () => {
+  const keys = (b: Box, key: string, mods: { shift?: boolean; alt?: boolean } = {}, snap = true) => nudged(b, key, !!mods.shift, !!mods.alt, snap);
+  it("moves by 20 onto the grid, or by 1 with Alt", () => {
+    expect(keys(box({ x: 3 }), "ArrowRight")).toMatchObject({ x: 20 });
+    expect(keys(box(), "ArrowDown")).toMatchObject({ y: -20 });
+    expect(keys(box({ x: 3 }), "ArrowLeft", { alt: true })).toMatchObject({ x: 2 });
+    expect(keys(box({ x: 3 }), "ArrowRight", {}, false)).toMatchObject({ x: 23 });
+  });
+  it("resizes with Shift in the tag's size steps, never below one step", () => {
+    expect(keys(box(), "ArrowRight", { shift: true })).toMatchObject({ x: 0, w: 120 });
+    expect(keys(box(), "ArrowUp", { shift: true })).toMatchObject({ y: 0, h: 60 });
+    expect(keys(box({ tag: "Coin", w: 24 }), "ArrowLeft", { shift: true })).toMatchObject({ w: 20 });
+    expect(keys(box(), "ArrowDown", { shift: true, alt: true })).toMatchObject({ h: 39 });
+    expect(keys(box({ h: 20 }), "ArrowDown", { shift: true })).toMatchObject({ h: 20 });
+  });
+  it("ignores other keys", () => expect(nudged(box(), "a", false, false, true)).toBeUndefined());
+});
+
+describe("palette", () => {
+  it("drops a tag centred on the point, on the grid, with Player and Enemy's Script", () => {
+    expect(dropped("Coin", { x: 480, y: 270 }, ["Player"])).toEqual({ tag: "Coin", x: 460, y: 260, w: 24, h: 24, color: "gold" });
+    expect(dropped("Player", { x: 0, y: 0 }, ["Player"])).toMatchObject({ script: "Player", w: 32 });
+    expect(dropped("Enemy", { x: 0, y: 0 }, ["Player"])).not.toHaveProperty("script");
+  });
+  it("lists the art tags, then the Level's own tags with their colour", () => {
+    const tags = paletteTags([box({ tag: "Lava", color: "red" }), box({ tag: "Lava", color: "blue" })]);
+    expect(tags.map((t) => t.tag)).toEqual([...ART_TAGS, "Lava"]);
+    expect(tags.at(-1)).toMatchObject({ color: "red" });
+    expect(dropped("Lava", { x: 0, y: 0 }, [], tags)).toMatchObject({ tag: "Lava", color: "red", w: 40, h: 40 });
   });
 });

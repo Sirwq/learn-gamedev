@@ -23,7 +23,7 @@ import { courseMenu } from "./menu";
 import { levelView } from "./level-view";
 import { toast } from "./toast";
 import { download } from "./backup";
-import { deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject, scriptNameError, scriptStub } from "./sandbox";
+import { addScript, deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject } from "./sandbox";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -173,17 +173,22 @@ if (project) {
   addScript.onclick = () => {
     const name = prompt("Name of the new Script (its class name, like Coin):")?.trim();
     if (!name) return;
-    const error = scriptNameError(name, Object.keys(models));
+    const error = newScript(name);
     if (error) return void toast(error);
-    addModel(name, scriptStub(name));
-    project.scripts[name] = scriptStub(name);
-    saveProject(project);
-    const tab = makeTab(`${name}.ts`);
-    tabs.splice(tabs.length - 1, 0, tab);
-    tabs[tabs.length - 1].before(tab);
     show(name);
   };
   document.getElementById("tabs")!.append(addScript);
+}
+/** A new Script with its stub, saved, with its own file tab before Docs; returns what is wrong with the name, or "". */
+function newScript(name: string) {
+  const error = addScript(project!, name);
+  if (error) return error;
+  addModel(name, project!.scripts[name]);
+  saveProject(project!);
+  const tab = makeTab(`${name}.ts`);
+  tabs.splice(tabs.length - 1, 0, tab);
+  tabs[tabs.length - 1].before(tab);
+  return "";
 }
 const selectTab = (label: string) => {
   for (const tab of tabs) tab.ariaSelected = String(tab.textContent === label);
@@ -328,7 +333,7 @@ const images = loadImages();
 const startLevel = project ? project.level : course[lessonIndex].level;
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
-if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => saveProject(project) });
+if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => saveProject(project), addScript: newScript });
 // The Course menu and its Sandbox tab.
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus() });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)

@@ -369,7 +369,22 @@
       #level-objects button { width: 100%; text-align: left; border-color: transparent; background: none; font-variant-numeric: tabular-nums; }
       #level-objects button:hover { background: var(--surface-raised); }
       #level-objects button[aria-current] { background: var(--surface-button); border-color: var(--focus); }
-      #code > #stage { grid-row: 2; grid-column: 1; align-self: start; border-radius: 0; }
+      #level-area { grid-row: 2; grid-column: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+      #level-area[hidden] { display: none; }
+      #level-area > #stage { border-radius: 0; }
+      #level-area .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 6px; background: var(--surface-panel); }
+      #level-area .bar button { min-height: 28px; }
+      #level-area :is(button, canvas):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      #level-palette button { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; touch-action: none; user-select: none; }
+      #level-palette canvas { width: 24px; height: 24px; image-rendering: pixelated; pointer-events: none; }
+      #level-zoom-value { min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
+      #level-minimap { display: block; width: 100%; height: auto; cursor: pointer; touch-action: none; background: var(--surface-stage); }
+      body.carrying, body.carrying * { cursor: copy !important; }
+      #level-tag-box { background: var(--surface-dialog); color: var(--ink); border: 1px solid var(--border-dialog); border-radius: 10px; }
+      #level-tag-box h3 { margin-top: 0; }
+      #level-tag-box label { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 8px; margin: 8px 0; }
+      #level-tag-box input { font: inherit; color: var(--ink); background: var(--surface-editor); border: 1px solid var(--border-control); border-radius: 6px; }
+      #level-tag-box :is(button, input):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       #level-code-box { width: min(760px, 92vw); background: var(--surface-dialog); color: var(--ink); border: 1px solid var(--border-dialog); border-radius: 10px; }
       #level-code-box h3 { margin-top: 0; }
       #level-code-box pre { max-height: 50vh; overflow: auto; margin: 0; padding: 10px 12px; background: var(--surface-editor); border-radius: 6px; font: 12px ui-monospace, monospace; }
@@ -415,7 +430,7 @@
             <button id="level-code" aria-haspopup="dialog">View Level as Code</button>
           </div>
           <p id="level-locked" role="status" hidden>The game is running: press Stop to edit the Level.</p>
-          <p id="level-none">Click an object in the game view to select it. Drag to move it, drag its handles to resize it.</p>
+          <p id="level-none">Click an object in the game view to select it. Drag to move it, drag its handles to resize it. Drag empty sky or use the wheel to look around; arrows move the view.</p>
           <fieldset id="level-fields" disabled>
             <legend class="sr-only">Selected object</legend>
             <label>Tag <select id="level-tag"></select></label>
@@ -449,6 +464,17 @@
           <span id="zoom" role="group" aria-label="Editor font size"><button id="zoom-out">−</button><button id="zoom-reset"></button><button id="zoom-in">+</button></span>
         </div>
         <div id="editor"></div>
+        <div id="level-area" hidden>
+          <div id="level-palette" class="bar" role="toolbar" aria-label="Add an object: drag one into the view, or press it to drop it in the middle"></div>
+          <div class="bar" role="toolbar" aria-label="View">
+            <button id="level-zoom-out" aria-label="Zoom out" title="Zoom out (Ctrl+wheel)">−</button>
+            <span id="level-zoom-value">100%</span>
+            <button id="level-zoom-in" aria-label="Zoom in" title="Zoom in (Ctrl+wheel)">+</button>
+            <button id="level-fit">Fit Level</button>
+            <button id="level-camera" title="Save this view as where the camera starts on Run">Set camera start here</button>
+          </div>
+          <canvas id="level-minimap" width="960" height="80" tabindex="0" aria-label="Minimap of the whole Level: click or drag to move the view"></canvas>
+        </div>
         <div id="docs" hidden><nav aria-label="Docs pages"><p class="docs-tip">Share a Project: Export it and send the file. Your friend opens it with + New → From a file….</p></nav><article></article></div>
         <div id="console-panel">
           <button id="console-toggle" aria-expanded="false" aria-controls="console">Console <span id="console-count">0 lines</span></button>
@@ -537,6 +563,15 @@
       <p>The <code>boxes</code> of this Level, written the way a Lesson's <code>lesson.ts</code> lists them. Read-only: edit the Level in the 🗺 Level tab.</p>
       <pre><code></code></pre>
       <p><button id="level-copy">Copy</button> <button id="level-code-close">Close</button></p>
+    </dialog>
+    <dialog id="level-tag-box" aria-labelledby="level-tag-title">
+      <form method="dialog">
+        <h3 id="level-tag-title">New tag</h3>
+        <p>A tag with no image draws as a plain box in its colour.</p>
+        <label>Name <input id="level-tag-name" required maxlength="24" autocomplete="off" spellcheck="false" placeholder="Lava…"></label>
+        <label>Colour <input id="level-tag-color" type="color" value="#e05a2b"></label>
+        <p><button value="ok">Create tag</button> <button value="cancel" formnovalidate>Cancel</button></p>
+      </form>
     </dialog>
     <div id="toasts" role="status"></div>
     <dialog id="prompt-box" aria-label="Tutor prompt">

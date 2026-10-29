@@ -1,6 +1,6 @@
 // The 🗺 Level tab (spec 049): the stopped game view is the editor, the left column its inspector.
-import { type Box, Camera, GameObject, toScreen, Vector2 } from "./engine";
-import { ART_TAGS, boxAt, type Handle, handleAt, handlePoints, GRID, levelCode, levelEditor, moved, resized } from "./level-editor";
+import { type Box, Camera, type CameraStart, GameObject, toScreen, Vector2 } from "./engine";
+import { ART_TAGS, bounds, boxAt, cameraStart, dropped, fitView, type Handle, handleAt, handlePoints, GRID, levelCode, levelEditor, moved, nudged, paletteTags, resized, zoomed, zoomOf } from "./level-editor";
 import { drawWorld, type Images } from "./sprites";
 import type { Project } from "./sandbox";
 import { toast } from "./toast";
@@ -8,9 +8,11 @@ import { toast } from "./toast";
 const W = 960, H = 540;
 const CURSORS: Record<Handle, string> = { n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize", ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize" };
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const NEW = "\u0000new"; // the "+ New tag…" / "+ New Script…" option: no tag or Script can be named this
+const MW = 960, MH = 80; // the minimap canvas
 
-/** `scripts` lists the Project's Script names; `save` keeps the Project after every change. */
-export function levelView({ project, images, scripts, save }: { project: Project; images: Promise<Images>; scripts: () => string[]; save: () => void }) {
+/** `scripts` lists the Project's Script names; `save` keeps the Project after every change; `addScript` makes a new Script file and tab, returning what is wrong with the name or "". */
+export function levelView({ project, images, scripts, save, addScript }: { project: Project; images: Promise<Images>; scripts: () => string[]; save: () => void; addScript: (name: string) => string }) {
   const ed = levelEditor(project.level);
   const boxes = ed.level.boxes;
   const view = new Camera(project.level.camera); // the editor's own view: selecting from the list moves it
@@ -26,7 +28,7 @@ export function levelView({ project, images, scripts, save }: { project: Project
   let open = false;
   let snap = true;
   let imgs: Images | undefined;
-  images.then((i) => ((imgs = i), open && draw()));
+  images.then((i) => ((imgs = i), (paletteKey = ""), open && refresh()));
 
   /** The game canvas, or a fresh one when a Run has handed it to its worker. */
   function canvas() {
@@ -42,6 +44,18 @@ export function levelView({ project, images, scripts, save }: { project: Project
 
   const screen = (b: Box) => toScreen(view, b, W, H);
   const scale = () => H / 2 / view.orthographicSize;
+  /** The world point under a game-canvas point. */
+  const world = (sx: number, sy: number) => {
+    const s = scale(), { x, y } = view.transform.position;
+    return { x: x + (sx - W / 2) / s, y: y - (sy - H / 2) / s };
+  };
+  const viewNow = (): CameraStart => ({ ...view.transform.position, size: view.orthographicSize });
+  function setView({ x, y, size }: CameraStart) {
+    view.transform.position = new Vector2(x, y);
+    view.orthographicSize = size;
+    draw();
+  }
+  const pan = (dx: number, dy: number) => setView({ ...viewNow(), x: view.transform.position.x + dx, y: view.transform.position.y + dy });
 
   /** The Level as it starts; while editing, also the grid, Script labels and the selection. */
   function draw() {
@@ -49,6 +63,8 @@ export function levelView({ project, images, scripts, save }: { project: Project
     const ctx = canvas();
     drawWorld(ctx, imgs, view, boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y))));
     if (!open) return;
+    drawMinimap();
+    $("level-zoom-value").textContent = `${Math.round(zoomOf(view.orthographicSize) * 100)}%`;
     const s = scale(), { x: cx, y: cy } = view.transform.position;
     if (snap) {
       ctx.strokeStyle = "#ffffff26";
@@ -88,6 +104,36 @@ export function levelView({ project, images, scripts, save }: { project: Project
     for (const [hx, hy] of Object.values(handlePoints(r))) (ctx.fillRect(hx - 4, hy - 4, 8, 8), ctx.strokeRect(hx - 4, hy - 4, 8, 8));
     label(ctx, `${b.tag}  ${b.x}, ${b.y}  ${b.w}×${b.h}`, r.x, r.y - 22 < 0 ? r.y + r.h + 8 : r.y - 22);
   }
+  /** The whole Level (with a margin) squeezed into the strip, and the view's rect on it. */
+  const mapArea = () => {
+    const b = bounds(boxes) ?? { x: 0, y: 0, w: W, h: H };
+    const pad = 200, w = b.w + 2 * pad, h = b.h + 2 * pad;
+    const k = Math.min(MW / w, MH / h);
+    return { k, x0: b.x - pad - (MW / k - w) / 2, y0: b.y - pad - (MH / k - h) / 2 };
+  };
+  function drawMinimap() {
+    const ctx = $<HTMLCanvasElement>("level-minimap").getContext("2d")!;
+    const { k, x0, y0 } = mapArea();
+    const rect = (r: { x: number; y: number; w: number; h: number }) => [(r.x - x0) * k, MH - (r.y + r.h - y0) * k, r.w * k, r.h * k] as const;
+    ctx.fillStyle = "#5c94fc";
+    ctx.fillRect(0, 0, MW, MH);
+    for (const b of boxes) if (b.w > 0 && b.h > 0) (ctx.fillStyle = b.color), ctx.fillRect(...rect(b));
+    const s = scale(), { x, y } = view.transform.position;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(...rect({ x: x - W / 2 / s, y: y - H / 2 / s, w: W / s, h: H / s }));
+  }
+  const minimap = $<HTMLCanvasElement>("level-minimap");
+  let mapping = false;
+  const jump = (e: PointerEvent) => {
+    const r = minimap.getBoundingClientRect(), { k, x0, y0 } = mapArea();
+    setView({ ...viewNow(), x: x0 + ((e.clientX - r.left) * MW) / r.width / k, y: y0 + (MH - ((e.clientY - r.top) * MH) / r.height) / k });
+  };
+  minimap.addEventListener("pointerdown", (e) => ((mapping = true), minimap.setPointerCapture(e.pointerId), jump(e)));
+  minimap.addEventListener("pointermove", (e) => mapping && jump(e));
+  minimap.addEventListener("pointerup", () => (mapping = false));
+  minimap.addEventListener("pointercancel", () => (mapping = false));
+
   function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number) {
     const w = ctx.measureText(text).width + 8;
     ctx.fillStyle = "#000000b3";
@@ -105,11 +151,13 @@ export function levelView({ project, images, scripts, save }: { project: Project
     fields.disabled = ed.running || !b;
     $("level-none").hidden = !!b;
     const tags = [...new Set([...ART_TAGS, ...boxes.map((x) => x.tag)])];
-    tag.replaceChildren(...tags.map((t) => option(t)));
-    script.replaceChildren(option("", "(none)"), ...scripts().map((s) => option(s, `${s}.ts`)));
+    tag.replaceChildren(...tags.map((t) => option(t)), option(NEW, "+ New tag…"));
+    script.replaceChildren(option("", "(none)"), ...scripts().map((s) => option(s, `${s}.ts`)), option(NEW, "+ New Script…"));
     tag.value = b?.tag ?? "";
     script.value = b?.script ?? "";
     for (const [k, input] of nums) input.value = b ? String(b[k]) : "";
+    fillPalette();
+    for (const b of palette.querySelectorAll("button")) b.disabled = ed.running;
     undoBtn.disabled = !ed.canUndo();
     redoBtn.disabled = !ed.canRedo();
     list.replaceChildren(...boxes.map((x, i) => {
@@ -138,12 +186,75 @@ export function levelView({ project, images, scripts, save }: { project: Project
     refresh();
   }
 
-  tag.onchange = () => ed.edit((bs) => (bs[ed.selected].tag = tag.value)) && changed();
-  script.onchange = () => ed.edit((bs) => {
-    const b = bs[ed.selected];
-    if (script.value) b.script = script.value;
-    else delete b.script;
-  }) && changed();
+  // The palette: one button per tag with its sprite; press it (or Enter) to drop one in the middle of the view, or drag it in.
+  const palette = $("level-palette");
+  let paletteKey = "";
+  function fillPalette() {
+    const tags = paletteTags(boxes);
+    const key = tags.map((t) => t.tag + t.color).join();
+    if (key === paletteKey || !imgs) return;
+    paletteKey = key;
+    palette.replaceChildren(...tags.map((t) => {
+      const btn = Object.assign(document.createElement("button"), { title: `Add a ${t.tag}: press, or drag it into the view` });
+      const icon = Object.assign(document.createElement("canvas"), { width: 24, height: 24 });
+      icon.ariaHidden = "true";
+      drawWorld(icon.getContext("2d")!, imgs!, new Camera({ x: 10, y: 10, size: 10 }), [new GameObject(t.tag, 20, 20, t.color, undefined, new Vector2(0, 0))]);
+      btn.append(icon, t.tag);
+      btn.onclick = () => add(t.tag, view.transform.position);
+      btn.onpointerdown = (e) => e.button === 0 && (carry = { tag: t.tag, x: e.clientX, y: e.clientY, moved: false });
+      return btn;
+    }));
+  }
+  function add(t: string, at: { x: number; y: number }) {
+    if (ed.edit((bs) => bs.push(dropped(t, at, scripts(), paletteTags(boxes))))) (ed.selected = boxes.length - 1), changed();
+  }
+  let carry: { tag: string; x: number; y: number; moved: boolean } | undefined;
+  document.addEventListener("pointermove", (e) => {
+    if (!carry || carry.moved || Math.hypot(e.clientX - carry.x, e.clientY - carry.y) < 4) return;
+    carry.moved = true;
+    document.body.classList.add("carrying");
+  });
+  const putDown = (e: PointerEvent) => {
+    const c = carry;
+    carry = undefined;
+    document.body.classList.remove("carrying");
+    if (!c?.moved || e.type !== "pointerup") return;
+    const r = $("game").getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+    add(c.tag, world(((e.clientX - r.left) * W) / r.width, ((e.clientY - r.top) * H) / r.height));
+  };
+  document.addEventListener("pointerup", putDown);
+  document.addEventListener("pointercancel", putDown);
+
+  // "+ New tag…": a name and a colour; the selected box takes it.
+  const tagBox = $<HTMLDialogElement>("level-tag-box");
+  tagBox.onclose = () => {
+    const name = $<HTMLInputElement>("level-tag-name").value.trim();
+    const color = $<HTMLInputElement>("level-tag-color").value;
+    if (tagBox.returnValue !== "ok" || !name || !ed.edit((bs) => Object.assign(bs[ed.selected], { tag: name, color }))) return refresh();
+    changed();
+  };
+  tag.onchange = () => {
+    if (tag.value !== NEW) return void (ed.edit((bs) => (bs[ed.selected].tag = tag.value)) && changed());
+    $<HTMLInputElement>("level-tag-name").value = "";
+    tagBox.returnValue = "";
+    tagBox.showModal();
+  };
+  script.onchange = () => {
+    let name = script.value;
+    if (name === NEW) {
+      name = prompt("Name of the new Script (its class name, like Coin):")?.trim() ?? "";
+      const error = name && addScript(name);
+      if (error) toast(error);
+      if (!name || error) return refresh();
+    }
+    if (ed.edit((bs) => {
+      const b = bs[ed.selected];
+      if (name) b.script = name;
+      else delete b.script;
+    })) changed();
+    else refresh();
+  };
   for (const [k, input] of nums) {
     input.onchange = () => {
       const v = Math.round(Number(input.value));
@@ -152,14 +263,35 @@ export function levelView({ project, images, scripts, save }: { project: Project
       if (ed.edit((bs) => (bs[ed.selected][k] = v))) changed();
     };
   }
-  $("level-duplicate").onclick = () => {
+  const duplicate = () => {
     const b = boxes[ed.selected];
-    if (ed.edit((bs) => bs.push({ ...b, x: b.x + GRID, y: b.y + GRID }))) (ed.selected = boxes.length - 1), changed();
+    if (b && ed.edit((bs) => bs.push({ ...b, x: b.x + GRID, y: b.y + GRID }))) (ed.selected = boxes.length - 1), changed();
   };
+  const remove = () => ed.selected >= 0 && ed.edit((bs) => bs.splice(ed.selected, 1)) && ((ed.selected = -1), changed());
+  $("level-duplicate").onclick = duplicate;
   $("level-delete").onclick = () => {
-    if (ed.edit((bs) => bs.splice(ed.selected, 1))) (ed.selected = -1), changed();
+    remove();
     $("level-objects").querySelector("button")?.focus(); // the Delete button is now disabled: keep focus in the inspector
   };
+
+  // Moving around: − / + zoom on the middle of the view, Fit Level, and the camera start.
+  const zoomBy = (f: number, at: { x: number; y: number } = view.transform.position) => setView(zoomed(viewNow(), f, at));
+  $("level-zoom-in").onclick = () => zoomBy(1.25);
+  $("level-zoom-out").onclick = () => zoomBy(1 / 1.25);
+  $("level-fit").onclick = () => setView(fitView(boxes));
+  $("level-camera").onclick = () => {
+    project.level.camera = cameraStart(viewNow());
+    save();
+    toast("Camera start saved: Run starts the camera here");
+  };
+  viewport.addEventListener("wheel", (e) => {
+    if (!open || (e.target as HTMLElement).id !== "game") return;
+    e.preventDefault();
+    const r = $("game").getBoundingClientRect(), s = scale();
+    if (e.ctrlKey || e.metaKey) zoomBy(Math.exp(-e.deltaY * 0.002), world(((e.clientX - r.left) * W) / r.width, ((e.clientY - r.top) * H) / r.height));
+    else if (e.shiftKey && !e.deltaX) pan(e.deltaY / s, 0);
+    else pan(e.deltaX / s, -e.deltaY / s);
+  }, { passive: false });
   const undo = () => ed.undo() && changed();
   const redo = () => ed.redo() && changed();
   undoBtn.onclick = undo;
@@ -193,22 +325,25 @@ export function levelView({ project, images, scripts, save }: { project: Project
     return { sx: ((e.clientX - r.left) * W) / r.width, sy: ((e.clientY - r.top) * H) / r.height };
   };
   let drag: { start: Box; sx: number; sy: number; handle?: Handle } | undefined;
+  let panning: { sx: number; sy: number; x: number; y: number } | undefined; // dragging empty sky
   viewport.addEventListener("pointerdown", (e) => {
     if (!open || ed.running || (e.target as HTMLElement).id !== "game" || e.button !== 0) return;
     const { sx, sy } = at(e);
     const sel = boxes[ed.selected];
     const handle = sel && handleAt(screen(sel), sx, sy);
     if (!handle) {
-      const s = scale(), { x: cx, y: cy } = view.transform.position;
-      select(boxAt(boxes, cx + (sx - W / 2) / s, cy - (sy - H / 2) / s));
+      const p = world(sx, sy);
+      select(boxAt(boxes, p.x, p.y));
     }
-    if (ed.selected < 0 || !ed.begin()) return;
-    drag = { start: { ...boxes[ed.selected] }, sx, sy, handle };
     viewport.setPointerCapture(e.pointerId);
+    if (ed.selected < 0) return void (panning = { sx, sy, ...view.transform.position });
+    if (!ed.begin()) return;
+    drag = { start: { ...boxes[ed.selected] }, sx, sy, handle };
   });
   viewport.addEventListener("pointermove", (e) => {
-    if (!open || ed.running || (!drag && (e.target as HTMLElement).id !== "game")) return;
+    if (!open || ed.running || (!drag && !panning && (e.target as HTMLElement).id !== "game")) return;
     const { sx, sy } = at(e);
+    if (panning) return setView({ ...viewNow(), x: panning.x - (sx - panning.sx) / scale(), y: panning.y + (sy - panning.sy) / scale() });
     if (!drag) {
       const sel = boxes[ed.selected];
       const handle = sel && handleAt(screen(sel), sx, sy);
@@ -220,6 +355,7 @@ export function levelView({ project, images, scripts, save }: { project: Project
     draw();
   });
   const drop = () => {
+    panning = undefined;
     if (!drag) return;
     drag = undefined;
     if (ed.commit()) changed();
@@ -227,6 +363,22 @@ export function levelView({ project, images, scripts, save }: { project: Project
   viewport.addEventListener("pointerup", drop);
   viewport.addEventListener("pointercancel", drop);
 
+  // Arrows move the selection (Alt: by 1), Shift+arrows resize it; with nothing selected they pan. Del, Ctrl+D, Esc.
+  document.addEventListener("keydown", (e) => {
+    const t = e.target as HTMLElement;
+    if (!open || ed.running || (t !== document.body && !t.closest("#level-area, #inspector")) || t.closest("input, select, textarea, dialog")) return;
+    const b = boxes[ed.selected];
+    const next = b && nudged(b, e.key, e.shiftKey, e.altKey, snap);
+    if (next) ed.edit((bs) => (bs[ed.selected] = next)) && changed();
+    else if (!b && e.key.startsWith("Arrow")) {
+      const d = 100 / scale(); // 100 screen pixels
+      pan(e.key === "ArrowLeft" ? -d : e.key === "ArrowRight" ? d : 0, e.key === "ArrowUp" ? d : e.key === "ArrowDown" ? -d : 0);
+    } else if (e.key === "Delete") remove();
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "d") duplicate();
+    else if (e.key === "Escape" && b) select(-1);
+    else return;
+    e.preventDefault();
+  });
   document.addEventListener("keydown", (e) => {
     if (!open || !(e.ctrlKey || e.metaKey)) return;
     if ((e.target as HTMLElement).closest("input, textarea, .monaco-editor")) return; // their own undo
@@ -242,7 +394,8 @@ export function levelView({ project, images, scripts, save }: { project: Project
       open = on;
       $("lesson").hidden = on;
       $("inspector").hidden = !on;
-      if (on) $("tabbar").after($("stage"));
+      $("level-area").hidden = !on;
+      if (on) $("level-minimap").before($("stage"));
       else $("left").append($("stage"));
       $("game").style.cursor = "";
       if (!ed.running) refresh();
