@@ -1,4 +1,5 @@
 import html from "../index.html?raw";
+import main from "./main.ts?raw";
 import { describe, expect, it } from "vitest";
 
 const tag = (id: string) => html.match(new RegExp(`<[a-z]+ id="${id}"[^>]*>`))?.[0] ?? "";
@@ -44,4 +45,22 @@ describe("Course menu pointer navigation", () => {
   });
   it("replaces the 1 / 15 count with a group of dots", () => expect(tag("menu-dots")).toContain('role="group"'));
   it("gives coarse pointers 44 px targets", () => expect(html).toMatch(/@media \(pointer: coarse\) \{[^@]*min-height: 44px/));
+});
+
+describe("Course menu motion", () => {
+  const cover = html.match(/\n\s*\.cover \{[^}]*\}/)?.[0] ?? "";
+  it("moves cards with transforms, not layout properties", () => {
+    expect(cover).toMatch(/transition: translate [^;]*, scale /);
+    expect(cover).not.toMatch(/transition:[^;]*\b(left|top|width|height)\b/);
+  });
+  it("sizes cards in CSS, so resizing needs no JS measuring", () => {
+    expect(cover).toContain("aspect-ratio: 3 / 4");
+    expect(main).not.toContain("clientWidth");
+    expect(main).not.toContain('addEventListener("resize"');
+  });
+  it("stops sliding under reduced motion", () => {
+    expect(html).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.cover \{ transition: none; \}[^@]*animation-name: toast-fade/);
+    expect(main).toContain('matchMedia("(prefers-reduced-motion: reduce)")');
+  });
+  it("cancels a running tab slide before starting the next", () => expect(main).toMatch(/getAnimations\(\)[^\n]*cancel\(\)/));
 });

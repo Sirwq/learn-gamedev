@@ -337,13 +337,9 @@ const playLabel = (i: number) =>
   : states[i] === "locked" ? "Locked" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
 function layoutMenu() {
   const list = cards();
-  const W = rail.clientWidth, H = rail.clientHeight, gap = 22;
-  const bigW = H * 0.75, smallH = H * 0.6, smallW = smallH * 0.75;
   list.forEach((card, i) => {
     const d = i - focused;
-    const [w, h] = d ? [smallW, smallH] : [bigW, H];
-    const x = d === 0 ? W / 2 - w / 2 : d > 0 ? W / 2 + bigW / 2 + gap + (d - 1) * (smallW + gap) : W / 2 - bigW / 2 - gap - smallW + (d + 1) * (smallW + gap);
-    card.style.cssText = `left:${x}px;top:${(H - h) / 2}px;width:${w}px;height:${h}px`;
+    card.style.cssText = `--d:${d};--s:${Math.sign(d)}`; // CSS places and sizes the card
     card.ariaCurrent = dots.children[i].ariaCurrent = d ? null : "true";
     (dots.children[i] as HTMLElement).tabIndex = d ? -1 : 0; // one Tab stop for the dots; ← → move along them
     if (mode === "sandbox") {
@@ -376,8 +372,6 @@ function layoutMenu() {
     span.append(t);
     return span;
   }));
-  prevBtn.style.left = `${W / 2 - bigW / 2 - gap / 2}px`;
-  nextBtn.style.left = `${W / 2 + bigW / 2 + gap / 2}px`;
   prevBtn.disabled = focused === 0;
   nextBtn.disabled = focused === list.length - 1;
   if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
@@ -420,12 +414,16 @@ function showMode(m: typeof mode) {
   layoutMenu();
   announce();
 }
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 /** Switches tab with the whole menu sliding sideways: Sandbox sits to the right of TypeScript. */
 function setMode(m: typeof mode) {
   if (m === mode) return;
   showMode(m);
-  for (const el of [rail, document.getElementById("card-info")!, menuBg])
+  if (reduceMotion.matches) return;
+  for (const el of [rail, document.getElementById("card-info")!, menuBg]) {
+    for (const a of el.getAnimations()) a.cancel(); // a quick Q E Q doesn't stack slides
     el.animate([{ transform: `translateX(${m === "sandbox" ? "" : "-"}100%)` }, { transform: "none" }], { duration: 350, easing: "ease-out" });
+  }
 }
 const startMode = project || askedProject !== null ? "sandbox" : "course";
 // While the menu is open the page behind it is out of reach: Tab stays in the menu.
@@ -530,7 +528,6 @@ rail.addEventListener("touchend", (e) => {
   focusCard(focused + step);
 });
 menuOpen.onclick = document.getElementById("progress")!.onclick = () => openMenu();
-window.addEventListener("resize", () => menu.hidden || layoutMenu());
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
 // The Lesson strip of a Project: its name, Rename / Duplicate / Delete.

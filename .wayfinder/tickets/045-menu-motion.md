@@ -1,7 +1,7 @@
 ---
 title: Course menu: motion and layout without JS measuring
 label: design
-status: open
+status: closed
 blocked_by: [044-menu-pointer-nav]
 assignee:
 ---
@@ -21,3 +21,10 @@ Design ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/de
 - With reduced motion turned on in macOS / DevTools, nothing slides.
 - Resizing the window keeps the big card centred without `layoutMenu()` measuring.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- Cards are placed by CSS: `left: 50%; height: 100%; aspect-ratio: 3 / 4`, moved with `translate: calc(-50% + var(--d) * (60% + 22px) + var(--s) * 20%)` and `scale: .6` for the small ones. `layoutMenu()` only sets `--d` (distance from the focused card) and `--s` (its sign). The arrows use `cqh` units of `#menu` (`container-type: size`), so the `resize` listener and all `clientWidth`/`clientHeight` measuring are gone.
+- `prefers-reduced-motion: reduce`: cards switch with no transition, `setMode` skips the 350 ms tab slide, and toasts fade (`toast-fade`) instead of flying in.
+- `setMode` cancels running slides before it starts new ones. Card slides are CSS transitions, so new input retargets them instead of queueing.
+- Tests: "Course menu motion" in `src/a11y.test.ts`.
