@@ -12,7 +12,13 @@ export type Lesson = {
   lose: Check[];
   /** Scripts this Lesson adds, by name: starter stub and Reference code. */
   scripts: Record<string, { stub: string; reference: string }>;
+  /** Markdown, from the Lesson's optional `hints.md`: each one closer to the answer. */
+  hints?: string[];
 };
+
+/** Splits a `hints.md` at its `## Hint 1` / `## Hint 2` / `## Hint 3` headings. */
+export const splitHints = (markdown: string) =>
+  markdown.split(/^## Hint \d+[ \t]*$/m).slice(1).map((h) => h.trim());
 
 type Rect = { x: number; y: number; w: number; h: number };
 export const overlaps = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -41,3 +47,10 @@ export function loadScripts(lessons: Pick<Lesson, "scripts">[], upTo: number, st
     for (const [name, { stub }] of Object.entries(scripts)) code[name] ??= store.getItem(codeKey(name)) ?? stub;
   return code;
 }
+
+// How many Hints the student has opened, per Lesson.
+const hintsKey = (lesson: string) => `hints:${lesson}`;
+export const openedHints = (lesson: string, store: Pick<Storage, "getItem"> = localStorage) =>
+  Number(store.getItem(hintsKey(lesson))) || 0;
+export const saveOpenedHints = (lesson: string, count: number, store: Pick<Storage, "setItem"> = localStorage) =>
+  store.setItem(hintsKey(lesson), String(count));

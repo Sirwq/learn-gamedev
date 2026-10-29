@@ -5,7 +5,7 @@ import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
-import { loadScripts, saveScript } from "./lesson";
+import { loadScripts, openedHints, saveOpenedHints, saveScript } from "./lesson";
 import { markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
@@ -21,6 +21,26 @@ const lessonIndex = Number.isInteger(asked) && unlocked(course, asked) ? asked :
 const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
 document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
+
+const hints = lesson.hints ?? [];
+const stillStuck = document.getElementById("still-stuck")!;
+const nextHint = document.getElementById("next-hint") as HTMLButtonElement;
+function showHints(opened: number) {
+  document.getElementById("hints")!.replaceChildren(...hints.slice(0, opened).map((hint, i) => {
+    const div = document.createElement("div");
+    div.innerHTML = marked.parse(`**💡 Hint ${i + 1}**\n\n${hint}`, { async: false });
+    return div;
+  }));
+  nextHint.textContent = `💡 Hint ${opened + 1} of ${hints.length}`;
+  nextHint.hidden = opened >= hints.length;
+  stillStuck.hidden = !nextHint.hidden;
+}
+let opened = Math.min(openedHints(lesson.title), hints.length);
+nextHint.onclick = () => {
+  saveOpenedHints(lesson.title, ++opened);
+  showHints(opened);
+};
+showHints(opened);
 
 function showProgress() {
   const done = progress(course);

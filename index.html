@@ -19,6 +19,9 @@
       #lesson h1 { font-size: 16px; margin: 8px 0 0; }
       #lesson code { background: #2d2d2d; padding: 1px 4px; }
       #lesson pre { overflow: auto; }
+      #hints > div, #still-stuck { margin: 8px 0; padding: 0 10px; border: 1px solid #554a22; border-radius: 6px; background: #2a2618; }
+      #still-stuck { padding: 8px 10px; }
+      #still-stuck[hidden] { display: none; }
       #lesson blockquote { color: #999; margin-left: 0; padding-left: 8px; border-left: 3px solid #555; }
       main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
       /* The game is 960×540 and scales to fit the left half, keeping its shape. */
@@ -61,6 +64,16 @@
     <section id="lesson">
       <h1 id="lesson-title"></h1>
       <div id="explanation"></div>
+      <div id="hints"></div>
+      <p><button id="next-hint"></button></p>
+      <aside id="still-stuck" hidden>
+        <b>Still stuck?</b>
+        <ul>
+          <li>Press <b>Ask DeepSeek</b> for a tutor who gives hints, not answers.</li>
+          <li>Look the API up in the <b>📖 Docs</b> tab.</li>
+          <li>Ask the person on your left, then the one on your right.</li>
+        </ul>
+      </aside>
     </section>
     <main>
       <div id="stage">

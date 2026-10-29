@@ -1,7 +1,8 @@
 import type { Lesson } from "../../lesson";
-import { find, offScreen, overlaps } from "../../lesson";
+import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import { withNoteBox, withNoteComment } from "../ai-note";
 import explanation from "./explanation.md?raw";
+import hints from "./hints.md?raw";
 import stub from "../06-land/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
 import reference from "./reference/Player.ts?raw";
 
@@ -22,4 +23,5 @@ export const lesson: Lesson = {
   goals: [{ message: "Climb the platforms to the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen],
   scripts: { Player: { stub: withNoteComment(stub), reference } },
+  hints: splitHints(hints),
 };
