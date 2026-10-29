@@ -5,7 +5,7 @@ import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
-import { markPassed } from "./check";
+import { markPassed, progress } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 
@@ -20,11 +20,29 @@ const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
 document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
 
-// shortcut: only the Player Script gets an editor, until tabs land (ticket 022).
+function showProgress() {
+  const done = progress(course);
+  const label = document.createElement("span");
+  label.textContent = `${done.filter(Boolean).length} / ${course.length}`;
+  document.getElementById("progress")!.replaceChildren(...done.map((d, i) => {
+    const pip = document.createElement("i");
+    pip.className = d ? "done" : "";
+    pip.title = course[i].title;
+    return pip;
+  }), label);
+}
+showProgress();
+
+// shortcut: only the Player Script gets an editor and a tab, until many Scripts land (ticket 022).
+const tab = document.createElement("span");
+tab.role = "tab";
+tab.textContent = "Player.ts";
+document.getElementById("tabs")!.append(tab);
 const model = monaco.editor.createModel(lesson.scripts.Player.stub, "typescript", monaco.Uri.parse("file:///Player.ts"));
 monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dark", automaticLayout: true });
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
+const stopBtn = document.getElementById("stop")!;
 const status = document.getElementById("status")!;
 const goalsList = document.getElementById("goals")!;
 const overlay = document.getElementById("overlay")!;
@@ -75,9 +93,15 @@ model.onDidChangeContent(() => monaco.editor.setModelMarkers(model, "runtime", [
 let worker: Worker | undefined;
 let watchdog: number | undefined;
 
+/** The game loop ended (or will): the last frame stays on the canvas. */
+function ended() {
+  clearInterval(watchdog);
+  stopBtn.hidden = true;
+}
+
 function stop() {
   worker?.terminate();
-  clearInterval(watchdog);
+  ended();
 }
 
 function run() {
@@ -102,6 +126,7 @@ function run() {
 
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
+  stopBtn.hidden = false;
   worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
 
   let lastTick = performance.now();
@@ -110,15 +135,16 @@ function run() {
     if (e.data.type === "logs") log(e.data.lines);
     if (e.data.type === "check") {
       showGoals(e.data.met);
-      if (e.data.lost || e.data.passed) clearInterval(watchdog); // the worker stopped its loop on purpose
+      if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose
       if (e.data.lost) showOverlay(e.data.lost, true);
       if (e.data.passed) {
         markPassed(lesson.title);
+        showProgress();
         showOverlay("✓ Lesson passed", false);
       }
     }
     if (e.data.type === "error") {
-      clearInterval(watchdog); // the worker already stopped its loop; terminating now would blank the last frame
+      ended(); // the worker already stopped its loop; terminating now would blank the last frame
       const where = e.data.script && e.data.line ? `${e.data.script}.ts:${e.data.line} ` : "";
       log([{ level: "error", text: `${where}${e.data.message}`, count: 1 }]);
       if (e.data.line) {
@@ -143,3 +169,4 @@ function run() {
 }
 
 runBtn.onclick = overlayRun.onclick = run;
+stopBtn.onclick = stop;

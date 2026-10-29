@@ -18,3 +18,7 @@ export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
 const key = (title: string) => `passed:${title}`;
 export const markPassed = (title: string, store: Pick<Storage, "setItem"> = localStorage) => store.setItem(key(title), "1");
 export const isPassed = (title: string, store: Pick<Storage, "getItem"> = localStorage) => store.getItem(key(title)) === "1";
+
+/** One flag per Lesson, true if passed: the top bar's progress pips. */
+export const progress = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) =>
+  lessons.map((l) => isPassed(l.title, store));

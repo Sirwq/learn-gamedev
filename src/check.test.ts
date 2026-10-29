@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checker, isPassed, markPassed } from "./check";
+import { checker, isPassed, markPassed, progress } from "./check";
 import type { World } from "./engine";
 
 const at = (x: number): World => [{ tag: "Player", x, y: 0, w: 1, h: 1, color: "" }];
@@ -38,5 +38,14 @@ describe("passed state", () => {
     markPassed("1. Move right", store);
     expect(isPassed("1. Move right", { getItem: store.getItem })).toBe(true);
     expect(isPassed("2. Jump", store)).toBe(false);
+  });
+});
+
+describe("progress", () => {
+  it("marks the passed Lessons, in Course order", () => {
+    const store = new Map<string, string>();
+    const s = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
+    markPassed("Speed", s);
+    expect(progress([{ title: "Move" }, { title: "Speed" }], s)).toEqual([false, true]);
   });
 });
