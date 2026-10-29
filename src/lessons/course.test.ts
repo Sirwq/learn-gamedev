@@ -33,6 +33,12 @@ const play: Record<string, (frame: number) => string[]> = {
   // Lesson 11 needs no keys: the enemy patrols while you stand still.
   // A running jump over the low wall comes down on the enemy.
   "12. Stomp": (f) => (f === 10 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 60 ? [KeyCode.RightArrow] : []),
+  "13. Shooting": (f) => (f === 10 ? [KeyCode.S] : []),
+  // Walk into the spikes, then a running jump over them to the flag.
+  "14. Health and respawn": (f) => (f === 80 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  // A running jump onto the platform, stand still while it crosses the water, then jump off to the flag.
+  "15. Moving platforms": (f) =>
+    f === 3 || f === 345 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 40 || f > 345 ? [KeyCode.RightArrow] : [],
 };
 
 describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, lesson, index) => {
