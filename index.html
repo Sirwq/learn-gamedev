@@ -6,136 +6,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>learn-dev</title>
     <style>
+      /* Palette v3 "Kenney Day": every hue from the Kenney sprites. Source of truth: the learn-dev design system (tokens.json). */
+      :root {
+        --surface-menu: #12141b;
+        --surface-editor: #181b24;
+        --surface-panel: #1f232e;
+        --surface-raised: #272c39;
+        --surface-button: #313748;
+        --surface-button-hover: #3b4256;
+        --surface-stage: #12141b;
+        --surface-dialog: #1f232e;
+        --border-subtle: #2a2f3c;
+        --border-control: #747a90;
+        --border-dialog: #434a5f;
+        --ink: #dce1e7;
+        --ink-strong: #ffffff;
+        --ink-muted: #959ab1;
+        --ink-menu-meta: #dce1e7;
+        --ink-menu-files: #959ab1;
+        --accent: #5ad28c;
+        --accent-strong: #2eb082;
+        --accent-hover: #86f6bb;
+        --accent-on: #12141b;
+        --accent-ink: #bdf3d5;
+        --focus: #4ce5fd;
+        --link: #4ce5fd;
+        --run: #5ad28c;
+        --run-border: #2eb082;
+        --run-hover: #86f6bb;
+        --ask: #2cc5f6;
+        --ask-hover: #4ce5fd;
+        --success: #f4b41b;
+        --success-surface: #3b2f10;
+        --passed-surface: #2b2412;
+        --passed-ink: #fee481;
+        --passed-line: #6f5a1e;
+        --locked-surface: #272c39;
+        --locked-ink: #959ab1;
+        --locked-line: #434a5f;
+        --hint-surface: #10283a;
+        --hint-line: #1f5a78;
+        --warn: #f4ac66;
+        --error: #ff7a5c;
+        --game-outline: #434a5f;
+        --game-focus: #4ce5fd;
+        --gold: #f4b41b;
+        --gold-light: #fee481;
+        --gold-dark: #6f3e43;
+        --gold-ink: #fee481;
+        --stone: #747a90;
+        --stone-light: #dce1e7;
+        --stone-dark: #434a5f;
+        --map-ground-a: #181b24;
+        --map-ground-b: #1d2029;
+        --map-path: #747a90;
+        --map-path-lit: #f4b41b;
+        --scrim: #12141bcc;
+      }
       * { box-sizing: border-box; }
-      body { margin: 0; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding: 8px; overflow: hidden; font: 14px system-ui, sans-serif; background: #1e1e1e; color: #ddd; }
-      button { font: inherit; color: #ddd; background: #333743; border: 1px solid #444; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding: 8px; overflow: hidden; font: 14px system-ui, sans-serif; background: var(--surface-editor); color: var(--ink); }
+      button { font: inherit; color: var(--ink); background: var(--surface-button); border: 1px solid var(--border-control); border-radius: 6px; padding: 4px 12px; cursor: pointer; }
       button:disabled { opacity: .5; cursor: default; }
       button[hidden] { display: none; }
       header { display: flex; gap: 12px; align-items: center; }
       header b { font-size: 16px; }
       header button { min-height: 28px; touch-action: manipulation; transition: background-color .15s, border-color .15s; }
-      header button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
+      header button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       /* Run and Stop share one cell, so swapping them never moves the header. */
       #run-slot { display: grid; }
       #run-slot > button { grid-area: 1 / 1; }
       #run-slot > button[hidden] { display: block; visibility: hidden; }
       #run, #stop { padding: 4px 14px; font-weight: 600; white-space: nowrap; }
-      #run { background: #1f883d; border-color: #2ea043; color: #fff; }
-      #run:hover:not(:disabled) { background: #1a7f37; border-color: #3fb950; }
-      #run:active:not(:disabled) { background: #176f30; }
+      #run { background: var(--run); border-color: var(--run-border); color: var(--accent-on); }
+      #run:hover:not(:disabled) { background: var(--run-hover); border-color: var(--run-border); }
+      #run:active:not(:disabled) { background: var(--run-border); }
       #run kbd { margin-left: 4px; padding: 0 5px; border-radius: 4px; background: #0003; font: 600 11px system-ui, sans-serif; }
-      #stop:hover { background: #3d4252; border-color: #666; }
-      #ask { display: inline-flex; gap: 6px; align-items: center; background: #4463f5; border-color: #4463f5; color: #fff; }
-      #ask:hover { background: #3d5ce8; border-color: #8ea2ff; }
-      #ask:active { background: #3553d6; }
+      #stop:hover { background: var(--surface-button-hover); border-color: var(--border-control); }
+      #ask { display: inline-flex; gap: 6px; align-items: center; background: var(--ask); border-color: var(--ask); color: var(--accent-on); }
+      #ask:hover { background: var(--ask-hover); border-color: var(--link); }
+      #ask:active { background: var(--ask); }
       #ask svg { width: 16px; height: 16px; flex: none; }
       #menu-open { white-space: nowrap; }
       /* Narrow screens keep only the arrow; the title tooltip and aria-label still say where it goes. */
       @media (max-width: 720px) { #menu-open span + span { display: none; } }
       #progress { display: flex; gap: 3px; align-items: center; background: none; border-color: transparent; padding: 4px; }
-      #progress:hover { background: #333743; }
+      #progress:hover { background: var(--surface-button); }
       /* Passed pips are filled, the rest only outlined, so it reads without color too. */
-      #progress i { width: 12px; height: 10px; border-radius: 3px; border: 1.5px solid #6a6f7d; }
-      #progress i.done { background: #4cc38a; border-color: #4cc38a; }
-      #progress span { margin-left: 6px; color: #b3b3b3; font-size: 12px; }
-      #progress:hover span { color: #fff; }
+      #progress i { width: 12px; height: 10px; border-radius: 3px; border: 1.5px solid var(--border-control); }
+      #progress i.done { background: var(--success); border-color: var(--success); }
+      #progress span { margin-left: 6px; color: var(--ink-muted); font-size: 12px; }
+      #progress:hover span { color: var(--ink-strong); }
       /* Left column: the Lesson text on top (its own scroll, at most 60%), the game below in the rest. */
       #left { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
-      #lesson { flex: 0 1 auto; max-height: 60%; overflow: auto; overscroll-behavior: contain; padding: 0 14px; border: 1px solid #333; border-radius: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+      #lesson { flex: 0 1 auto; max-height: 60%; overflow: auto; overscroll-behavior: contain; padding: 0 14px; border: 1px solid var(--border-subtle); border-radius: 6px; line-height: 1.5; overflow-wrap: anywhere; }
       /* A fade pinned to the bottom edge while there is more to scroll; at the end it is just blank space. */
-      #lesson::after { content: ""; position: sticky; bottom: 0; display: block; height: 20px; background: linear-gradient(#1e1e1e00, #1e1e1e); pointer-events: none; }
-      #lesson:focus-visible { outline: 2px solid #9cf; outline-offset: -2px; }
+      #lesson::after { content: ""; position: sticky; bottom: 0; display: block; height: 20px; background: linear-gradient(transparent, var(--surface-editor)); pointer-events: none; }
+      #lesson:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
       #lesson > * { max-width: 72ch; }
       #lesson :is(h1, #hints > div, #still-stuck) { scroll-margin-top: 8px; }
       #lesson h1 { font-size: 16px; line-height: 1.3; margin: 10px 0 0; }
       #lesson :is(p, pre, blockquote, ul) { margin: 10px 0; }
       #lesson p:has(> #next-hint[hidden]) { display: none; }
-      #lesson code { background: #2d2d2d; padding: 1px 4px; }
-      #lesson pre { white-space: pre-wrap; padding: 8px 10px; background: #2d2d2d; border-radius: 6px; }
+      #lesson code { background: var(--surface-raised); padding: 1px 4px; }
+      #lesson pre { white-space: pre-wrap; padding: 8px 10px; background: var(--surface-raised); border-radius: 6px; }
       #lesson pre code { padding: 0; }
-      #hints > div, #still-stuck { margin: 8px 0; padding: 0 10px; border: 1px solid #554a22; border-radius: 6px; background: #2a2618; }
+      #hints > div, #still-stuck { margin: 8px 0; padding: 0 10px; border: 1px solid var(--hint-line); border-radius: 6px; background: var(--hint-surface); }
       #still-stuck { padding: 8px 10px; }
       #still-stuck[hidden] { display: none; }
       main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
       /* The game is 960×540 and scales to fit the space under the Lesson text, keeping its shape. */
-      #stage { flex: 1; min-height: 0; container-type: size; display: flex; align-items: center; justify-content: center; background: #111; border-radius: 6px; min-width: 0; }
+      #stage { flex: 1; min-height: 0; container-type: size; display: flex; align-items: center; justify-content: center; background: var(--surface-stage); border-radius: 6px; min-width: 0; }
       #viewport { position: relative; width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; }
-      #game { width: 100%; height: 100%; display: block; background: #000; outline: 2px solid #4af3; outline-offset: -2px; }
+      #game { width: 100%; height: 100%; display: block; background: #000; outline: 2px solid var(--game-outline); outline-offset: -2px; }
       #goals { position: absolute; top: 8px; left: 8px; margin: 0; padding: 6px 10px; list-style: none; background: #000a; border-radius: 6px; pointer-events: none; }
       #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; background: #000a; font-size: 18px; }
       #overlay[hidden] { display: none; }
-      #game:focus { outline: 2px solid #4af; }
+      #game:focus { outline: 2px solid var(--game-focus); }
       /* The editor gets all the height; the Console is a thin bar until it opens. */
-      #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
+      #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden; }
       #code:has(#console-toggle[aria-expanded="true"]) { grid-template-rows: auto 2fr 1fr; }
-      #tabbar { display: flex; align-items: flex-end; background: #252526; }
+      #tabbar { display: flex; align-items: flex-end; background: var(--surface-panel); }
       #tabs { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 4px 6px 0; }
       #zoom { flex: none; display: flex; align-items: center; gap: 2px; padding: 2px 6px; }
-      #zoom button { min-width: 24px; min-height: 24px; padding: 0 6px; border: 0; background: none; color: #ccc; font-size: 13px; }
-      #zoom button:hover:not(:disabled) { background: #3a3d45; color: #fff; }
+      #zoom button { min-width: 24px; min-height: 24px; padding: 0 6px; border: 0; background: none; color: var(--ink-muted); font-size: 13px; }
+      #zoom button:hover:not(:disabled) { background: var(--surface-button-hover); color: var(--ink-strong); }
       #zoom-reset { min-width: 44px; font-variant-numeric: tabular-nums; }
-      #zoom button:focus-visible, #console-toggle:focus-visible { outline: 2px solid #9cf; outline-offset: -2px; }
-      #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: #2d2d2d; color: #b3b3b3; font-size: 12px; }
-      #tabs button:hover { color: #fff; }
-      #tabs button[aria-selected="true"] { background: #1e1e1e; color: #fff; }
-      #tabs button:focus-visible, #docs nav button:focus-visible { outline: 2px solid #9cf; outline-offset: -2px; }
-      #editor-hint { display: none; align-self: center; padding: 0 6px; color: #b3b3b3; font-size: 11px; white-space: nowrap; }
+      #zoom button:focus-visible, #console-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+      #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: var(--surface-raised); color: var(--ink-muted); font-size: 12px; }
+      #tabs button:hover { color: var(--ink-strong); }
+      #tabs button[aria-selected="true"] { background: var(--surface-editor); color: var(--ink-strong); }
+      #tabs button:focus-visible, #docs nav button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+      #editor-hint { display: none; align-self: center; padding: 0 6px; color: var(--ink-muted); font-size: 11px; white-space: nowrap; }
       #code:has(#editor:focus-within) #editor-hint { display: block; }
       #editor, #docs { grid-row: 2; grid-column: 1; min-height: 0; }
       #docs { display: flex; overflow: hidden; }
       #docs[hidden] { display: none; }
-      #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid #333; overflow: auto; }
-      #docs nav button { text-align: left; border: 0; background: none; color: #b3b3b3; font-size: 12px; }
-      #docs nav button:hover { background: #2d2d2d; color: #fff; }
-      #docs nav button[aria-current="page"] { background: #333743; color: #fff; }
+      #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid var(--border-subtle); overflow: auto; }
+      #docs nav button { text-align: left; border: 0; background: none; color: var(--ink-muted); font-size: 12px; }
+      #docs nav button:hover { background: var(--surface-raised); color: var(--ink-strong); }
+      #docs nav button[aria-current="page"] { background: var(--surface-button); color: var(--ink-strong); }
       #docs article { flex: 1; font-size: 14px; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
       #docs article h3 { margin: 20px 0 4px; font-size: 1em; }
-      #docs article blockquote, #lesson blockquote { color: #b3b3b3; margin-left: 0; padding-left: 8px; border-left: 3px solid #555; }
-      #docs code { background: #2d2d2d; padding: 1px 4px; }
+      #docs article blockquote, #lesson blockquote { color: var(--ink-muted); margin-left: 0; padding-left: 8px; border-left: 3px solid var(--stone-dark); }
+      #docs code { background: var(--surface-raised); padding: 1px 4px; }
       #docs pre { overflow: auto; }
-      a { color: #7bf; }
-      #console-panel { display: flex; flex-direction: column; min-height: 0; border-top: 1px solid #333; }
-      #console-toggle { flex: none; display: flex; gap: 8px; align-items: center; min-height: 24px; padding: 2px 8px; border: 0; border-radius: 0; background: #252526; color: #ccc; font-size: 12px; text-align: left; }
-      #console-toggle:hover { background: #2d2f36; color: #fff; }
+      a { color: var(--link); }
+      #console-panel { display: flex; flex-direction: column; min-height: 0; border-top: 1px solid var(--border-subtle); }
+      #console-toggle { flex: none; display: flex; gap: 8px; align-items: center; min-height: 24px; padding: 2px 8px; border: 0; border-radius: 0; background: var(--surface-panel); color: var(--ink-muted); font-size: 12px; text-align: left; }
+      #console-toggle:hover { background: var(--surface-button-hover); color: var(--ink-strong); }
       #console-toggle::before { content: "▸"; }
       #console-toggle[aria-expanded="true"]::before { content: "▾"; }
-      #console-toggle span { color: #aaa; font-variant-numeric: tabular-nums; }
+      #console-toggle span { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
       #console { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-      #console .warn { color: #fc6; }
-      #console .error { color: #f66; }
+      #console .warn { color: var(--warn); }
+      #console .error { color: var(--error); }
       #pass { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
       #pass[hidden] { display: none; }
-      #next { background: #2f6b4c; }
+      #next { background: var(--success-surface); }
       /* Compare takes the whole window so both sides show full lines. */
-      #compare { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: #1e1e1e; }
+      #compare { position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: var(--surface-editor); }
       #compare[hidden] { display: none; }
-      #compare header span { flex: 1; color: #b3b3b3; }
-      #diff { flex: 1; min-height: 0; border: 1px solid #333; }
+      #compare header span { flex: 1; color: var(--ink-muted); }
+      #diff { flex: 1; min-height: 0; border: 1px solid var(--border-subtle); }
       #toasts { position: fixed; top: 8px; right: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
-      #toasts > div { padding: 8px 14px; border-radius: 6px; background: #2f6b4c; color: #fff; animation: toast 4s forwards; }
-      #toasts > .achievement { display: flex; gap: 10px; align-items: center; min-width: 260px; border-radius: 0; background: #2b2b2b; border: 3px solid #6e6e6e; box-shadow: 0 6px 20px #0008; }
-      .achievement small { display: block; color: #e8c252; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+      #toasts > div { padding: 8px 14px; border-radius: 6px; background: var(--success-surface); color: var(--ink-strong); animation: toast 4s forwards; }
+      #toasts > .achievement { display: flex; gap: 10px; align-items: center; min-width: 260px; border-radius: 0; background: var(--surface-panel); border: 3px solid var(--stone); box-shadow: 0 6px 20px #0008; }
+      .achievement small { display: block; color: var(--gold-ink); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
       /* Achievement map: full window, blocky dark background, square bevelled tiles. */
-      #achievements { position: fixed; inset: 0; z-index: 15; display: flex; flex-direction: column; background: #151515; }
+      #achievements { position: fixed; inset: 0; z-index: 15; display: flex; flex-direction: column; background: var(--surface-menu); }
       #achievements[hidden] { display: none; }
-      #achievements header { padding: 10px 16px; background: #1c1c1c; border-bottom: 2px solid #000; }
-      #achievements header span { flex: 1; color: #b3b3b3; font-size: 12px; }
-      #achievements > div { flex: 1; overflow: auto; background: repeating-conic-gradient(#262626 0 25%, #2c2c2c 0 50%) 0 0 / 32px 32px; }
+      #achievements header { padding: 10px 16px; background: var(--surface-panel); border-bottom: 2px solid #000; }
+      #achievements header span { flex: 1; color: var(--ink-muted); font-size: 12px; }
+      #achievements > div { flex: 1; overflow: auto; background: repeating-conic-gradient(var(--map-ground-a) 0 25%, var(--map-ground-b) 0 50%) 0 0 / 32px 32px; }
       #tree { position: relative; margin: 30px auto; }
       #tree svg { position: absolute; inset: 0; }
-      #tree polyline { fill: none; stroke: #9a9a9a; stroke-width: 2; }
-      #tree polyline.lit { stroke: #5fd35f; }
-      #arrow path { fill: #9a9a9a; }
-      #arrowlit path { fill: #5fd35f; }
-      .tile { width: 46px; height: 46px; display: grid; place-items: center; font: normal 24px system-ui; background: #8b8b8b; border: 3px solid; border-color: #c6c6c6 #555 #555 #c6c6c6; }
+      #tree polyline { fill: none; stroke: var(--map-path); stroke-width: 2; }
+      #tree polyline.lit { stroke: var(--map-path-lit); }
+      #arrow path { fill: var(--map-path); }
+      #arrowlit path { fill: var(--map-path-lit); }
+      .tile { width: 46px; height: 46px; display: grid; place-items: center; font: normal 24px system-ui; background: var(--stone); border: 3px solid; border-color: var(--stone-light) var(--stone-dark) var(--stone-dark) var(--stone-light); }
       #tree .tile { position: absolute; transform: translate(-50%, -50%); }
-      .tile.earned { background: #c9a43a; border-color: #f3dc85 #7a5d12 #7a5d12 #f3dc85; }
+      .tile.earned { background: var(--gold); border-color: var(--gold-light) var(--gold-dark) var(--gold-dark) var(--gold-light); }
       .tile.locked > span { filter: grayscale(1) brightness(.55); }
-      .tile.hidden { background: #3a3a3a; border-color: #4d4d4d #222 #222 #4d4d4d; color: #777; font: 700 18px system-ui; }
+      .tile.hidden { background: var(--stone-dark); border-color: var(--stone) var(--map-ground-a) var(--map-ground-a) var(--stone); color: var(--ink-muted); font: 700 18px system-ui; }
       @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
-      #replaying { margin-left: 8px; color: #f5c04a; font-size: 12px; font-weight: normal; }
+      #replaying { margin-left: 8px; color: var(--warn); font-size: 12px; font-weight: normal; }
       /* Course menu: the focused Lesson's cover big in the middle, its own art blurred behind everything. */
-      #menu { position: fixed; inset: 0; z-index: 12; overflow: hidden; container-type: size; background: #0c0d10; outline: none; }
+      #menu { position: fixed; inset: 0; z-index: 12; overflow: hidden; container-type: size; background: var(--surface-menu); outline: none; }
       #menu[hidden] { display: none; }
       #menu-bg { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); filter: blur(24px) brightness(.45) saturate(1.3); }
       /* Narrow screens wrap the bars (the stats go under the chips); the notch gets its own padding. */
@@ -145,10 +202,10 @@
       #menu .bar button { display: flex; gap: 6px; align-items: center; background: #0006; border-color: #fff3; border-radius: 999px; }
       #menu .bar button[hidden] { display: none; }
       #menu .chip { font-weight: 600; }
-      #menu .chip.on { background: #b14cff; border-color: #b14cff; color: #fff; }
-      #menu .soon { color: #aaa; }
-      #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
-      #menu .bar button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
+      #menu .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
+      #menu .soon { color: var(--ink-muted); }
+      #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: var(--ink-muted); }
+      #menu .bar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; font-variant-numeric: tabular-nums; }
       /* Bottom bar: equal side columns keep the Lesson track centred on the screen, whatever the buttons' widths. */
       #menu .bar.bottom { display: grid; grid-template-columns: 1fr minmax(0, min(640px, 100% - 740px)) 1fr; /* 740px: room for the widest right side ("How to unlock") on both sides */ }
@@ -160,14 +217,14 @@
       #menu-dots button::before { content: ""; height: 4px; border-radius: 2px; background: #ffffff38; transition: height .15s, background-color .15s; }
       #menu-dots button.passed::before { background: #ffffffb3; }
       #menu-dots button:hover::before { background: #fffd; }
-      #menu-dots button[aria-current]::before { height: 6px; background: #b14cff; box-shadow: 0 0 10px #b14cff8c; }
+      #menu-dots button[aria-current]::before { height: 6px; background: var(--accent); box-shadow: 0 0 10px #5ad28c66; }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
       /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
       #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
-      #menu-prev { left: calc(50% - 22.5cqh - 28px); background: #23252dee; color: #c7cbd4; box-shadow: inset 0 0 0 1px #464a56, 0 4px 14px #0009; }
-      #menu-next { left: calc(50% + 22.5cqh + 28px); background: #9a3be8; color: #fff; box-shadow: 0 0 18px #b14cff8c, 0 4px 14px #0009; }
-      #menu-prev:hover { background: #343744; color: #fff; box-shadow: inset 0 0 0 1px #7a7f8e, 0 4px 14px #0009; }
-      #menu-next:hover { background: #a94ff5; }
+      #menu-prev { left: calc(50% - 22.5cqh - 28px); background: var(--locked-surface); color: var(--locked-ink); box-shadow: inset 0 0 0 1px var(--locked-line), 0 4px 14px #0009; }
+      #menu-next { left: calc(50% + 22.5cqh + 28px); background: var(--accent); color: var(--accent-on); box-shadow: 0 0 18px #5ad28c66, 0 4px 14px #0009; }
+      #menu-prev:hover { background: var(--surface-button-hover); color: var(--ink-strong); box-shadow: inset 0 0 0 1px var(--border-control), 0 4px 14px #0009; }
+      #menu-next:hover { background: var(--accent-hover); }
       #menu .nav:hover { transform: translate(-50%, -50%) scale(1.08); }
       #menu .nav:active { transform: translate(-50%, -50%) scale(.92); }
       #menu .nav svg { width: 22px; height: 22px; transition: transform .15s; }
@@ -177,34 +234,34 @@
       #menu-next:hover svg { transform: translateX(2px); }
       /* At the ends the arrow fades out but keeps its place. */
       #menu .nav:disabled { opacity: 0; pointer-events: none; }
-      #menu .nav:focus-visible { outline: 2px solid #9cf; outline-offset: 3px; }
+      #menu .nav:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
       #menu button { touch-action: manipulation; }
       @media (pointer: coarse) { #menu .bar button, #menu #menu-dots button { min-height: 44px; } #menu #menu-dots button { width: 24px; } #menu kbd { display: none; } }
       /* Under 900px: Back and Achievements keep only their icon, Play gets its own full-width row. */
       @media (max-width: 900px) {
         #menu-back span + span, #menu-achievements span + span { display: none; }
-        #menu #menu-play { order: 1; flex-basis: 100%; justify-content: center; min-height: 44px; background: #b14cff; border-color: #b14cff; color: #fff; }
+        #menu #menu-play { order: 1; flex-basis: 100%; justify-content: center; min-height: 44px; background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
       }
       #menu-phone { display: none; }
       @media (max-width: 599px) {
-        #menu-phone { position: absolute; z-index: 1; left: 12px; right: 12px; top: max(12px, env(safe-area-inset-top)); display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #26282f; border: 1px solid #353842; box-shadow: 0 6px 20px #0008; }
+        #menu-phone { position: absolute; z-index: 1; left: 12px; right: 12px; top: max(12px, env(safe-area-inset-top)); display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 10px; background: var(--surface-dialog); border: 1px solid var(--border-dialog); box-shadow: 0 6px 20px #0008; }
         #menu-phone p { flex: 1; margin: 0; }
         #menu-phone ~ .bar:not(.bottom) { top: calc(max(12px, env(safe-area-inset-top)) + 110px); }
       }
-      .cover { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 3 / 4; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 10px 30px #0009; translate: calc(-50% + var(--d) * (60% + 22px) + var(--s) * 20%); transition: translate .22s, scale .22s; }
+      .cover { position: absolute; left: 50%; top: 0; height: 100%; aspect-ratio: 3 / 4; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: var(--surface-stage); box-shadow: 0 10px 30px #0009; translate: calc(-50% + var(--d) * (60% + 22px) + var(--s) * 20%); transition: translate .22s, scale .22s; }
       /* --d is the card's distance from the focused one, --s its sign: small cards are .6 wide, 22px apart. */
       .cover:not([aria-current]) { scale: .6; }
       .cover canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-      .cover[aria-current] { outline: 3px solid #b14cff; outline-offset: 3px; box-shadow: 0 0 40px #b14cff8c, 0 10px 30px #0009; }
+      .cover[aria-current] { outline: 3px solid var(--accent); outline-offset: 3px; box-shadow: 0 0 40px #5ad28c66, 0 10px 30px #0009; }
       .cover.locked canvas { filter: grayscale(.85) brightness(.5) contrast(.9); }
       .cover .tag { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: #000a; font: 700 11px system-ui; }
-      .cover.passed .tag { color: #9ff0c6; }
-      .cover.current .tag { color: #bfe0ff; }
+      .cover.passed .tag { color: var(--passed-ink); }
+      .cover.current .tag { color: var(--accent); }
       .cover.locked .tag { inset: 0; display: grid; place-items: center; padding: 0; border-radius: 0; background: radial-gradient(circle, #0000 30%, #0005); }
       /* Frosted round badge with a padlock, the same shape as the locked pill's icon. */
-      .cover.locked .lock { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; color: #e4e7ee; background: #15171dbf; box-shadow: inset 0 0 0 1.5px #ffffff2b, 0 8px 22px #0008; backdrop-filter: blur(3px); }
-      .cover .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; text-align: left; background: linear-gradient(#0000, #000d); font: 800 16px system-ui; color: #fff; }
-      .cover .name small { display: block; color: #ccc; font-size: 11px; letter-spacing: .1em; }
+      .cover.locked .lock { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; color: var(--ink); background: #12141bbf; box-shadow: inset 0 0 0 1.5px #ffffff2b, 0 8px 22px #0008; backdrop-filter: blur(3px); }
+      .cover .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; text-align: left; background: linear-gradient(#0000, #000d); font: 800 16px system-ui; color: var(--ink-strong); }
+      .cover .name small { display: block; color: var(--ink-muted); font-size: 11px; letter-spacing: .1em; }
       .cover .tag:empty { display: none; }
       .cover.new .name { inset: 0; display: grid; place-items: center; padding: 0; background: #0006; font-size: 28px; }
       @keyframes toast-fade { from { opacity: 0; } 8%, 90% { opacity: 1; } to { opacity: 0; } }
@@ -217,22 +274,22 @@
       #project-actions[hidden] { display: none; }
       #card-info { position: absolute; left: 0; right: 0; top: 75%; text-align: center; text-shadow: 0 2px 8px #000; }
       #card-info h2 { margin: 0; font-size: 24px; }
-      #card-meta { margin-top: 6px; color: #e4e6eb; font-size: 15px; }
-      #card-meta code { padding: 1px 5px; border-radius: 4px; background: #1b1d24cc; color: #e9d3ff; font: 13.5px ui-monospace, SFMono-Regular, Menlo, monospace; text-shadow: none; }
-      #card-meta .meta-files { margin-top: 6px; color: #b4b9c4; font-size: 13px; }
+      #card-meta { margin-top: 6px; color: var(--ink-menu-meta); font-size: 15px; }
+      #card-meta code { padding: 1px 5px; border-radius: 4px; background: #181b24cc; color: var(--accent-ink); font: 13.5px ui-monospace, SFMono-Regular, Menlo, monospace; text-shadow: none; }
+      #card-meta .meta-files { margin-top: 6px; color: var(--ink-menu-files); font-size: 13px; }
       #card-meta .meta-files code { background: none; padding: 0; color: inherit; font-size: 12.5px; }
       #card-meta .pill { display: inline-flex; align-items: center; gap: 5px; margin-right: 6px; padding: 2px 9px 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; vertical-align: 1px; text-shadow: none; font-variant-numeric: tabular-nums; }
-      #card-meta .pill.current { background: #9a3be8; color: #fff; }
-      #card-meta .pill.passed { background: #163a26; color: #8ee6ad; box-shadow: inset 0 0 0 1px #2c6b45; }
-      #card-meta .pill.locked { background: #23252d; color: #c7cbd4; box-shadow: inset 0 0 0 1px #464a56; }
-      #replay, #new-project { width: min(460px, 92vw); background: #26282f; color: #ddd; border: 1px solid #353842; border-radius: 10px; }
+      #card-meta .pill.current { background: var(--accent); color: var(--accent-on); }
+      #card-meta .pill.passed { background: var(--passed-surface); color: var(--passed-ink); box-shadow: inset 0 0 0 1px var(--passed-line); }
+      #card-meta .pill.locked { background: var(--locked-surface); color: var(--locked-ink); box-shadow: inset 0 0 0 1px var(--locked-line); }
+      #replay, #new-project { width: min(460px, 92vw); background: var(--surface-dialog); color: var(--ink); border: 1px solid var(--border-dialog); border-radius: 10px; }
       #replay h3, #new-project h3 { margin-top: 0; }
       #replay button, #new-project button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
-      #replay button:focus, #new-project button:focus { outline: 2px solid #b14cff; }
-      #replay small, #new-project small { display: block; color: #9aa0ab; }
+      #replay button:focus, #new-project button:focus { outline: 2px solid var(--accent); }
+      #replay small, #new-project small { display: block; color: var(--ink-muted); }
       .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-      #prompt-box { width: min(720px, 90vw); background: #252526; color: #ddd; border: 1px solid #444; border-radius: 6px; }
-      #prompt-box textarea { width: 100%; height: 50vh; background: #1e1e1e; color: #ddd; font: 12px ui-monospace, monospace; }
+      #prompt-box { width: min(720px, 90vw); background: var(--surface-panel); color: var(--ink); border: 1px solid var(--border-control); border-radius: 6px; }
+      #prompt-box textarea { width: 100%; height: 50vh; background: var(--surface-editor); color: var(--ink); font: 12px ui-monospace, monospace; }
     </style>
   </head>
   <body>

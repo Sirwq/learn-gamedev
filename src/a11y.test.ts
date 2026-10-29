@@ -34,7 +34,7 @@ describe("Course menu accessibility", () => {
     expect(tag("menu-achievements")).toContain('aria-keyshortcuts="A"');
     expect(tag("menu-play")).toContain('aria-keyshortcuts="Enter"');
   });
-  it("gives the menu buttons the header's focus ring", () => expect(html).toContain("#menu .bar button:focus-visible { outline: 2px solid #9cf;"));
+  it("gives the menu buttons the header's focus ring", () => expect(html).toContain("#menu .bar button:focus-visible { outline: 2px solid var(--focus);"));
   it("uses tabular numbers in the stats", () => expect(html).toMatch(/#menu-stats \{[^}]*tabular-nums/));
 });
 
