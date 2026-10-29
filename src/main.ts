@@ -337,6 +337,8 @@ const icon = (d: string) => `<svg aria-hidden="true" viewBox="0 0 12 12" width="
 const CHECK = icon(`<path d="M2 6.5 5 9.5 10 3" fill="none" stroke="currentColor" stroke-width="2"/>`);
 const PLAY = icon(`<path d="M3 1.5v9l7.5-4.5z" fill="currentColor"/>`);
 const LOCK = icon(`<rect x="2" y="5.5" width="8" height="6" rx="1" fill="currentColor"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`);
+/** The same padlock, big, in a round badge in the middle of a locked cover. */
+const LOCK_BADGE = `<span class="lock"><svg aria-hidden="true" viewBox="0 0 24 24" width="34" height="34"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1.6" fill="#1b1d24"/></svg></span>`;
 const playLabel = (i: number) =>
   mode === "sandbox" ? (i === projects.length ? "Create" : "Open")
   : states[i] === "locked" ? "How to unlock" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
@@ -356,7 +358,9 @@ function layoutMenu() {
     }
     card.className = `cover ${states[i]}`;
     card.ariaLabel = `${course[i].title}, ${{ passed: "passed", current: "up next", locked: "locked" }[states[i]]}`;
-    card.querySelector(".tag")!.textContent = { passed: "✓ passed", current: "▶ next", locked: "🔒" }[states[i]];
+    const tag = card.querySelector(".tag")!;
+    if (states[i] === "locked") tag.innerHTML = LOCK_BADGE; // our own markup
+    else tag.textContent = { passed: "✓ passed", current: "▶ next" }[states[i]];
   });
   drawBg();
   const meta = document.getElementById("card-meta")!;

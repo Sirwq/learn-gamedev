@@ -196,11 +196,13 @@
       .cover:not([aria-current]) { scale: .6; }
       .cover canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
       .cover[aria-current] { outline: 3px solid #b14cff; outline-offset: 3px; box-shadow: 0 0 40px #b14cff8c, 0 10px 30px #0009; }
-      .cover.locked canvas { filter: grayscale(1) brightness(.45); }
+      .cover.locked canvas { filter: grayscale(.85) brightness(.5) contrast(.9); }
       .cover .tag { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: #000a; font: 700 11px system-ui; }
       .cover.passed .tag { color: #9ff0c6; }
       .cover.current .tag { color: #bfe0ff; }
-      .cover.locked .tag { inset: 0; display: grid; place-items: center; background: none; font-size: 34px; }
+      .cover.locked .tag { inset: 0; display: grid; place-items: center; padding: 0; border-radius: 0; background: radial-gradient(circle, #0000 30%, #0005); }
+      /* Frosted round badge with a padlock, the same shape as the locked pill's icon. */
+      .cover.locked .lock { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; color: #e4e7ee; background: #15171dbf; box-shadow: inset 0 0 0 1.5px #ffffff2b, 0 8px 22px #0008; backdrop-filter: blur(3px); }
       .cover .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; text-align: left; background: linear-gradient(#0000, #000d); font: 800 16px system-ui; color: #fff; }
       .cover .name small { display: block; color: #ccc; font-size: 11px; letter-spacing: .1em; }
       .cover .tag:empty { display: none; }
