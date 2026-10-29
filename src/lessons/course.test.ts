@@ -3,6 +3,7 @@ import { course } from "./course";
 import { api, keyEvent, KeyCode, releaseAllKeys, scriptSource, startGame, worldView, type MonoBehaviour } from "../engine";
 import { transpile } from "../run-utils";
 import { checker } from "../check";
+import { achievementChecker, achievements } from "../achievements";
 
 // Headless stand-in for the worker's blob import: evaluate the Script with the student API in scope.
 const load = (ts: string, name: string) =>
@@ -41,6 +42,22 @@ const play: Record<string, (frame: number) => string[]> = {
     f === 3 || f === 345 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 40 || f > 345 ? [KeyCode.RightArrow] : [],
 };
 
+// Achievements each Lesson's playthrough should earn, every one checked as if unlocked.
+const earns: Record<string, string[]> = {
+  "3. Steer": ["steps", "both"],
+  "5. Jump": ["jump"],
+  "6. Land on a box": ["land"],
+  "7. Many platforms": ["hop"],
+  "8. Walls": ["bonk"],
+  "9. Camera follow": ["explore"],
+  "10. Coins": ["coin", "allcoins"],
+  "11. Enemy patrol": ["patrol"],
+  "12. Stomp": ["stomp"],
+  "13. Shooting": ["pew", "snipe"],
+  "14. Health and respawn": ["respawn"],
+  "15. Moving platforms": ["ride"],
+};
+
 describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, lesson, index) => {
   it("is complete", () => {
     expect(lesson.title).not.toBe("");
@@ -56,10 +73,11 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
   });
 
   // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
-  const framesToPass = (code: Record<string, string>) => {
+  const framesToPass = (code: Record<string, string>, earned = new Set<string>()) => {
     const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, load(s, n)]));
     const game = startGame(lesson.level.boxes, classes);
     const check = checker(lesson);
+    const checkAchievements = achievementChecker(lesson.level.boxes, earned, achievements.map((a) => ({ ...a, after: null })));
     releaseAllKeys();
     let held: string[] = [];
     for (let frame = 1; frame <= 600; frame++, game.step()) {
@@ -68,6 +86,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
       for (const k of keys) keyEvent(k, true);
       held = keys;
       const result = check(worldView(game.objects));
+      checkAchievements(worldView(game.objects));
       if (result.lost) break;
       if (result.passed) return frame;
     }
@@ -82,6 +101,12 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
   it("is passed by its Reference code within 10 simulated seconds, and not by the stub", () => {
     expect(framesToPass({ ...earlier, ...code([lesson], "reference") })).toBeLessThanOrEqual(600);
     expect(framesToPass({ ...earlier, ...code([lesson], "stub") })).toBe(601);
+  });
+
+  it.runIf(lesson.title in earns)("earns its Achievements when played with its Reference code", () => {
+    const earned = new Set<string>();
+    framesToPass({ ...earlier, ...code([lesson], "reference") }, earned);
+    expect([...earned]).toEqual(expect.arrayContaining(earns[lesson.title]));
   });
 
   it.runIf(index > 0)("is not passed by the previous Lesson's Reference code", () => {

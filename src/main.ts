@@ -11,6 +11,7 @@ import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
+import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -161,7 +162,61 @@ function toast(text: string) {
   t.textContent = text;
   t.onanimationend = () => t.remove();
   document.getElementById("toasts")!.append(t);
+  return t;
 }
+
+// Achievements: earned in the worker, saved and shown here.
+const earned = loadEarned();
+const trophies = document.getElementById("trophies")!;
+const map = document.getElementById("achievements")!;
+const showTrophies = () => (trophies.textContent = `🏆 ${earned.size} / ${achievements.length}`);
+showTrophies();
+function earn(ids: string[]) {
+  for (const id of ids) {
+    const a = achievements.find((a) => a.id === id)!;
+    earned.add(id);
+    saveEarned(id);
+    const t = toast("");
+    t.className = "achievement";
+    t.innerHTML = `<i class="tile">${a.icon}</i><span><small>Achievement unlocked</small><b>${a.title}</b></span>`; // our own data
+  }
+  showTrophies();
+  if (!map.hidden) drawMap();
+}
+const CELL = 76;
+const centre = (a: (typeof achievements)[number]) => [a.col * CELL + CELL / 2, a.row * CELL + CELL / 2];
+function drawMap() {
+  map.querySelector("header span")!.textContent = `${earned.size} earned · gold = earned · grey = can earn now · ? = earn the one before it first`;
+  const [w, h] = [13 * CELL, 9 * CELL];
+  // Right-angled arrows, each stopping at the edge of the tile it points to.
+  const lines = achievements.filter((a) => a.after).map((a) => {
+    const [x1, y1] = centre(achievements.find((p) => p.id === a.after)!), [x2, y2] = centre(a);
+    const pts = x1 === x2 || y1 === y2 ? [[x1, y1], [x2, y2]] : a.vertical ? [[x1, y1], [x1, y2], [x2, y2]] : [[x1, y1], [x2, y1], [x2, y2]];
+    const [ax, ay] = pts[pts.length - 2], s = 30 / Math.hypot(x2 - ax, y2 - ay);
+    pts[pts.length - 1] = [x2 - (x2 - ax) * s, y2 - (y2 - ay) * s];
+    const lit = earned.has(a.id) ? "lit" : "";
+    return `<polyline class="${lit}" points="${pts.join(" ")}" marker-end="url(#arrow${lit})"/>`;
+  });
+  const arrow = (id: string) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z"/></marker>`;
+  const tiles = achievements.map((a) => {
+    const state = stateOf(a, earned), [x, y] = centre(a);
+    const tip = state === "hidden" ? "???\nEarn the one before it first" : `${a.title}\n${a.message}${state === "earned" ? "\n✓ earned" : ""}`;
+    return `<i class="tile ${state}" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
+  });
+  map.querySelector("#tree")!.innerHTML = `<svg width="${w}" height="${h}"><defs>${arrow("arrow")}${arrow("arrowlit")}</defs>${lines.join("")}</svg>${tiles.join("")}`;
+  (map.querySelector("#tree") as HTMLElement).style.cssText = `width:${w}px;height:${h}px`;
+}
+trophies.onclick = () => {
+  drawMap();
+  map.hidden = false;
+  document.getElementById("achievements-close")!.focus();
+};
+const closeMap = () => {
+  map.hidden = true;
+  trophies.focus();
+};
+document.getElementById("achievements-close")!.onclick = closeMap;
+map.onkeydown = (e) => e.key === "Escape" && closeMap();
 
 // The Reference model is JavaScript so the TS project never sees a second `class Player`; its diagnostics are off.
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
@@ -292,13 +347,14 @@ function run() {
   running = true;
   paused = false;
   canvas.focus();
-  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
     if (e.data.type === "tick") lastTick = performance.now();
     if (e.data.type === "paused") paused = e.data.paused;
     if (e.data.type === "logs") log(e.data.lines);
+    if (e.data.type === "achievements") earn(e.data.ids);
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose

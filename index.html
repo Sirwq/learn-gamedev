@@ -59,7 +59,26 @@
       #compare header span { flex: 1; color: #999; }
       #diff { flex: 1; min-height: 0; border: 1px solid #333; }
       #toasts { position: fixed; top: 8px; right: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
-      #toasts div { padding: 8px 14px; border-radius: 6px; background: #2f6b4c; color: #fff; animation: toast 4s forwards; }
+      #toasts > div { padding: 8px 14px; border-radius: 6px; background: #2f6b4c; color: #fff; animation: toast 4s forwards; }
+      #toasts > .achievement { display: flex; gap: 10px; align-items: center; min-width: 260px; border-radius: 0; background: #2b2b2b; border: 3px solid #6e6e6e; box-shadow: 0 6px 20px #0008; }
+      .achievement small { display: block; color: #e8c252; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+      /* Achievement map: full window, blocky dark background, square bevelled tiles. */
+      #achievements { position: fixed; inset: 0; z-index: 15; display: flex; flex-direction: column; background: #151515; }
+      #achievements[hidden] { display: none; }
+      #achievements header { padding: 10px 16px; background: #1c1c1c; border-bottom: 2px solid #000; }
+      #achievements header span { flex: 1; color: #999; font-size: 12px; }
+      #achievements > div { flex: 1; overflow: auto; background: repeating-conic-gradient(#262626 0 25%, #2c2c2c 0 50%) 0 0 / 32px 32px; }
+      #tree { position: relative; margin: 30px auto; }
+      #tree svg { position: absolute; inset: 0; }
+      #tree polyline { fill: none; stroke: #9a9a9a; stroke-width: 2; }
+      #tree polyline.lit { stroke: #5fd35f; }
+      #arrow path { fill: #9a9a9a; }
+      #arrowlit path { fill: #5fd35f; }
+      .tile { width: 46px; height: 46px; display: grid; place-items: center; font: normal 24px system-ui; background: #8b8b8b; border: 3px solid; border-color: #c6c6c6 #555 #555 #c6c6c6; }
+      #tree .tile { position: absolute; transform: translate(-50%, -50%); }
+      .tile.earned { background: #c9a43a; border-color: #f3dc85 #7a5d12 #7a5d12 #f3dc85; }
+      .tile.locked > span { filter: grayscale(1) brightness(.55); }
+      .tile.hidden { background: #3a3a3a; border-color: #4d4d4d #222 #222 #4d4d4d; color: #777; font: 700 18px system-ui; }
       @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
       #prompt-box { width: min(720px, 90vw); background: #252526; color: #ddd; border: 1px solid #444; border-radius: 6px; }
       #prompt-box textarea { width: 100%; height: 50vh; background: #1e1e1e; color: #ddd; font: 12px ui-monospace, monospace; }
@@ -69,6 +88,7 @@
     <header>
       <b>learn-dev</b>
       <div id="progress" aria-label="Course progress"></div>
+      <button id="trophies" title="Achievements"></button>
       <button id="run">▶ Run</button>
       <button id="stop" hidden>■ Stop</button>
       <button id="ask">Ask DeepSeek</button>
@@ -111,6 +131,14 @@
         <button id="compare-close" aria-label="Close">✕</button>
       </header>
       <div id="diff"></div>
+    </section>
+    <section id="achievements" hidden aria-label="Achievements">
+      <header>
+        <b>🏆 Achievements</b>
+        <span></span>
+        <button id="achievements-close" aria-label="Close">✕ Close (Esc)</button>
+      </header>
+      <div><div id="tree"></div></div>
     </section>
     <div id="toasts" role="status"></div>
     <dialog id="prompt-box" aria-label="Tutor prompt">

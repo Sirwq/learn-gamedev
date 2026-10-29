@@ -3,6 +3,7 @@ import { errorLine } from "./run-utils";
 import { api, type Box, Camera, findScript, keyEvent, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, worldView } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { checker } from "./check";
+import { achievementChecker } from "./achievements";
 import { course } from "./lessons/course";
 
 const scriptOf: Record<string, string> = {}; // blob URL -> Script name
@@ -58,18 +59,22 @@ self.onmessage = async (e: MessageEvent) => {
   }
 
   const check = checker(lesson);
+  const achieve = achievementChecker(level, new Set(e.data.earned));
   let last = "";
   const frame = () => {
     if (paused) return void (pausedFrame = frame);
     postMessage({ type: "tick" });
-    let result;
+    let result, earned;
     try {
       game.step();
-      result = check(worldView(game.objects));
+      const world = worldView(game.objects);
+      result = check(world);
+      earned = achieve(world, logs.length > 0); // also on the frame the game stops
     } catch (err) {
       return report(err); // stop the loop: the game pauses on the error
     }
     flushLogs();
+    if (earned.length) postMessage({ type: "achievements", ids: earned });
     const json = JSON.stringify(result);
     if (json !== last) postMessage({ type: "check", ...result });
     last = json;
