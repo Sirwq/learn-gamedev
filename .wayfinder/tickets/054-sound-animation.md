@@ -23,3 +23,5 @@ Grilled with the user; all recommendations accepted, plus the user's own sounds 
 - **Mute**: a 🔊 / 🔇 icon button labelled "Mute sound" on the game view, saved with the localStorage settings, sound on by default. No keyboard shortcut: keys belong to the game.
 - **Later, not v2**: students' own sounds and background music, taught in a later chapter of Lessons ("How to add your own sounds").
 - **Claude Player**: if the Player is redrawn ([What does the Player look like as a Claude sprite?](058-claude-player-sprite.md)), it needs its own walk and jump frames; added to that ticket.
+
+**Amended** by [How do students learn the v2 parts?](062-teaching-v2.md): Chapter 2 Lessons (16 onwards) teach sound, screen text and game feel; Lessons 1–15 are unchanged.

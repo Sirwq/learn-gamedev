@@ -5,7 +5,7 @@ title: learn-dev v2 — after the MVP
 
 ## Destination
 
-A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Construct-like Sandbox for the same student after the Course, with a Level editor, own sprites, sound and animation, on-screen UI text and Achievements for extra Mechanics, unlocked once Lesson 15 is passed.
+A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Construct-like Sandbox for the same student after the Course, with a Level editor, own sprites, sound and animation, on-screen UI text and Achievements for extra Mechanics, plus a Chapter 2 of Lessons for the new code and game feel, unlocked once Lesson 15 is passed.
 
 ## Notes
 
@@ -24,17 +24,17 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - [How do students bring their own sprites?](tickets/050-own-sprites.md): Sandbox only, one PNG/JPEG per tag per Project (at most 256×256), set in the inspector; Stretch or 20 px Tile with an optional Top image, Reset to the Kenney art, drawn shape = hitbox kept, no new code API.
 - [Where do Projects with images live?](tickets/051-project-storage.md): Projects and their image Blobs move to IndexedDB (`idb-keyval`), Course progress and settings stay in localStorage; `persist()` asked once on first save; backup is a one-file JSON Export / Import per Project plus Export everything; a one-time, locked, repeat-safe migration that keeps the old key.
 - [Is the Level editor also the authors' Lesson editor?](tickets/052-author-lesson-editor.md): no, it's student-only. Authors keep writing `level.boxes` by hand, helped by a Copy button on "View Level as Code"; Goals, Lose events, Hints, the Explanation and Reference code stay code and Markdown.
-- [What do sound and animation add to the engine?](tickets/054-sound-animation.md): Sandbox only; the engine animates from the Kenney pack's own frames with no API (tags without frames and own sprites stay still); `this.audio.PlayOneShot("Jump")` with ten fixed clip names from one CC0 pixel pack; the worker sends clip names to the page's Web Audio; a labelled mute button.
-- [What on-screen UI text does the student write?](tickets/055-ui-text.md): Sandbox only, screen text only; Unity's `OnGUI()` + `GUI.Label(new Rect(...), text)` with top-left, y-down coordinates; `GUI.color`, `GUI.skin.label` fontSize / alignment / outline (on by default), reset every frame; one Kenney CC0 pixel font; not in the Level editor; a hidden label list for screen readers.
+- [What do sound and animation add to the engine?](tickets/054-sound-animation.md): Sandbox and Chapter 2 only; the engine animates from the Kenney pack's own frames with no API (tags without frames and own sprites stay still); `this.audio.PlayOneShot("Jump")` with ten fixed clip names from one CC0 pixel pack; the worker sends clip names to the page's Web Audio; a labelled mute button.
+- [What on-screen UI text does the student write?](tickets/055-ui-text.md): Sandbox and Chapter 2 only, screen text only; Unity's `OnGUI()` + `GUI.Label(new Rect(...), text)` with top-left, y-down coordinates; `GUI.color`, `GUI.skin.label` fontSize / alignment / outline (on by default), reset every frame; one Kenney CC0 pixel font; not in the Level editor; a hidden label list for screen readers.
 - [Which Achievements reward extra Mechanics?](tickets/056-mechanic-achievements.md): Double jump (after First jump), Wall jump (after Bonk) and Dash (after Both ways), earned anywhere from day one and always on the map, so `🏆 n / 21`; tests get `keysDown` in `Run` and rule out stomp bounces, respawns and rides; "secret" reworded to "after the Course".
 - [What does the Player look like as a Claude sprite?](tickets/058-claude-player-sprite.md): an original orange critter (not Anthropic's mascot) in a Claude-like palette, 16×16 at 2× filling the 32×32 Player box, with idle / walk / jump frames for Sandbox; Enemy and other tags stay Kenney.
 - [How do students keep their saves safe?](tickets/059-backup-ux.md): a 💾 Saves dialog on the menu from Lesson 1 (Export / Import everything, last-backup line), Export in the Project strip, Import as "From a file…" under + New; one quiet menu reminder after 7+ days with new progress; no popups or private-window detection; Import everything merges per Lesson and never overwrites; `<name>.learn-dev.json` / `learn-dev-backup-YYYY-MM-DD.json`.
 - [How do students share a Project?](tickets/060-share-project.md): the Export file is the share, imported as an ordinary new Project; before unlock 💾 Saves Import keeps it until Sandbox opens; Sandbox only, no Share button; a dev-build-only toggle unlocks Sandbox for checking.
 - [Which CC0 sound pack ships with v2?](tickets/061-sound-pack.md): SubspaceAudio's CC0 "512 Sound Effects (8-bit style)" covers all ten clip names; ten clips converted once to mono 96 kbps MP3 (about 70 KB) in `public/audio/` with the pack's licence and a source README.
+- [How do students learn the v2 parts?](tickets/062-teaching-v2.md): an optional Chapter 2 of real Lessons (16 onwards) for sound, screen text and game feel, unlocked with Sandbox at Lesson 15 (Lessons 1–15 unchanged); a Docs Sandbox page and an "Example: Sandbox tour" Project teach the Level editor, sprites and sharing; no new Achievements; Mechanic Achievements get an "Extra" line.
 
 ## Not yet specified
 
-- Teaching the new parts: whether the Course gains Lessons (or Achievements) for whatever v2 adds, or students find it on their own in Sandbox mode, unlocked after the Course.
 
 ## Out of scope
 

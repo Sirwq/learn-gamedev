@@ -34,3 +34,5 @@ Grilled with the user; all recommendations accepted, plus a switch for the outli
 - **Runtime**: the worker collects the frame's labels and sends them with the frame message; the page draws them over the game. Text shows only while running, stays frozen with the last frame on pause, and is gone on Stop.
 - **Level editor**: doesn't place UI text; it exists only in code.
 - **Screen readers**: a visually hidden list beside the game view holds the current labels. It updates only when the text changes and is not a live region, so a ticking timer isn't announced every second.
+
+**Amended** by [How do students learn the v2 parts?](062-teaching-v2.md): Chapter 2 Lessons (16 onwards) teach sound, screen text and game feel; Lessons 1–15 are unchanged.

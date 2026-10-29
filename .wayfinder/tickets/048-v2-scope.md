@@ -24,3 +24,5 @@ The MVP put a list of things off for later (Out of scope on the [MVP map](../map
   - Extra Mechanics (double jump, wall jump, dash) as new **Achievements** only: no Lessons and no new engine features. The student builds the move and the Achievement notices ([Which Achievements reward extra Mechanics?](056-mechanic-achievements.md)).
 - **Left open**: whether the Level editor is also the authors' Lesson editor ([Is the Level editor also the authors' Lesson editor?](052-author-lesson-editor.md)).
 - **Later, not v2**: a C# Course ([How does student C# run in the browser?](053-csharp-runtime.md), closed as out of scope), the built-in paid AI tutor (Ask DeepSeek stays), accounts and server saves (backup by export / import file instead), multiplayer.
+
+**Amended** by [How do students learn the v2 parts?](062-teaching-v2.md): Chapter 2 Lessons (16 onwards) teach sound, screen text and game feel; Lessons 1–15 are unchanged.
