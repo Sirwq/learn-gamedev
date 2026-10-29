@@ -9,3 +9,10 @@ export function errorLine(stack: string | undefined): { url: string; line: numbe
   const m = stack?.match(/(blob:[^\s)]*):(\d+):(\d+)/);
   return m ? { url: m[1], line: Number(m[2]), col: Number(m[3]) } : undefined;
 }
+
+/** Ctrl+Enter runs; Monaco maps it to ⌘ on Apple platforms. */
+export const runShortcut = (platform: string) => (/Mac|iPhone|iPad/.test(platform) ? "⌘↵" : "Ctrl+↵");
+
+/** The one Console line each Run starts with. */
+export const runStartLine = (lessonIndex: number, projectName?: string) =>
+  `▶ Running ${projectName ?? `Lesson ${lessonIndex + 1}`}…`;

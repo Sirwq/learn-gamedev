@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { errorLine, transpile } from "./run-utils";
+import { errorLine, runShortcut, runStartLine, transpile } from "./run-utils";
 
 describe("transpile", () => {
   it("strips types and keeps every line on the same line number", () => {
@@ -30,5 +30,19 @@ describe("errorLine", () => {
   it("returns undefined when no blob frame exists", () => {
     expect(errorLine("Error\n    at http://x/w.js:1:1")).toBeUndefined();
     expect(errorLine(undefined)).toBeUndefined();
+  });
+});
+
+describe("Run button", () => {
+  it("shows the shortcut with the platform's symbols", () => {
+    expect(runShortcut("MacIntel")).toBe("⌘↵");
+    expect(runShortcut("iPad")).toBe("⌘↵");
+    expect(runShortcut("Win32")).toBe("Ctrl+↵");
+    expect(runShortcut("Linux x86_64")).toBe("Ctrl+↵");
+  });
+  it("names the Lesson by number, a Project by its name", () => {
+    expect(runStartLine(0)).toBe("▶ Running Lesson 1…");
+    expect(runStartLine(14)).toBe("▶ Running Lesson 15…");
+    expect(runStartLine(3, "My world")).toBe("▶ Running My world…");
   });
 });

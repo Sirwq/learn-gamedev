@@ -2,7 +2,7 @@ import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
-import { transpile } from "./run-utils";
+import { runShortcut, runStartLine, transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
 import { loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot } from "./lesson";
@@ -172,6 +172,8 @@ editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop")!;
+runBtn.querySelector("kbd")!.textContent = runShortcut(navigator.platform);
+runBtn.title = `Run (${runShortcut(navigator.platform)})`;
 const status = document.getElementById("status")!;
 const goalsList = document.getElementById("goals")!;
 const overlay = document.getElementById("overlay")!;
@@ -549,7 +551,10 @@ let paused = false; // the worker confirmed it stopped its frames
 function ended() {
   running = false;
   clearInterval(watchdog);
+  const hadFocus = document.activeElement === stopBtn;
   stopBtn.hidden = true;
+  runBtn.hidden = false;
+  if (hadFocus) runBtn.focus();
 }
 
 function stop() {
@@ -563,7 +568,7 @@ function run() {
   for (const model of Object.values(models)) monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
   clearLines(consoleLines);
-  log([]);
+  log([{ level: "log", text: runStartLine(lessonIndex, project?.name), count: 1 }]);
   showGoals([]);
   showOverlay("", false);
 
@@ -593,6 +598,7 @@ function run() {
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
   stopBtn.hidden = false;
+  runBtn.hidden = true;
   running = true;
   paused = false;
   canvas.focus();
