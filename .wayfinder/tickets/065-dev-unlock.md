@@ -1,7 +1,7 @@
 ---
 title: DEV toggle that unlocks Sandbox
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -22,3 +22,8 @@ In the dev build only (`import.meta.env.DEV`), the Course menu gets a labelled t
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+`sandboxUnlocked` in `src/sandbox.ts` is also true when `import.meta.env.DEV` and `dev:sandbox-unlocked` is `"1"`; `setDevUnlock(on)` sets or removes that key. In the dev build, `courseMenu` adds a "DEV: Unlock Sandbox" / "DEV: Lock Sandbox" chip before the menu stats. It flips the flag, shows or hides the Sandbox chip, and switches back to the Course tab when locking. It never calls `markPassed`, so there is no toast, no slide and no Lesson passed, and Projects stay in storage. The toggle is made in JS inside an `import.meta.env.DEV` block, so Vite drops it from production.
+
+- Test: `src/sandbox.test.ts` "opens with the dev flag without passing any Lesson".
+- Built-files check: after `npm run build`, `grep -r "DEV: \|dev:sandbox" dist/` finds nothing. This was a manual check, not an automated test, so the test suite doesn't run a Vite build.

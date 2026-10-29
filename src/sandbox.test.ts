@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createProject, deleteProject, duplicateProject, loadProjects, playground, sandboxUnlocked, saveProject, scriptNameError } from "./sandbox";
-import { markPassed } from "./check";
+import { createProject, deleteProject, duplicateProject, loadProjects, playground, sandboxUnlocked, saveProject, scriptNameError, setDevUnlock } from "./sandbox";
+import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
@@ -15,6 +15,15 @@ describe("Sandbox unlock", () => {
     expect(sandboxUnlocked(course, s)).toBe(false);
     markPassed(course[course.length - 1].title, s);
     expect(sandboxUnlocked(course, s)).toBe(true);
+  });
+
+  it("opens with the dev flag without passing any Lesson", () => {
+    const s = memoryStore();
+    setDevUnlock(true, s);
+    expect(sandboxUnlocked(course, s)).toBe(true);
+    expect(course.some((l) => isPassed(l.title, s))).toBe(false);
+    setDevUnlock(false, s);
+    expect(sandboxUnlocked(course, s)).toBe(false);
   });
 });
 

@@ -6,9 +6,14 @@ import { withoutNoteComment } from "./lessons/ai-note";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
-/** A secret until the Course's last Lesson is passed. */
+/** A secret until the Course's last Lesson is passed, or the dev build's unlock flag is set. */
 export const sandboxUnlocked = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) =>
-  lessons.length > 0 && isPassed(lessons[lessons.length - 1].title, store);
+  (lessons.length > 0 && isPassed(lessons[lessons.length - 1].title, store)) ||
+  (import.meta.env.DEV && store.getItem("dev:sandbox-unlocked") === "1");
+
+/** Dev build only: open Sandbox without passing the Course. Locking keeps the Projects. */
+export const setDevUnlock = (on: boolean, store: Pick<Storage, "setItem" | "removeItem"> = localStorage) =>
+  on ? store.setItem("dev:sandbox-unlocked", "1") : store.removeItem("dev:sandbox-unlocked");
 
 /** A new Script's stub: the class name must match the file, like every Course Script. */
 export const scriptStub = (name: string) => `class ${name} extends MonoBehaviour {

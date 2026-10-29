@@ -6,7 +6,7 @@ import { achievements } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, type Images } from "./sprites";
 import { swipeStep } from "./swipe";
-import { createProject, loadProjects, type Project, sandboxUnlocked } from "./sandbox";
+import { createProject, loadProjects, type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
 import { toast } from "./toast";
 
 type Page = {
@@ -231,6 +231,20 @@ export function courseMenu({ lessonIndex, project, askedProject, earned, images,
   };
   chipCourse.onclick = () => setMode("course");
   chipSandbox.onclick = () => setMode("sandbox");
+  if (import.meta.env.DEV) {
+    // Dev build only: check Sandbox screens without passing the Course; no toast, no slide, no Lesson marked passed.
+    const devToggle = document.createElement("button");
+    devToggle.className = "chip";
+    const devLabel = () => (devToggle.textContent = localStorage.getItem("dev:sandbox-unlocked") ? "DEV: Lock Sandbox" : "DEV: Unlock Sandbox");
+    devToggle.onclick = () => {
+      setDevUnlock(!localStorage.getItem("dev:sandbox-unlocked"));
+      devLabel();
+      chipSandbox.hidden = !sandboxUnlocked(course);
+      if (chipSandbox.hidden) setMode("course");
+    };
+    devLabel();
+    document.getElementById("menu-stats")!.before(devToggle);
+  }
   const menuKeys: Record<string, () => void> = {
     ArrowLeft: () => focusCard(focused - 1),
     ArrowRight: () => focusCard(focused + 1),
