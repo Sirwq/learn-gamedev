@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "6. Land on a box",
+  concept: "functions",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

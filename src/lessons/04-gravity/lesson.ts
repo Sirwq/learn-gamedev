@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "4. Gravity",
+  concept: "changing values over time",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

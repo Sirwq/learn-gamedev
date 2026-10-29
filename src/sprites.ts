@@ -36,7 +36,7 @@ export async function loadImages(): Promise<Images> {
 }
 
 /** Draws the night sky, then every object: its tag's sprite, or a plain box in its color when the tag has none. */
-export function drawWorld(ctx: OffscreenCanvasRenderingContext2D, images: Images, camera: Camera, objects: GameObject[]) {
+export function drawWorld(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, images: Images, camera: Camera, objects: GameObject[]) {
   const { width: W, height: H } = ctx.canvas;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(images.Sky, 0, 0, W, H);

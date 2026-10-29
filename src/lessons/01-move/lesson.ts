@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "1. Move right",
+  concept: "Update() and statements",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

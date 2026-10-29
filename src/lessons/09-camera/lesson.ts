@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "9. Camera follow",
+  concept: "Camera.main",
   explanation: withNoteBox(explanation),
   level: {
     width: 2400,

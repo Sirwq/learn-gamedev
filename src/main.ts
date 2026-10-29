@@ -5,13 +5,15 @@ import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
-import { loadScripts, openedHints, saveOpenedHints, saveScript } from "./lesson";
-import { markPassed, progress, referenceFor, unlocked } from "./check";
+import { loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot } from "./lesson";
+import { cardStates, currentLesson, markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
+import { Camera, GameObject, Vector2 } from "./engine";
+import { drawWorld, loadImages } from "./sprites";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -19,10 +21,15 @@ self.MonacoEnvironment = {
 
 monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-const asked = Number(new URLSearchParams(location.search).get("lesson")); // shortcut: ?lesson=N until the Course menu picks Lessons
-const lessonIndex = Number.isInteger(asked) && unlocked(course, asked) ? asked : 0;
+// The Course menu picks a Lesson by reloading with ?lesson=N; without it the app opens on the menu, over the current Lesson.
+const asked = new URLSearchParams(location.search).get("lesson");
+const current = currentLesson(course);
+const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocked(course, Number(asked)) ? Number(asked) : current;
+const replaying = lessonIndex !== current;
+if (!replaying) restoreStash(); // before the editor loads the code
 const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
+document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
 explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
 const pages = docPages(engineApi);
@@ -149,11 +156,12 @@ passBox.append(...Object.keys(lesson.scripts).map((name) => {
   b.onclick = () => openCompare(name);
   return b;
 }));
-if (lessonIndex + 1 < course.length) {
+const nextIndex = replaying ? current : lessonIndex + 1;
+if (nextIndex < course.length) {
   const next = document.createElement("button");
   next.id = "next";
-  next.textContent = "Next Lesson ▶";
-  next.onclick = () => (location.search = `?lesson=${lessonIndex + 1}`);
+  next.textContent = replaying ? `Back to Lesson ${current + 1}` : "Next Lesson ▶";
+  next.onclick = () => (location.search = `?lesson=${nextIndex}`);
   passBox.append(next);
 }
 
@@ -213,10 +221,131 @@ trophies.onclick = () => {
 };
 const closeMap = () => {
   map.hidden = true;
-  trophies.focus();
+  (menu.hidden ? trophies : menu).focus();
 };
 document.getElementById("achievements-close")!.onclick = closeMap;
 map.onkeydown = (e) => e.key === "Escape" && closeMap();
+
+// Course menu: a cover carousel, one card per Lesson.
+const menu = document.getElementById("menu")!;
+const rail = document.getElementById("rail")!;
+const replayBox = document.getElementById("replay") as HTMLDialogElement;
+let focused = lessonIndex;
+let states = cardStates(course);
+let menuCurrent = current; // moves on when a Lesson is passed on this page
+const cards = course.map((l, i) => {
+  const card = document.createElement("button");
+  card.tabIndex = -1; // ← → move between cards
+  card.innerHTML = `<canvas width="240" height="320"></canvas><span class="tag"></span><span class="name"><small>LESSON ${i + 1}</small>${l.title.replace(/^\d+\.\s*/, "")}</span>`; // our own titles
+  card.onclick = () => (i === focused ? pick(i) : focusCard(i));
+  return card;
+});
+rail.append(...cards);
+const coverOf = (i: number) => cards[i].querySelector("canvas")!;
+const menuBg = document.getElementById("menu-bg") as HTMLCanvasElement;
+const drawBg = () => menuBg.getContext("2d")!.drawImage(coverOf(focused), 0, 0);
+// Cover art: the Lesson's Level in the game's pixel style, zoomed in around the Player and what's ahead of it.
+loadImages().then((images) => {
+  course.forEach((l, i) => {
+    const objects = l.level.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)));
+    const p = l.level.boxes.find((b) => b.tag === "Player")!;
+    const size = 180;
+    drawWorld(coverOf(i).getContext("2d")!, images, new Camera({ x: p.x + 90, y: Math.max(size, p.y + p.h / 2), size }), objects);
+  });
+  drawBg();
+});
+
+const playLabel = (i: number) => (states[i] === "locked" ? "Locked" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play");
+function layoutMenu() {
+  const W = rail.clientWidth, H = rail.clientHeight, gap = 22;
+  const bigW = H * 0.75, smallH = H * 0.6, smallW = smallH * 0.75;
+  cards.forEach((card, i) => {
+    const d = i - focused;
+    const [w, h] = d ? [smallW, smallH] : [bigW, H];
+    const x = d === 0 ? W / 2 - w / 2 : d > 0 ? W / 2 + bigW / 2 + gap + (d - 1) * (smallW + gap) : W / 2 - bigW / 2 - gap - smallW + (d + 1) * (smallW + gap);
+    card.style.cssText = `left:${x}px;top:${(H - h) / 2}px;width:${w}px;height:${h}px`;
+    card.className = `cover ${states[i]}`;
+    card.ariaCurrent = d ? null : "true";
+    card.ariaLabel = `${course[i].title}, ${states[i]}`;
+    card.querySelector(".tag")!.textContent = { passed: "✓ passed", current: "▶ next", locked: "🔒" }[states[i]];
+  });
+  drawBg();
+  const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
+  const state = { passed: "✓ Passed", current: "▶ Up next", locked: `🔒 Pass Lesson ${menuCurrent + 1} first` }[states[focused]];
+  document.getElementById("card-title")!.textContent = course[focused].title;
+  document.getElementById("card-meta")!.replaceChildren(...[`🧩 ${course[focused].concept}`, `📄 ${scripts.join(", ")}`, state].map((t) => {
+    const span = document.createElement("span");
+    span.textContent = t;
+    return span;
+  }));
+  document.getElementById("menu-count")!.textContent = `${focused + 1} / ${course.length}`;
+  document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
+  document.getElementById("menu-stats")!.textContent =
+    `🏆 ${earned.size} / ${achievements.length}   ✓ ${states.filter((s) => s === "passed").length} / ${course.length} passed`;
+}
+function focusCard(i: number) {
+  focused = Math.max(0, Math.min(course.length - 1, i));
+  layoutMenu();
+}
+function openMenu() {
+  states = cardStates(course);
+  menuCurrent = currentLesson(course);
+  focused = lessonIndex;
+  menu.hidden = false;
+  layoutMenu();
+  menu.focus();
+}
+function closeMenu() {
+  menu.hidden = true;
+  editor.focus();
+}
+const go = (i: number) => (location.search = `?lesson=${i}`);
+function pick(i: number) {
+  if (states[i] === "locked") return void toast(`Pass Lesson ${menuCurrent + 1} first`);
+  if (i === lessonIndex) return closeMenu();
+  if (playLabel(i) === "Play" || !snapshot(course[i].title)) return go(i);
+  replayBox.querySelector("h3")!.textContent = `Replay ${course[i].title}?`;
+  replayBox.querySelector("#replay-load small")!.textContent =
+    `Your editor goes back to the code you passed it with. Your newer code is saved and comes back when you return to Lesson ${menuCurrent + 1}.`;
+  (replayBox.querySelector("#replay-keep") as HTMLButtonElement).onclick = () => go(i);
+  (replayBox.querySelector("#replay-load") as HTMLButtonElement).onclick = () => {
+    loadSnapshot(course[i].title);
+    go(i);
+  };
+  replayBox.showModal();
+}
+document.getElementById("replay-cancel")!.onclick = () => replayBox.close();
+replayBox.onclose = () => menu.focus();
+replayBox.onkeydown = (e) => {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  const options = Array.from(replayBox.querySelectorAll("button"));
+  const k = options.indexOf(document.activeElement as HTMLButtonElement);
+  options[(k + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length].focus();
+};
+const soon = () => toast("TypeScript is the only Course for now. C# comes later.");
+const menuKeys: Record<string, () => void> = {
+  ArrowLeft: () => focusCard(focused - 1),
+  ArrowRight: () => focusCard(focused + 1),
+  Escape: closeMenu,
+  KeyA: () => trophies.click(),
+  KeyQ: soon,
+  KeyE: soon,
+};
+document.addEventListener("keydown", (e) => {
+  if (menu.hidden || !map.hidden || replayBox.open || map.contains(e.target as Node)) return;
+  // Enter on a focused button clicks it; on the menu itself it plays the focused card.
+  const key = menuKeys[e.code] ?? (e.code === "Enter" && e.target === menu ? () => pick(focused) : undefined);
+  if (!key) return;
+  e.preventDefault();
+  key();
+});
+document.getElementById("menu-back")!.onclick = closeMenu;
+document.getElementById("menu-achievements")!.onclick = () => trophies.click();
+document.getElementById("menu-play")!.onclick = () => pick(focused);
+document.getElementById("menu-open")!.onclick = document.getElementById("progress")!.onclick = openMenu;
+window.addEventListener("resize", () => menu.hidden || layoutMenu());
+if (asked === null) openMenu(); // the app opens on the Course menu
 
 // The Reference model is JavaScript so the TS project never sees a second `class Player`; its diagnostics are off.
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
@@ -361,6 +490,7 @@ function run() {
       if (e.data.lost) showOverlay(e.data.lost, true);
       if (e.data.passed) {
         markPassed(lesson.title);
+        saveSnapshot(lesson.title, Object.fromEntries(Object.entries(models).map(([n, m]) => [n, m.getValue()])));
         showProgress();
         showOverlay("✓ Lesson passed", false, true);
         toast("Lesson passed");

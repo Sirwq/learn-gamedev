@@ -32,3 +32,14 @@ export const unlocked = (lessons: Pick<Lesson, "title">[], index: number, store:
 /** A Script's Reference code from the latest passed Lesson that has it; undefined until one is passed. */
 export const referenceFor = (lessons: Pick<Lesson, "title" | "scripts">[], script: string, store: Pick<Storage, "getItem"> = localStorage) =>
   [...lessons].reverse().find((l) => script in l.scripts && isPassed(l.title, store))?.scripts[script].reference;
+
+/** The Lesson the student is up to: the first one not passed, else the last. */
+export function currentLesson(lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) {
+  const i = progress(lessons, store).indexOf(false);
+  return i < 0 ? lessons.length - 1 : i;
+}
+
+export type CardState = "passed" | "current" | "locked";
+/** The Course menu's card states, one per Lesson. */
+export const cardStates = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage): CardState[] =>
+  progress(lessons, store).map((passed, i) => (passed ? "passed" : unlocked(lessons, i, store) ? "current" : "locked"));

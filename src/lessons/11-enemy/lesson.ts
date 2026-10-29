@@ -8,6 +8,7 @@ import reference from "./reference/Enemy.ts?raw";
 
 export const lesson: Lesson = {
   title: "11. Enemy patrol",
+  concept: "a second Script: Enemy",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

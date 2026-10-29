@@ -1,7 +1,7 @@
 ---
 title: Build the Course menu cover carousel
 label: build
-status: open
+status: closed
 blocked_by: [023-pass-compare, 025-sprites]
 assignee:
 ---
@@ -27,3 +27,11 @@ The prototype is on a local branch: `git show prototype/course-menu:prototypes/c
 
 - Tests cover card states from progress, and replay restore / return of newer code.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `check.ts`: `currentLesson` (first not passed, else the last) and `cardStates` (passed / current / locked from progress).
+- `lesson.ts`: `concept` on every Lesson (shown under its card). Replay storage: `saveSnapshot` keeps the code of a Lesson's first pass (`snapshot:<title>`); `loadSnapshot` puts the newer code aside in `code-before-replay` (never overwriting code already put aside, `null` = never edited, back to the stub) and loads the snapshot; `restoreStash` brings it back when the current Lesson opens.
+- `main.ts` / `index.html`: without `?lesson=N` the app opens on the Course menu over the current Lesson; ☰ and the progress pips reopen it, Esc closes it. Cover carousel with ← →, click a side card to focus it, click the focused card or Enter to play; Q / E toast that C# comes later; A opens the achievement map over the menu. Covers are the Level drawn with `drawWorld` (now also takes a page canvas context), zoomed around the Player, "LESSON n" + name over a dark fade; the background is the focused cover blurred and darkened. Picking a locked card toasts "Pass Lesson N first". A passed Lesson asks Keep my current code (default focus) / Load my code from when I passed it (↑ ↓ Enter, Esc cancels); without a snapshot (passed before this ticket) it just plays. A replay shows "↺ replaying a passed Lesson" and its pass screen offers Back to Lesson N.
+- Tests: card states and current Lesson in `check.test.ts`; snapshot first-pass-only, load, a second replay, and return of newer code in `lesson.test.ts`.
+- Not checked in a real browser (none in the sandbox); typecheck, tests and build pass.

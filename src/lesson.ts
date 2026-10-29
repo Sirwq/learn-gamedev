@@ -5,6 +5,8 @@ export type Check = { message: string; test: (world: World, time: number) => boo
 
 export type Lesson = {
   title: string;
+  /** The new idea it teaches, under its card on the Course menu. */
+  concept: string;
   /** Markdown. */
   explanation: string;
   level: { boxes: Box[]; width?: number; height?: number; camera?: CameraStart };
@@ -56,3 +58,29 @@ export const openedHints = (lesson: string, store: Pick<Storage, "getItem"> = lo
   Number(store.getItem(hintsKey(lesson))) || 0;
 export const saveOpenedHints = (lesson: string, count: number, store: Pick<Storage, "setItem"> = localStorage) =>
   store.setItem(hintsKey(lesson), String(count));
+
+// Replay: the code at a Lesson's first pass, and the newer code put aside while a replay uses it.
+const snapshotKey = (lesson: string) => `snapshot:${lesson}`;
+const STASH = "code-before-replay";
+export function saveSnapshot(lesson: string, code: Record<string, string>, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
+  if (store.getItem(snapshotKey(lesson)) === null) store.setItem(snapshotKey(lesson), JSON.stringify(code));
+}
+export const snapshot = (lesson: string, store: Pick<Storage, "getItem"> = localStorage): Record<string, string> | null =>
+  JSON.parse(store.getItem(snapshotKey(lesson)) ?? "null");
+
+/** "Load my code from when I passed it": the pass's code goes in, the newer code is put aside (never over code already put aside). */
+export function loadSnapshot(lesson: string, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
+  const old = snapshot(lesson, store) ?? {};
+  const stash: Record<string, string | null> = JSON.parse(store.getItem(STASH) ?? "{}");
+  for (const name in old) if (!(name in stash)) stash[name] = store.getItem(codeKey(name)); // null: never edited, back to the stub
+  store.setItem(STASH, JSON.stringify(stash));
+  for (const [name, code] of Object.entries(old)) saveScript(name, code, store);
+}
+
+/** Back on the current Lesson: the code a replay put aside returns. */
+export function restoreStash(store: Pick<Storage, "getItem" | "setItem" | "removeItem"> = localStorage) {
+  const stash: Record<string, string | null> | null = JSON.parse(store.getItem(STASH) ?? "null");
+  if (!stash) return;
+  for (const [name, code] of Object.entries(stash)) code === null ? store.removeItem(codeKey(name)) : saveScript(name, code, store);
+  store.removeItem(STASH);
+}

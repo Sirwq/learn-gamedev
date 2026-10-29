@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checker, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
+import { cardStates, checker, currentLesson, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
 import type { World } from "./engine";
 import type { Lesson } from "./lesson";
 
@@ -93,5 +93,22 @@ describe("unlocked", () => {
     expect([-1, 3].map((i) => unlocked(lessons, i, s))).toEqual([false, false]);
     markPassed("1", s);
     expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, true, false]);
+  });
+});
+
+describe("Course menu cards", () => {
+  it("are passed, current (the first not passed) or locked", () => {
+    const s = memStore();
+    expect(cardStates(lessons, s)).toEqual(["current", "locked", "locked"]);
+    expect(currentLesson(lessons, s)).toBe(0);
+    markPassed("1", s);
+    expect(cardStates(lessons, s)).toEqual(["passed", "current", "locked"]);
+    expect(currentLesson(lessons, s)).toBe(1);
+  });
+  it("are all passed at the end, the last Lesson staying current", () => {
+    const s = memStore();
+    for (const l of lessons) markPassed(l.title, s);
+    expect(cardStates(lessons, s)).toEqual(["passed", "passed", "passed"]);
+    expect(currentLesson(lessons, s)).toBe(2);
   });
 });

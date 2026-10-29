@@ -11,6 +11,7 @@ const flag = (world: World, side: number) => world.filter((o) => o.tag === "Flag
 
 export const lesson: Lesson = {
   title: "3. Steer",
+  concept: "if and Input.GetKey",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

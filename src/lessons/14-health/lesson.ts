@@ -12,6 +12,7 @@ let lastX = start.x; // the Player's x on the previous frame of this Run
 
 export const lesson: Lesson = {
   title: "14. Health and respawn",
+  concept: "Start()",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

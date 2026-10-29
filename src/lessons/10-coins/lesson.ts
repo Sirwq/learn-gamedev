@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "10. Coins",
+  concept: "Destroy and Debug.Log",
   explanation: withNoteBox(explanation),
   level: {
     width: 2400,

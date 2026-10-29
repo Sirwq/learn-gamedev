@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { type Lesson, loadScripts, openedHints, saveOpenedHints, saveScript, splitHints } from "./lesson";
+import { type Lesson, loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot, splitHints } from "./lesson";
 
 const store = () => {
   const m = new Map<string, string>();
-  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v) };
+  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) };
 };
 const lessons: Pick<Lesson, "scripts">[] = [
   { scripts: { Player: { stub: "player stub", reference: "player 1" } } },
@@ -41,5 +41,29 @@ describe("Hints", () => {
     saveOpenedHints("1. Move right", 2, s);
     expect(openedHints("1. Move right", s)).toBe(2);
     expect(openedHints("2. Speed", s)).toBe(0);
+  });
+});
+
+describe("replay", () => {
+  it("keeps the code from a Lesson's first pass", () => {
+    const s = store();
+    expect(snapshot("1", s)).toBeNull();
+    saveSnapshot("1", { Player: "player at pass" }, s);
+    saveSnapshot("1", { Player: "later" }, s);
+    expect(snapshot("1", s)).toEqual({ Player: "player at pass" });
+  });
+  it("loads the code from a pass, and the newer code returns on going back", () => {
+    const s = store();
+    saveSnapshot("1", { Player: "player 1" }, s);
+    saveSnapshot("2", { Player: "player 2", Bullet: "bullet 2" }, s);
+    saveScript("Player", "newest player", s); // Bullet never edited: still the stub
+    loadSnapshot("1", s);
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "player 1", Bullet: "bullet stub" });
+    loadSnapshot("2", s); // a second replay doesn't put the older code aside over the newest
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "player 2", Bullet: "bullet 2" });
+    restoreStash(s);
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "newest player", Bullet: "bullet stub" });
+    restoreStash(s); // nothing put aside any more
+    expect(loadScripts(lessons, 1, s)).toEqual({ Player: "newest player", Bullet: "bullet stub" });
   });
 });

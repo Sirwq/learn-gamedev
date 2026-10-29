@@ -10,6 +10,7 @@ import bulletReference from "./reference/Bullet.ts?raw";
 
 export const lesson: Lesson = {
   title: "13. Shooting",
+  concept: "Instantiate and Bullet",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

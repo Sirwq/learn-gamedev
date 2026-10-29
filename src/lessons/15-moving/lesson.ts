@@ -8,6 +8,7 @@ import reference from "./reference/MovingPlatform.ts?raw";
 
 export const lesson: Lesson = {
   title: "15. Moving platforms",
+  concept: "another object's motion",
   explanation: withNoteBox(explanation),
   level: {
     width: 2000,

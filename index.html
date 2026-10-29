@@ -11,7 +11,8 @@
       button[hidden] { display: none; }
       header { display: flex; gap: 12px; align-items: center; }
       header b { font-size: 16px; }
-      #progress { display: flex; gap: 3px; align-items: center; }
+      #progress { display: flex; gap: 3px; align-items: center; background: none; border-color: transparent; padding: 4px; }
+      #progress:hover { background: #333743; }
       #progress i { width: 14px; height: 6px; border-radius: 3px; background: #3a3e4a; }
       #progress i.done { background: #4cc38a; }
       #progress span { margin-left: 6px; color: #999; font-size: 12px; }
@@ -80,14 +81,49 @@
       .tile.locked > span { filter: grayscale(1) brightness(.55); }
       .tile.hidden { background: #3a3a3a; border-color: #4d4d4d #222 #222 #4d4d4d; color: #777; font: 700 18px system-ui; }
       @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
+      #replaying { margin-left: 8px; color: #f5c04a; font-size: 12px; font-weight: normal; }
+      /* Course menu: the focused Lesson's cover big in the middle, its own art blurred behind everything. */
+      #menu { position: fixed; inset: 0; z-index: 12; overflow: hidden; background: #0c0d10; outline: none; }
+      #menu[hidden] { display: none; }
+      #menu-bg { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); filter: blur(24px) brightness(.45) saturate(1.3); }
+      #menu .bar { position: absolute; left: 18px; right: 18px; display: flex; align-items: center; gap: 10px; }
+      #menu .bar:first-of-type { top: 14px; }
+      #menu .bar.bottom { bottom: 14px; }
+      #menu .bar button { display: flex; gap: 6px; align-items: center; background: #0006; border-color: #fff3; border-radius: 999px; }
+      #menu .chip { font-weight: 600; }
+      #menu .chip.on { background: #b14cff; border-color: #b14cff; color: #fff; }
+      #menu .chip:disabled { opacity: .45; }
+      #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
+      #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; }
+      #menu-count { margin: 0 auto; color: #aaa; font-variant-numeric: tabular-nums; }
+      #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; }
+      .cover { position: absolute; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: #111; box-shadow: 0 10px 30px #0009; transition: left .22s, top .22s, width .22s, height .22s; }
+      .cover canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+      .cover[aria-current] { outline: 3px solid #b14cff; outline-offset: 3px; box-shadow: 0 0 40px #b14cff8c, 0 10px 30px #0009; }
+      .cover.locked canvas { filter: grayscale(1) brightness(.45); }
+      .cover .tag { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: #000a; font: 700 11px system-ui; }
+      .cover.passed .tag { color: #9ff0c6; }
+      .cover.current .tag { color: #bfe0ff; }
+      .cover.locked .tag { inset: 0; display: grid; place-items: center; background: none; font-size: 34px; }
+      .cover .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 10px 10px; text-align: left; background: linear-gradient(#0000, #000d); font: 800 16px system-ui; color: #fff; }
+      .cover .name small { display: block; color: #ccc; font-size: 11px; letter-spacing: .1em; }
+      #card-info { position: absolute; left: 0; right: 0; top: 75%; text-align: center; text-shadow: 0 2px 8px #000; }
+      #card-info h2 { margin: 0; font-size: 24px; }
+      #card-meta { display: flex; justify-content: center; gap: 22px; margin-top: 4px; color: #d8dbe2; }
+      #replay { width: min(460px, 92vw); background: #26282f; color: #ddd; border: 1px solid #353842; border-radius: 10px; }
+      #replay h3 { margin-top: 0; }
+      #replay button { display: block; width: 100%; margin-top: 8px; padding: 10px 12px; text-align: left; }
+      #replay button:focus { outline: 2px solid #b14cff; }
+      #replay small { display: block; color: #9aa0ab; }
       #prompt-box { width: min(720px, 90vw); background: #252526; color: #ddd; border: 1px solid #444; border-radius: 6px; }
       #prompt-box textarea { width: 100%; height: 50vh; background: #1e1e1e; color: #ddd; font: 12px ui-monospace, monospace; }
     </style>
   </head>
   <body>
     <header>
+      <button id="menu-open" title="Course menu (all Lessons)">☰</button>
       <b>learn-dev</b>
-      <div id="progress" aria-label="Course progress"></div>
+      <button id="progress" aria-label="Course progress: open the Course menu" title="Course menu"></button>
       <button id="trophies" title="Achievements"></button>
       <button id="run">▶ Run</button>
       <button id="stop" hidden>■ Stop</button>
@@ -95,7 +131,7 @@
       <span id="status" role="status"></span>
     </header>
     <section id="lesson">
-      <h1 id="lesson-title"></h1>
+      <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span></h1>
       <div id="explanation"></div>
       <div id="hints"></div>
       <p><button id="next-hint"></button></p>
@@ -140,6 +176,30 @@
       </header>
       <div><div id="tree"></div></div>
     </section>
+    <section id="menu" hidden aria-label="Course menu" tabindex="-1">
+      <canvas id="menu-bg" width="240" height="320"></canvas>
+      <div class="bar">
+        <kbd>Q</kbd>
+        <button class="chip on" aria-pressed="true">TypeScript</button>
+        <button class="chip" disabled title="A later Course">C# · soon</button>
+        <kbd>E</kbd>
+        <span id="menu-stats"></span>
+      </div>
+      <div id="rail"></div>
+      <div id="card-info"><h2 id="card-title"></h2><div id="card-meta"></div></div>
+      <div class="bar bottom">
+        <button id="menu-back"><kbd>Esc</kbd> Back to Lesson</button>
+        <span id="menu-count"></span>
+        <button id="menu-achievements"><kbd>A</kbd> 🏆 Achievements</button>
+        <button id="menu-play"><kbd>Enter</kbd> <b></b></button>
+      </div>
+    </section>
+    <dialog id="replay" aria-label="Replay a passed Lesson">
+      <h3></h3>
+      <button id="replay-keep" autofocus>Keep my current code<small>Play this Lesson's Level with everything you've written. Nothing changes.</small></button>
+      <button id="replay-load">Load my code from when I passed it<small></small></button>
+      <button id="replay-cancel">Cancel</button>
+    </dialog>
     <div id="toasts" role="status"></div>
     <dialog id="prompt-box" aria-label="Tutor prompt">
       <p>Copying didn't work. Select all, copy it, and paste it into <a href="https://chat.deepseek.com" target="_blank">DeepSeek</a>.</p>

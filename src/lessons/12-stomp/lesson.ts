@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "12. Stomp",
+  concept: "comparing positions",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

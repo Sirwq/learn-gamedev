@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "2. Speed",
+  concept: "fields and Time.deltaTime",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [

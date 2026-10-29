@@ -8,6 +8,7 @@ import reference from "./reference/Player.ts?raw";
 
 export const lesson: Lesson = {
   title: "5. Jump",
+  concept: "booleans and &&",
   explanation: withNoteBox(explanation),
   level: {
     boxes: [
