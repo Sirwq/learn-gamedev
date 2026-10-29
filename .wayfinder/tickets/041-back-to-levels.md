@@ -1,7 +1,7 @@
 ---
 title: ☰ becomes a "Back to Lessons" button
 label: design
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -29,3 +29,7 @@ Wording: "Lessons", the glossary term the cards already use (user decision).
 - A Lesson shows `← Back to Lessons` in the header, and clicking it opens the Course menu on the current Lesson.
 - A Sandbox Project shows `← Back to Projects`.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+The header `☰` is now a labelled `← Back to Lessons` button (arrow `aria-hidden`, `aria-label` and `title` "Back to Lessons"). It is still first in the header and still calls `openMenu()`. In a Sandbox Project, `main.ts` changes the text, `aria-label` and `title` to "Back to Projects", the same way `#menu-back` does. The `#progress` pips keep their behaviour; their `aria-label` now ends "…, back to Lessons" and their `title` is "Back to Lessons". Below 720px the text is hidden and only `←` shows; the `title` tooltip and `aria-label` keep the full words. `a11y.test.ts` checks the new label and title and that `☰` is gone.

@@ -9,8 +9,12 @@ describe("Lesson page accessibility", () => {
     expect(html).toContain('<meta name="theme-color" content="#1e1e1e" />');
   });
   it("names icon-only buttons", () => {
-    expect(tag("menu-open")).toContain('aria-label="Course menu"');
     expect(tag("compare-close")).toContain('aria-label="Close"');
+  });
+  it("labels the way back to the Course menu in words, not a ☰ glyph", () => {
+    expect(tag("menu-open")).toContain('aria-label="Back to Lessons"');
+    expect(tag("menu-open")).toContain('title="Back to Lessons"');
+    expect(html).not.toContain("☰");
   });
   it("gives the Console a role that allows its label", () => expect(tag("console")).toContain('role="log"'));
   it("lets the progress name come from code, holding the visible count", () => expect(tag("progress")).not.toContain("aria-label"));

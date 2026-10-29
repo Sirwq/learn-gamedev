@@ -77,7 +77,7 @@ function showProgress() {
   const label = document.createElement("span");
   label.textContent = `${done.filter(Boolean).length} / ${course.length}`;
   const button = document.getElementById("progress")!;
-  button.ariaLabel = `${label.textContent} Lessons passed, open the Course menu`;
+  button.ariaLabel = `${label.textContent} Lessons passed, back to Lessons`;
   button.replaceChildren(...done.map((d, i) => {
     const pip = document.createElement("i");
     pip.className = d ? "done" : "";
@@ -464,9 +464,14 @@ document.addEventListener("keydown", (e) => {
 const menuBack = document.getElementById("menu-back")!;
 menuBack.onclick = closeMenu;
 if (project) menuBack.lastChild!.textContent = " Back to Project";
+const menuOpen = document.getElementById("menu-open")!;
+if (project) {
+  menuOpen.ariaLabel = menuOpen.title = "Back to Projects";
+  menuOpen.lastChild!.textContent = " Back to Projects";
+}
 document.getElementById("menu-achievements")!.onclick = () => trophies.click();
 document.getElementById("menu-play")!.onclick = () => pick(focused);
-document.getElementById("menu-open")!.onclick = document.getElementById("progress")!.onclick = () => openMenu();
+menuOpen.onclick = document.getElementById("progress")!.onclick = () => openMenu();
 window.addEventListener("resize", () => menu.hidden || layoutMenu());
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
