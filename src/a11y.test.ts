@@ -64,3 +64,29 @@ describe("Course menu motion", () => {
   });
   it("cancels a running tab slide before starting the next", () => expect(main).toMatch(/getAnimations\(\)[^\n]*cancel\(\)/));
 });
+
+describe("Course menu on small screens", () => {
+  it("uses the device width and keeps zoom", () => {
+    expect(html).toContain('<meta name="viewport" content="width=device-width, initial-scale=1" />');
+    expect(html).not.toMatch(/user-scalable|maximum-scale/);
+  });
+  it("wraps the bars and drops key hints on touch screens", () => {
+    expect(html).toMatch(/#menu \.bar \{[^}]*flex-wrap: wrap/);
+    expect(html).toMatch(/@media \(pointer: coarse\) \{[^@]*#menu kbd \{ display: none; \}/);
+  });
+  it("turns Back and Achievements into named icon buttons and Play into a full-width button when narrow", () => {
+    expect(tag("menu-back")).toContain('aria-label="Back to Lesson"');
+    expect(tag("menu-achievements")).toContain('aria-label="Achievements"');
+    expect(html).toMatch(/@media \(max-width: 900px\) \{[^@]*#menu-play \{[^}]*flex-basis: 100%/);
+  });
+  it("keeps both bars clear of the notch", () => {
+    expect(html).toMatch(/#menu \.bar \{[^}]*env\(safe-area-inset-left\)[^}]*env\(safe-area-inset-right\)/);
+    expect(html).toContain("env(safe-area-inset-top)");
+    expect(html).toContain("env(safe-area-inset-bottom)");
+  });
+  it("shows a dismissible 'works best on a computer' note on phones only", () => {
+    expect(tag("menu-phone")).toContain('role="note"');
+    expect(html).toMatch(/#menu-phone \{ display: none; \}\s*@media \(max-width: 599px\)/);
+    expect(main).toMatch(/menu-phone[^\n]*\n[^\n]*remove\(\)/);
+  });
+});

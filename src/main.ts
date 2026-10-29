@@ -500,7 +500,12 @@ document.addEventListener("keydown", (e) => {
 });
 const menuBack = document.getElementById("menu-back")!;
 menuBack.onclick = closeMenu;
-if (project) menuBack.lastChild!.textContent = " Back to Project";
+if (project) {
+  menuBack.ariaLabel = menuBack.title = "Back to Project";
+  menuBack.lastChild!.textContent = " Back to Project";
+}
+const phoneNote = document.getElementById("menu-phone")!;
+phoneNote.querySelector("button")!.onclick = () => (phoneNote.remove(), menu.focus());
 const menuOpen = document.getElementById("menu-open")!;
 if (project) {
   menuOpen.ariaLabel = menuOpen.title = "Back to Projects";

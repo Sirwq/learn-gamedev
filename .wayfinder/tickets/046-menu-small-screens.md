@@ -1,7 +1,7 @@
 ---
 title: Course menu on small screens
 label: design
-status: open
+status: closed
 blocked_by: [045-menu-motion]
 assignee:
 ---
@@ -25,3 +25,12 @@ Phones are not a target (user decision): the editor is too hard to use there. On
 - No horizontal scroll at 768 px, and every control is visible and tappable.
 - At 375 px the "works best on a computer" note shows and nothing overflows behind it.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `index.html` gets `<meta name="viewport" content="width=device-width, initial-scale=1">` (zoom stays on).
+- Both Course menu bars `flex-wrap: wrap`, so on narrow screens the stats drop under the chips. `pointer: coarse` hides every `<kbd>` hint in the menu.
+- Under 900px: Back (now `← Back to Lesson`) and Achievements show only their icon and keep their name in `aria-label`/`title`, like the header's `#menu-open`. Play moves to its own full-width purple row. The dots wrap and centre, so a long Sandbox list can't push the buttons off screen.
+- The bars are padded with `max(…, env(safe-area-inset-*))` on the top, bottom, left and right.
+- Under 600px: a `role="note"` banner over the top of the menu says "learn-dev works best on a computer". "Got it" removes it and gives focus back to the menu. The menu works behind it.
+- Tests: "Course menu on small screens" in `src/a11y.test.ts`. No browser was available here, so the 768/1024/1280/2560 px and 375 px checks were reasoned from the CSS, not measured.
