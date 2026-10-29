@@ -13,12 +13,14 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 - Skills: grilling + domain-modeling for grilling tickets; prototype for prototype tickets; research for research tickets.
 - Same tracker: local markdown, tickets in `tickets/` numbered on from the MVP; front matter holds `label`, `status`, `blocked_by`, `assignee`. Frontier = `status: open`, all `blocked_by` closed, no `assignee`. Open tickets are found that way, not listed here.
 - Planning only: produce decisions, not app code.
+- UI design: every new screen and prototype follows [Vercel's Web Interface Guidelines](https://vercel.com/design/guidelines) and the frontend-design skill. In particular: only useful scrollbars (no stacks of nested scroll areas), hit targets of at least 24 px (44 px on touch), visible keyboard focus, labels on icon buttons, and reduced motion respected. Rarely used detail goes behind a button, not in a panel that is always open.
 - Carried over from the MVP: TypeScript + Vite + Monaco + Canvas 2D static site, browser only, no accounts, Unity-style API, drawn shape = hitbox, art from Kenney's CC0 Pixel Platformer pack.
 
 ## Decisions so far
 
 <!-- one line per closed ticket -->
 - [What is in v2?](tickets/048-v2-scope.md): a Construct-like Sandbox for the same student, all of it behind the secret Lesson-15 unlock: Level editor, own sprites, sound and animation, UI text, extra Mechanics as Achievements only. The authors' Lesson editor is left to its own ticket.
+- [How does the Level editor work?](tickets/049-level-editor.md): Sandbox only, a 🗺 Level file tab where the stopped game view is the editor; inspector dropdowns, 20 px snap, edit only while stopped, Level code behind a button.
 
 ## Not yet specified
 
