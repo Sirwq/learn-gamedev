@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { course } from "./course";
 import { api, scriptSource, startGame, worldView, type MonoBehaviour } from "../engine";
 import { transpile } from "../run-utils";
+import { checker } from "../check";
 
 // Headless stand-in for the worker's blob import: evaluate the Script with the student API in scope.
 const load = (ts: string, name: string) =>
@@ -22,13 +23,17 @@ describe.each(course.map((l) => [l.title, l] as const))("Lesson %s", (_, lesson)
     }
   });
 
-  // Frames until every Goal holds, or 601 if not within 10 simulated seconds.
+  // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
   const framesToPass = (code: "stub" | "reference") => {
     const classes = Object.fromEntries(Object.entries(lesson.scripts).map(([n, s]) => [n, load(s[code], n)]));
     const game = startGame(lesson.level.boxes, classes);
-    let frame = 0;
-    while (frame++ < 600 && !lesson.goals.every((g) => g.test(worldView(game.objects)))) game.step();
-    return frame;
+    const check = checker(lesson);
+    for (let frame = 1; frame <= 600; frame++, game.step()) {
+      const result = check(worldView(game.objects));
+      if (result.lost) break;
+      if (result.passed) return frame;
+    }
+    return 601;
   };
 
   it("is passed by its Reference code within 10 simulated seconds, and not by the stub", () => {

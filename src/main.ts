@@ -5,6 +5,7 @@ import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
 import { marked } from "marked";
 import { course } from "./lessons/course";
+import { markPassed } from "./check";
 import engineApi from "./engine-api.d.ts?raw";
 
 self.MonacoEnvironment = {
@@ -13,7 +14,8 @@ self.MonacoEnvironment = {
 
 monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-const lesson = course[0];
+const lessonIndex = 0;
+const lesson = course[lessonIndex];
 document.getElementById("lesson-title")!.textContent = lesson.title;
 document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
 
@@ -23,6 +25,25 @@ monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dar
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
 const status = document.getElementById("status")!;
+const goalsList = document.getElementById("goals")!;
+const overlay = document.getElementById("overlay")!;
+const overlayText = document.getElementById("overlay-text")!;
+const overlayRun = document.getElementById("overlay-run")!;
+
+function showGoals(met: boolean[]) {
+  goalsList.replaceChildren(...lesson.goals.map((g, i) => {
+    const li = document.createElement("li");
+    li.textContent = `${met[i] ? "✓" : "⬜"} ${g.message}`;
+    return li;
+  }));
+}
+
+function showOverlay(text: string, withRun: boolean) {
+  overlayText.textContent = text;
+  overlayRun.hidden = !withRun;
+  overlay.hidden = !text;
+}
+showGoals([]);
 
 // Type errors block Run; our own "runtime" markers don't.
 const hasTypeErrors = () =>
@@ -49,6 +70,8 @@ function run() {
   stop();
   monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
+  showGoals([]);
+  showOverlay("", false);
 
   // A canvas can hand itself to a worker only once, so each Run gets a fresh one.
   const old = document.getElementById("game") as HTMLCanvasElement;
@@ -62,11 +85,20 @@ function run() {
 
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
-  worker.postMessage({ canvas: offscreen, level: lesson.level.boxes, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, lesson: lessonIndex, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {
     if (e.data.type === "tick") lastTick = performance.now();
+    if (e.data.type === "check") {
+      showGoals(e.data.met);
+      if (e.data.lost || e.data.passed) clearInterval(watchdog); // the worker stopped its loop on purpose
+      if (e.data.lost) showOverlay(e.data.lost, true);
+      if (e.data.passed) {
+        markPassed(lesson.title);
+        showOverlay("✓ Lesson passed", false);
+      }
+    }
     if (e.data.type === "error") {
       clearInterval(watchdog); // the worker already stopped its loop; terminating now would blank the last frame
       status.textContent = `Error: ${e.data.message}`;
@@ -91,4 +123,4 @@ function run() {
   }, 250);
 }
 
-runBtn.onclick = run;
+runBtn.onclick = overlayRun.onclick = run;

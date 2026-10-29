@@ -16,6 +16,14 @@ export const lesson: Lesson = {
     ],
   },
   goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
-  lose: [],
+  lose: [
+    {
+      message: "You fell off the screen. Press Run to try again.",
+      test: (world) => {
+        const p = find(world, "Player");
+        return p.x + p.w < 0 || p.x > 960 || p.y + p.h < 0;
+      },
+    },
+  ],
   scripts: { Player: { stub: withNoteComment(stub), reference } },
 };
