@@ -132,6 +132,7 @@ applyTheme();
 const editor = monaco.editor.create(document.getElementById("editor")!, {
   theme: "page",
   automaticLayout: true,
+  minimap: { enabled: false },
   ariaLabel: "Code editor. Press Escape, then Tab to leave it.",
 });
 // Tab indents, so Esc turns on Monaco's "Tab moves focus" until the next other key or leaving the editor.
@@ -589,6 +590,7 @@ monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidatio
 const compare = document.getElementById("compare")!;
 const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
   theme: "page", readOnly: true, wordWrap: "on", automaticLayout: true,
+  minimap: { enabled: false }, renderOverviewRuler: false,
 });
 let comparing = "";
 function openCompare(name: string) {

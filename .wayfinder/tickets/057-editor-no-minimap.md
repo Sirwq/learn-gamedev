@@ -1,7 +1,7 @@
 ---
 title: Code editor without the minimap
 label: design
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -20,3 +20,9 @@ Design ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/de
 
 - No minimap in the code editor or in Compare, in Lessons and in Sandbox.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `monaco.editor.create` in `src/main.ts` gets `minimap: { enabled: false }`. Sandbox Projects use the same editor instance, so the change covers them too.
+- The Compare diff editor gets `minimap: { enabled: false }` and `renderOverviewRuler: false`, so the change markers no longer show up as a second scrollbar beside the real one.
+- `src/a11y.test.ts` checks both options are in `main.ts`.

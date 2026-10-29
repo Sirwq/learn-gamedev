@@ -100,4 +100,8 @@ describe("Course menu on small screens", () => {
     expect(main).not.toContain('"Locked"');
     expect(main.match(/`Pass Lesson \$\{menuCurrent \+ 1\} to unlock`/g)).toHaveLength(2); // the Play toast and the line under the title
   });
+  it("shows no minimap in the code editor or Compare, and no overview ruler as a second scrollbar", () => {
+    expect(main.match(/minimap: \{ enabled: false \}/g)).toHaveLength(2);
+    expect(main).toContain("renderOverviewRuler: false");
+  });
 });
