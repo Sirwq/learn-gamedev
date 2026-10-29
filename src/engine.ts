@@ -71,3 +71,32 @@ export function findScript(mod: { __script?: unknown }, name: string): new () =>
   if (typeof cls === "function" && cls.prototype instanceof MonoBehaviour) return cls as new () => MonoBehaviour;
   throw new Error(`${name}.ts must define class ${name} extends MonoBehaviour`);
 }
+
+/** What a Script sees as globals. */
+export const api = { MonoBehaviour, Vector2, Time, Input, KeyCode };
+
+export type GameObject = Box & { transform: Transform };
+
+/** Spawns the Level, attaches one new Script instance per scripted box and calls Start. */
+export function startGame(level: Box[], scripts: Record<string, new () => MonoBehaviour>) {
+  const objects: GameObject[] = level.map((box) => ({ ...box, transform: new Transform(new Vector2(box.x, box.y)) }));
+  const behaviours = objects.filter((o) => o.script).map((o) => {
+    const b = new scripts[o.script!]();
+    b.transform = o.transform;
+    return b;
+  });
+  for (const b of behaviours) b.Start?.();
+  return {
+    objects,
+    step() {
+      nextFrame();
+      for (const b of behaviours) b.Update?.();
+    },
+  };
+}
+
+/** Read-only snapshot of the game objects for Goals and Lose events. */
+export type World = readonly Readonly<Omit<Box, "script">>[];
+
+export const worldView = (objects: GameObject[]): World =>
+  objects.map(({ tag, w, h, color, transform: { position } }) => ({ tag, x: position.x, y: position.y, w, h, color }));

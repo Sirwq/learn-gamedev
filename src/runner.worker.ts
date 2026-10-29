@@ -1,6 +1,6 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine } from "./run-utils";
-import { type Box, findScript, flipY, Input, keyEvent, KeyCode, MonoBehaviour, nextFrame, scriptSource, Time, Transform, Vector2 } from "./engine";
+import { api, type Box, findScript, flipY, keyEvent, type MonoBehaviour, scriptSource, startGame } from "./engine";
 
 function report(err: unknown) {
   const e = err instanceof Error ? err : new Error(String(err));
@@ -14,33 +14,29 @@ self.onmessage = async (e: MessageEvent) => {
   const level: Box[] = e.data.level;
   const scripts: Record<string, string> = e.data.scripts;
   const ctx = canvas.getContext("2d")!;
-  Object.assign(globalThis, { MonoBehaviour, Vector2, Time, Input, KeyCode });
+  Object.assign(globalThis, api);
 
-  const objects = level.map((box) => ({ ...box, transform: new Transform(new Vector2(box.x, box.y)) }));
-  const behaviours: MonoBehaviour[] = [];
+  let game: ReturnType<typeof startGame>;
   try {
-    for (const obj of objects) {
-      if (!obj.script) continue;
-      const url = URL.createObjectURL(new Blob([scriptSource(scripts[obj.script], obj.script)], { type: "text/javascript" }));
-      const b = new (findScript(await import(/* @vite-ignore */ url), obj.script))();
-      b.transform = obj.transform;
-      behaviours.push(b);
+    const classes: Record<string, new () => MonoBehaviour> = {};
+    for (const name of new Set(level.flatMap((box) => box.script ?? []))) {
+      const url = URL.createObjectURL(new Blob([scriptSource(scripts[name], name)], { type: "text/javascript" }));
+      classes[name] = findScript(await import(/* @vite-ignore */ url), name);
     }
-    for (const b of behaviours) b.Start?.();
+    game = startGame(level, classes);
   } catch (err) {
     return report(err);
   }
 
   const frame = () => {
     postMessage({ type: "tick" });
-    nextFrame();
     try {
-      for (const b of behaviours) b.Update?.();
+      game.step();
     } catch (err) {
       return report(err); // stop the loop: the game pauses on the error
     }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    for (const { transform: { position }, w, h, color } of objects) {
+    for (const { transform: { position }, w, h, color } of game.objects) {
       ctx.fillStyle = color;
       ctx.fillRect(position.x, flipY(position.y, h, canvas.height), w, h);
     }

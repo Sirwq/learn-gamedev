@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/Sirwq/learn-gamedev#readme",
   "dependencies": {
+    "marked": "^18.1.2",
     "monaco-editor": "^0.57.0",
     "sucrase": "^3.35.1"
   },

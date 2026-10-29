@@ -3,7 +3,8 @@ import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
 import { transpile } from "./run-utils";
-import type { Box } from "./engine";
+import { marked } from "marked";
+import { course } from "./lessons/course";
 import engineApi from "./engine-api.d.ts?raw";
 
 self.MonacoEnvironment = {
@@ -12,18 +13,12 @@ self.MonacoEnvironment = {
 
 monaco.typescript.typescriptDefaults.addExtraLib(engineApi, "file:///engine-api.d.ts");
 
-// shortcut: hard-coded Level, replace once the lesson loader (ticket 017) lands.
-const level: Box[] = [
-  { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },
-  { tag: "Ground", x: 0, y: 0, w: 960, h: 40, color: "#5a3" },
-];
+const lesson = course[0];
+document.getElementById("lesson-title")!.textContent = lesson.title;
+document.getElementById("explanation")!.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
 
-const starter = `class Player extends MonoBehaviour {
-  Update() {}
-}
-`;
-
-const model = monaco.editor.createModel(starter, "typescript", monaco.Uri.parse("file:///Player.ts"));
+// shortcut: only the Player Script gets an editor, until tabs land (ticket 022).
+const model = monaco.editor.createModel(lesson.scripts.Player.stub, "typescript", monaco.Uri.parse("file:///Player.ts"));
 monaco.editor.create(document.getElementById("editor")!, { model, theme: "vs-dark", automaticLayout: true });
 
 const runBtn = document.getElementById("run") as HTMLButtonElement;
@@ -67,7 +62,7 @@ function run() {
 
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
-  worker.postMessage({ canvas: offscreen, level, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
+  worker.postMessage({ canvas: offscreen, level: lesson.level.boxes, scripts: { Player: transpile(model.getValue()) } }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e) => {

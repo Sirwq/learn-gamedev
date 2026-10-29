@@ -10,5 +10,5 @@
     "skipLibCheck": true
   },
   "include": ["src"],
-  "exclude": ["src/engine-api.d.ts"]
+  "exclude": ["src/engine-api.d.ts", "src/lessons/*/stub", "src/lessons/*/reference"]
 }

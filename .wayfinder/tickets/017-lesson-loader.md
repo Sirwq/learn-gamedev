@@ -1,7 +1,7 @@
 ---
 title: Load Lessons from folders and ship Lesson 1
 label: build
-status: open
+status: closed
 blocked_by: [016-engine-core]
 assignee:
 ---
@@ -29,3 +29,12 @@ Lesson 1 content: "Move right" (statements, numbers). One-screen Level with a Pl
 - A test checks every Lesson in `course.ts` has a title, a Level with exactly one `script: "Player"` box, at least one Goal, and a stub + Reference file for each Script it adds.
 - A test runs Lesson 1's Reference code in the engine (headless, no canvas) and confirms the Goal becomes true within 10 simulated seconds.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `src/lesson.ts` holds the `Lesson` / `Check` types plus `overlaps` and `find` helpers for Goal tests.
+- `src/lessons/01-move/` has `lesson.ts`, `explanation.md`, `stub/Player.ts` and `reference/Player.ts`. `src/lessons/course.ts` lists the Lessons in order.
+- The Note for AI assistants lives only in `src/lessons/ai-note.ts`. It is added to the stub as a header comment and to the Explanation as a blockquote.
+- `src/engine.ts` gets `startGame` (spawn, attach Scripts, Start, step) and `worldView`, both used by the worker and the headless test.
+- The page shows the title and the Explanation (rendered with `marked`) in a strip above the game, and opens the Player stub.
+- `src/lessons/course.test.ts` checks every Lesson's shape. It runs the Reference code headless, which must meet every Goal within 600 frames, and checks that the stub alone does not.
