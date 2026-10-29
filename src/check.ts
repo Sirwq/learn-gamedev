@@ -25,7 +25,7 @@ export const progress = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, 
 
 /** Lessons unlock in order: Lesson 1, then each one after the one before it is passed. */
 export const unlocked = (lessons: Pick<Lesson, "title">[], index: number, store: Pick<Storage, "getItem"> = localStorage) =>
-  index === 0 || (index < lessons.length && isPassed(lessons[index - 1].title, store));
+  index === 0 || (index > 0 && index < lessons.length && isPassed(lessons[index - 1].title, store));
 
 /** A Script's Reference code from the latest passed Lesson that has it; undefined until one is passed. */
 export const referenceFor = (lessons: Pick<Lesson, "title" | "scripts">[], script: string, store: Pick<Storage, "getItem"> = localStorage) =>

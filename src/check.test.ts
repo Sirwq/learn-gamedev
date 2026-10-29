@@ -83,6 +83,7 @@ describe("unlocked", () => {
   it("opens Lesson 1, and the next Lesson only after passing the one before", () => {
     const s = memStore();
     expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, false, false]);
+    expect([-1, 3].map((i) => unlocked(lessons, i, s))).toEqual([false, false]);
     markPassed("1", s);
     expect([0, 1, 2].map((i) => unlocked(lessons, i, s))).toEqual([true, true, false]);
   });

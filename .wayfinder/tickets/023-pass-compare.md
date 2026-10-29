@@ -32,3 +32,8 @@ assignee:
 - Compare: a full-window section with Monaco's read-only diff editor, side by side, `wordWrap: "on"` so there is no sideways scroll. Left is the student's live model and right is the Reference code. Esc or ✕ closes it. **Load reference code** replaces only that file, as one edit, so Ctrl+Z restores the student's code. The Reference model uses the `javascript` language with JS diagnostics off, so the shared TS project never sees a second global `class Player` (which would be a "Duplicate identifier" error and block Run).
 - Green "Lesson passed" toast in the top-right corner. It slides in, fades out after about 4 s and stacks in `#toasts`, ready for Achievement toasts.
 - Not checked in a real browser (none in the sandbox).
+
+## Review follow-up
+
+- Fixed: `?lesson=-1` threw in `unlocked` (negative index); now locked, tested.
+- Not fixed: nothing verified in a real browser.
