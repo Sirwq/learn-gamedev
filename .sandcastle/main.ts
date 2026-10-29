@@ -30,7 +30,8 @@ const shared = {
 } satisfies Partial<RunOptions>;
 
 // Runs once, and after a usage limit sleeps until it resets (+5 min) and relaunches.
-// Any other error still stops the script.
+// A Docker error retries every minute, 10 times per script run. Any other error still stops the script.
+let dockerRetries = 0;
 async function runPastLimits(options: RunOptions): Promise<RunResult> {
   while (true) {
     let wait: number | null;
@@ -40,10 +41,12 @@ async function runPastLimits(options: RunOptions): Promise<RunResult> {
       wait = result.completionSignal ? null : limitWaitMs(result.stdout.slice(-500));
       if (wait === null) return result;
     } catch (err) {
-      wait = limitWaitMs(String(err));
+      // Sandcastle reports any failed `docker image inspect` (daemon briefly down) as a missing image.
+      const dockerBlip = String(err).includes("Provider 'docker'") && dockerRetries++ < 10;
+      wait = limitWaitMs(String(err)) ?? (dockerBlip ? 60_000 : null);
       if (wait === null) throw err;
     }
-    console.log(`Usage limit hit. Relaunching ${options.name} at ${new Date(Date.now() + wait).toLocaleString()}.`);
+    console.log(`Usage limit or Docker error. Relaunching ${options.name} at ${new Date(Date.now() + wait).toLocaleString()}.`);
     await new Promise((r) => setTimeout(r, wait));
   }
 }
