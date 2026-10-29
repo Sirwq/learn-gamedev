@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tiles } from "./sprites";
+import { playerFrames, tiles, urls } from "./sprites";
 
 describe("tiles", () => {
   it("covers a box with whole tiles when it fits exactly", () => {
@@ -16,5 +16,18 @@ describe("tiles", () => {
     const t = tiles({ x: 0, y: 40, w: 80, h: 16 }, 20, 16);
     expect(t).toHaveLength(4);
     expect(t[3]).toEqual({ x: 60, y: 40, w: 20, h: 16 });
+  });
+});
+
+const pngs: Record<string, string> = import.meta.glob("./sprites/Player*.png", { query: "?inline", import: "default", eager: true });
+
+describe("Player critter", () => {
+  it("has its four 16×16 frames loadable by name, and the Player tag draws idle", () => {
+    for (const name of ["PlayerIdle", "PlayerWalk1", "PlayerWalk2", "PlayerJump"] as const) {
+      expect(urls[name]).toBe(playerFrames[name]);
+      const png = new DataView(Uint8Array.from(atob(pngs[`./sprites/${name}.png`].split(",")[1]), (c) => c.charCodeAt(0)).buffer);
+      expect([png.getUint32(16), png.getUint32(20)]).toEqual([16, 16]); // IHDR width, height
+    }
+    expect(urls.Player).toBe(playerFrames.PlayerIdle);
   });
 });

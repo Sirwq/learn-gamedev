@@ -1,7 +1,7 @@
 ---
 title: Draw the orange critter Player sprite
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -32,3 +32,9 @@ Replace the Kenney Player sprite everywhere (Lessons, Sandbox, Lesson covers) wi
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+The Kenney `Player.png` is gone. The Player tag now draws `src/sprites/PlayerIdle.png`, our own 16×16 orange critter, stretched onto its 32×32 box (2×) and flipped by `drawWorld` as before. That covers Lessons, Sandbox and Lesson covers, because they all go through `drawWorld`. `PlayerWalk1`, `PlayerWalk2` and `PlayerJump` (feet tucked) are also in `src/sprites`. They are exported as `playerFrames` and loaded into `Images` by name, ready for ticket 067.
+
+- The prototype branch `prototype/claude-player` (commit `3c1740b`) isn't in this clone, so the critter was redrawn from the ticket 058 description: round body, two eyes looking the way it faces, an antenna nub and stubby feet, in the given palette.
+- It has a dark brown outline (`#5A2B1E`) so it doesn't blend into the Brick wall.
+- The pixel art is kept as text in `scripts/draw-player.mjs`, which writes the four PNGs (`node scripts/draw-player.mjs`), so ticket 067 can tweak the frames.
+- Test: `src/sprites.test.ts` checks that the four frames are in `urls` by name, are 16×16, and that the Player tag uses idle.

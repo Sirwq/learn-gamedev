@@ -1,4 +1,4 @@
-// Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
+// Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack, plus our own Player critter drawn by scripts/draw-player.mjs): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
 import Brick from "./sprites/Brick.png";
 import Bullet from "./sprites/Bullet.png";
 import Coin from "./sprites/Coin.png";
@@ -6,15 +6,20 @@ import Enemy from "./sprites/Enemy.png";
 import Flag from "./sprites/Flag.png";
 import GrassTop from "./sprites/GrassTop.png";
 import Dirt from "./sprites/Dirt.png";
-import Player from "./sprites/Player.png";
+import PlayerIdle from "./sprites/PlayerIdle.png";
+import PlayerJump from "./sprites/PlayerJump.png";
+import PlayerWalk1 from "./sprites/PlayerWalk1.png";
+import PlayerWalk2 from "./sprites/PlayerWalk2.png";
 import Sky from "./sprites/Sky.png";
 import Spikes from "./sprites/Spikes.png";
 import Water from "./sprites/Water.png";
 import WaterTop from "./sprites/WaterTop.png";
 import { type Camera, type GameObject, toScreen } from "./engine";
 
-const sprites = { Player, Enemy, Coin, Flag, Bullet };
-const urls = { ...sprites, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
+const sprites = { Player: PlayerIdle, Enemy, Coin, Flag, Bullet };
+/** The Player critter's frames (16×16, drawn at 2× on its 32×32 box); Lessons draw idle only. */
+export const playerFrames = { PlayerIdle, PlayerWalk1, PlayerWalk2, PlayerJump };
+export const urls = { ...sprites, ...playerFrames, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
 type Tile = keyof typeof urls;
 /** Tags drawn as repeated tiles instead of one stretched sprite: the top row, then the fill below it. oneRow: a single row stretched to the box's height. */
 const tiled: Record<string, { top: Tile; fill: Tile; oneRow?: boolean }> = {
