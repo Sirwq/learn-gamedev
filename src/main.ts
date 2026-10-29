@@ -2,7 +2,8 @@ import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
-import { runShortcut, runStartLine, transpile } from "./run-utils";
+import { modKey, runShortcut, runStartLine, transpile } from "./run-utils";
+import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
 import { marked } from "marked";
 import { course } from "./lessons/course";
 import { loadScripts, loadSnapshot, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot } from "./lesson";
@@ -497,6 +498,36 @@ document.getElementById("load-reference")!.onclick = () => {
   model.pushEditOperations([], [{ range: model.getFullModelRange(), text: diff.getModel()!.modified.getValue() }], () => null);
 };
 
+// Zoom: one font size for the editor, the Compare diff and the Docs tab, saved for Lessons and Sandbox alike.
+const zoomOut = document.getElementById("zoom-out") as HTMLButtonElement;
+const zoomReset = document.getElementById("zoom-reset") as HTMLButtonElement;
+const zoomIn = document.getElementById("zoom-in") as HTMLButtonElement;
+let fontSize = savedFontSize(localStorage.getItem("editor:fontSize"));
+function setFontSize(size: number) {
+  fontSize = size;
+  localStorage.setItem("editor:fontSize", String(size));
+  editor.updateOptions({ fontSize: size });
+  diff.updateOptions({ fontSize: size });
+  docsArticle.style.fontSize = `${size}px`;
+  zoomReset.textContent = zoomPercent(size);
+  zoomOut.disabled = size <= FONT_MIN;
+  zoomIn.disabled = size >= FONT_MAX;
+}
+setFontSize(fontSize);
+const mod = modKey(navigator.platform);
+for (const [button, step, label, key, code] of [
+  [zoomOut, -1, "Smaller code", "-", monaco.KeyCode.Minus],
+  [zoomReset, 0, "Reset code size", "0", monaco.KeyCode.Digit0],
+  [zoomIn, 1, "Bigger code", "=", monaco.KeyCode.Equal],
+] as const) {
+  button.ariaLabel = label;
+  button.title = `${label} (${mod}${key})`;
+  button.onclick = () => setFontSize(zoom(fontSize, step));
+  // Only while an editor has focus, so browser zoom keeps working everywhere else.
+  for (const ed of [editor, diff.getOriginalEditor(), diff.getModifiedEditor()])
+    ed.addCommand(monaco.KeyMod.CtrlCmd | code, () => setFontSize(zoom(fontSize, step)));
+}
+
 let goalsMet: boolean[] = [];
 const goals = project ? [] : lesson.goals;
 goalsList.hidden = !goals.length;
@@ -519,8 +550,21 @@ showGoals([]);
 
 const consoleEl = document.getElementById("console")!;
 const consoleLines: ConsoleLine[] = [];
+const consoleToggle = document.getElementById("console-toggle")!;
+function openConsole(open: boolean) {
+  consoleToggle.ariaExpanded = String(open);
+  consoleEl.hidden = !open;
+  // Relayout now, not on the next resize tick, so the cursor line can be kept in view.
+  editor.layout();
+  const pos = editor.getPosition();
+  if (pos) editor.revealPositionInCenterIfOutsideViewport(pos);
+}
+consoleToggle.onclick = () => openConsole(consoleEl.hidden);
 function log(batch: ConsoleLine[]) {
+  const wasEmpty = !consoleLines.length;
   for (const l of batch) addLine(consoleLines, l.level, l.text, l.count);
+  document.getElementById("console-count")!.textContent = `${consoleLines.length} ${consoleLines.length === 1 ? "line" : "lines"}`;
+  if (wasEmpty && consoleLines.length) openConsole(true); // once per Run, so a student who closes it keeps it closed
   const atBottom = consoleEl.scrollTop + consoleEl.clientHeight >= consoleEl.scrollHeight - 4;
   consoleEl.replaceChildren(...consoleLines.map((l) => {
     const div = document.createElement("div");

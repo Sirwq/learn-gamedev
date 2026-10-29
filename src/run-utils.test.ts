@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { errorLine, runShortcut, runStartLine, transpile } from "./run-utils";
+import { errorLine, modKey, runShortcut, runStartLine, transpile } from "./run-utils";
 
 describe("transpile", () => {
   it("strips types and keeps every line on the same line number", () => {
@@ -44,5 +44,12 @@ describe("Run button", () => {
     expect(runStartLine(0)).toBe("▶ Running Lesson 1…");
     expect(runStartLine(14)).toBe("▶ Running Lesson 15…");
     expect(runStartLine(3, "My world")).toBe("▶ Running My world…");
+  });
+});
+
+describe("modKey", () => {
+  it("is ⌘ on Apple platforms and Ctrl+ elsewhere", () => {
+    expect(modKey("MacIntel")).toBe("⌘");
+    expect(modKey("Win32")).toBe("Ctrl+");
   });
 });

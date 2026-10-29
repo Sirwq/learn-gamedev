@@ -10,8 +10,11 @@ export function errorLine(stack: string | undefined): { url: string; line: numbe
   return m ? { url: m[1], line: Number(m[2]), col: Number(m[3]) } : undefined;
 }
 
-/** Ctrl+Enter runs; Monaco maps it to ⌘ on Apple platforms. */
-export const runShortcut = (platform: string) => (/Mac|iPhone|iPad/.test(platform) ? "⌘↵" : "Ctrl+↵");
+/** Monaco's CtrlCmd: ⌘ on Apple platforms, Ctrl elsewhere. */
+export const modKey = (platform: string) => (/Mac|iPhone|iPad/.test(platform) ? "⌘" : "Ctrl+");
+
+/** Ctrl+Enter runs. */
+export const runShortcut = (platform: string) => `${modKey(platform)}↵`;
 
 /** The one Console line each Run starts with. */
 export const runStartLine = (lessonIndex: number, projectName?: string) =>

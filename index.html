@@ -48,8 +48,16 @@
       #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; background: #000a; font-size: 18px; }
       #overlay[hidden] { display: none; }
       #game:focus { outline: 2px solid #4af; }
-      #code { display: grid; grid-template-rows: auto 2fr 1fr; min-width: 0; min-height: 0; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
-      #tabs { display: flex; gap: 2px; padding: 4px 6px 0; background: #252526; }
+      /* The editor gets all the height; the Console is a thin bar until it opens. */
+      #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid #333; border-radius: 6px; overflow: hidden; }
+      #code:has(#console-toggle[aria-expanded="true"]) { grid-template-rows: auto 2fr 1fr; }
+      #tabbar { display: flex; align-items: flex-end; background: #252526; }
+      #tabs { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 4px 6px 0; }
+      #zoom { flex: none; display: flex; align-items: center; gap: 2px; padding: 2px 6px; }
+      #zoom button { min-width: 24px; min-height: 24px; padding: 0 6px; border: 0; background: none; color: #ccc; font-size: 13px; }
+      #zoom button:hover:not(:disabled) { background: #3a3d45; color: #fff; }
+      #zoom-reset { min-width: 44px; font-variant-numeric: tabular-nums; }
+      #zoom button:focus-visible, #console-toggle:focus-visible { outline: 2px solid #9cf; outline-offset: -2px; }
       #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: #2d2d2d; color: #999; font-size: 12px; }
       #tabs button[aria-selected="true"] { background: #1e1e1e; color: #ddd; }
       #editor, #docs { grid-row: 2; grid-column: 1; min-height: 0; }
@@ -58,13 +66,19 @@
       #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid #333; overflow: auto; }
       #docs nav button { text-align: left; border: 0; background: none; color: #999; font-size: 12px; }
       #docs nav button[aria-current="page"] { background: #2d2d2d; color: #ddd; }
-      #docs article { flex: 1; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
-      #docs article h3 { margin: 20px 0 4px; font-size: 14px; }
+      #docs article { flex: 1; font-size: 14px; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
+      #docs article h3 { margin: 20px 0 4px; font-size: 1em; }
       #docs article blockquote, #lesson blockquote { color: #999; margin-left: 0; padding-left: 8px; border-left: 3px solid #555; }
       #docs code { background: #2d2d2d; padding: 1px 4px; }
       #docs pre { overflow: auto; }
       a { color: #7bf; }
-      #console { min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; border-top: 1px solid #333; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+      #console-panel { display: flex; flex-direction: column; min-height: 0; border-top: 1px solid #333; }
+      #console-toggle { flex: none; display: flex; gap: 8px; align-items: center; min-height: 24px; padding: 2px 8px; border: 0; border-radius: 0; background: #252526; color: #ccc; font-size: 12px; text-align: left; }
+      #console-toggle:hover { background: #2d2f36; color: #fff; }
+      #console-toggle::before { content: "▸"; }
+      #console-toggle[aria-expanded="true"]::before { content: "▾"; }
+      #console-toggle span { color: #aaa; font-variant-numeric: tabular-nums; }
+      #console { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 4px 8px; font: 12px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
       #console .warn { color: #fc6; }
       #console .error { color: #f66; }
       #pass { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -173,10 +187,16 @@
         </div>
       </div>
       <div id="code">
-        <div id="tabs" role="tablist"></div>
+        <div id="tabbar">
+          <div id="tabs" role="tablist"></div>
+          <span id="zoom" role="group" aria-label="Editor font size"><button id="zoom-out">−</button><button id="zoom-reset"></button><button id="zoom-in">+</button></span>
+        </div>
         <div id="editor"></div>
         <div id="docs" hidden><nav aria-label="Docs pages"></nav><article></article></div>
-        <pre id="console" aria-label="Console" aria-live="polite"></pre>
+        <div id="console-panel">
+          <button id="console-toggle" aria-expanded="false" aria-controls="console">Console <span id="console-count">0 lines</span></button>
+          <pre id="console" aria-label="Console" aria-live="polite" hidden></pre>
+        </div>
       </div>
     </main>
     <section id="compare" hidden aria-label="Compare">
