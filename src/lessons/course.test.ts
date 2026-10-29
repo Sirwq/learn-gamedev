@@ -26,6 +26,13 @@ const play: Record<string, (frame: number) => string[]> = {
     : [],
   // Run into the low wall, jump onto it, jump onto the tall one.
   "8. Walls": (f) => (f === 31 || f === 75 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 95 ? [KeyCode.RightArrow] : []),
+  // Run right past the first screen, jumping the low wall.
+  "9. Camera follow": (f) => (f === 145 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  // Run right, jump onto the platform, jump from it for the high coin.
+  "10. Coins": (f) => (f === 100 || f === 140 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  // Lesson 11 needs no keys: the enemy patrols while you stand still.
+  // A running jump over the low wall comes down on the enemy.
+  "12. Stomp": (f) => (f === 10 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 60 ? [KeyCode.RightArrow] : []),
 };
 
 describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, lesson, index) => {
@@ -34,7 +41,8 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     expect(lesson.explanation).not.toBe("");
     expect(lesson.level.boxes.filter((b) => b.script === "Player")).toHaveLength(1);
     expect(lesson.goals.length).toBeGreaterThan(0);
-    for (const box of lesson.level.boxes) if (box.script) expect(Object.keys(lesson.scripts)).toContain(box.script);
+    const scripts = course.slice(0, index + 1).flatMap((l) => Object.keys(l.scripts)); // Scripts carry over
+    for (const box of lesson.level.boxes) if (box.script) expect(scripts).toContain(box.script);
     for (const { stub, reference } of Object.values(lesson.scripts)) {
       expect(stub.trim()).not.toBe("");
       expect(reference.trim()).not.toBe("");
@@ -63,12 +71,14 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
   const code = (lessons: typeof course, kind: "stub" | "reference") =>
     Object.fromEntries(lessons.flatMap((l) => Object.entries(l.scripts).map(([n, s]) => [n, s[kind]])));
 
+  // Earlier Lessons' Scripts carry over, as the student's own code would.
+  const earlier = code(course.slice(0, index), "reference");
   it("is passed by its Reference code within 10 simulated seconds, and not by the stub", () => {
-    expect(framesToPass(code([lesson], "reference"))).toBeLessThanOrEqual(600);
-    expect(framesToPass(code([lesson], "stub"))).toBe(601);
+    expect(framesToPass({ ...earlier, ...code([lesson], "reference") })).toBeLessThanOrEqual(600);
+    expect(framesToPass({ ...earlier, ...code([lesson], "stub") })).toBe(601);
   });
 
   it.runIf(index > 0)("is not passed by the previous Lesson's Reference code", () => {
-    expect(framesToPass({ ...code([lesson], "stub"), ...code(course.slice(0, index), "reference") })).toBe(601);
+    expect(framesToPass({ ...code([lesson], "stub"), ...earlier })).toBe(601);
   });
 });
