@@ -143,6 +143,26 @@ export async function deleteProject(id: string, store: Local = localStorage) {
   changed(store);
 }
 
+/** Own images (spec 050) need IndexedDB: false while Projects still live in localStorage. */
+export const canStoreImages = (store: Pick<Storage, "getItem"> = localStorage) => onIdb(store);
+
+/** The Project's own images as Blobs by `<tag>[:top]`. */
+export async function loadImageBlobs(id: string): Promise<Record<string, Blob>> {
+  const names = await imageKeys(id);
+  const blobs = await getMany<Blob>(names);
+  return Object.fromEntries(names.map((k, i) => [k.slice(`image:${id}:`.length), blobs[i]!]));
+}
+
+/** Writes the Project's images as they are now: new and replaced ones set, the rest dropped. */
+export async function saveImages(id: string, images: Record<string, Blob>, store: Local = localStorage) {
+  if (!onIdb(store)) throw new Error("Images can't be saved in this browser right now. Reload the page and try again.");
+  askPersist(store);
+  const stale = (await imageKeys(id)).filter((k) => !Object.hasOwn(images, k.slice(`image:${id}:`.length)));
+  await setMany(Object.entries(images).map(([k, b]): [string, unknown] => [`image:${id}:${k}`, b]));
+  await delMany(stale);
+  changed(store);
+}
+
 let lastTime = 0;
 // Strictly increasing time part, so ids sort in creation order even within one millisecond.
 const newId = () => (lastTime = Math.max(Date.now(), lastTime + 1)).toString(36) + Math.random().toString(36).slice(2, 8);
@@ -196,6 +216,7 @@ export async function exportProject(project: Project) {
 
 const isNum = (v: unknown) => typeof v === "number" && Number.isFinite(v);
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+const isArt = (a: unknown) => isObj(a) && (a.draw === "stretch" || a.draw === "tile") && typeof a.pixel === "boolean";
 const isBox = (b: unknown) => isObj(b) && typeof b.tag === "string" && typeof b.color === "string" &&
   ["x", "y", "w", "h"].every((k) => isNum(b[k])) && (b.script === undefined || typeof b.script === "string");
 
@@ -228,12 +249,13 @@ export function checkProjectFile(file: unknown): ProjectFile {
   if (!isObj(p) || typeof p.name !== "string" || !isObj(p.scripts) || !isObj(level) || !Array.isArray(level.boxes) ||
     !Object.entries(p.scripts).every(([n, c]) => /^[A-Z][A-Za-z0-9_]*$/.test(n) && typeof c === "string") ||
     !level.boxes.every(isBox) || !["width", "height"].every((k) => level[k] === undefined || isNum(level[k])) ||
+    !(level.art === undefined || (isObj(level.art) && Object.values(level.art).every(isArt))) ||
     !(level.camera === undefined || (isObj(level.camera) && ["x", "y", "size"].every((k) => isNum((level.camera as Record<string, unknown>)[k])))) ||
     !isObj(images))
     throw bad("the Project in it is damaged");
   const pngs: [string, Blob][] = [];
   for (const [k, url] of Object.entries(images)) {
-    if (!/^[A-Za-z]\w*(:top)?$/.test(k)) throw bad("the Project in it is damaged");
+    if (!/^[\w%.!~*'()-]+(:top)?$/.test(k)) throw bad("the Project in it is damaged"); // imageName: an escaped tag
     const bytes = pngBytes(url);
     if (typeof bytes === "string") throw bad(`it has ${bytes}`);
     pngs.push([k, new Blob([bytes as BlobPart], { type: "image/png" })]);

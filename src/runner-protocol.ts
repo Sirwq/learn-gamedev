@@ -5,8 +5,8 @@ import type { Clip, Label } from "./engine";
 import type { Project } from "./sandbox";
 
 export type ToWorker =
-  /** Starts the Run: a Lesson by index, or a Sandbox Project's Level; `scripts` is transpiled JS by Script name. */
-  | ({ type: "start"; canvas: OffscreenCanvas; earned: string[]; scripts: Record<string, string> } & ({ lesson: number } | { level: Project["level"] }))
+  /** Starts the Run: a Lesson by index, or a Sandbox Project's Level and own images; `scripts` is transpiled JS by Script name. */
+  | ({ type: "start"; canvas: OffscreenCanvas; earned: string[]; scripts: Record<string, string> } & ({ lesson: number } | { level: Project["level"]; images: Record<string, Blob> }))
   | { type: "key"; code: string; down: boolean }
   | { type: "pause" }
   | { type: "resume" };

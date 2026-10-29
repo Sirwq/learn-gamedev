@@ -1,6 +1,7 @@
 // The Level editor's pure parts (spec 049): snapping, hit-testing, undo and the Level as code. The page side is level-view.ts.
 import type { Box, CameraStart } from "./engine";
 import type { Lesson } from "./lesson";
+import { imageName, type TagArt } from "./sprites";
 
 export type Level = Lesson["level"];
 type Rect = { x: number; y: number; w: number; h: number };
@@ -61,28 +62,43 @@ export function handleAt(r: Rect, px: number, py: number, reach = 8): Handle | u
   return HANDLES.find((h) => Math.abs(points[h][0] - px) <= reach && Math.abs(points[h][1] - py) <= reach);
 }
 
-/** The editor's state: one undo step per committed change; nothing changes while a Run has the Level. */
-export function levelEditor(level: Level) {
-  const past: Box[][] = [];
-  const future: Box[][] = [];
-  let before: string | undefined;
-  const put = (boxes: Box[]) => void level.boxes.splice(0, level.boxes.length, ...boxes);
+/** Same images under the same names. */
+export const sameImages = (a: Record<string, Blob>, b: Record<string, Blob>) =>
+  Object.keys({ ...a, ...b }).every((k) => a[k] === b[k]);
+
+/** The editor's state: one undo step per committed change to the boxes, the tags' art or their own images (Blobs by imageName); nothing changes while a Run has the Level. */
+export function levelEditor(level: Level, images: Record<string, Blob> = {}) {
+  type Snap = { json: string; images: Record<string, Blob> };
+  const past: Snap[] = [];
+  const future: Snap[] = [];
+  let before: Snap | undefined;
+  const snap = (): Snap => ({ json: JSON.stringify({ boxes: level.boxes, art: level.art }), images: { ...images } });
+  const put = (s: Snap) => {
+    const { boxes, art } = JSON.parse(s.json);
+    level.boxes.splice(0, level.boxes.length, ...boxes);
+    if (art) level.art = art;
+    else delete level.art;
+    for (const k in images) delete images[k];
+    Object.assign(images, s.images);
+  };
   const ed = {
     level,
+    images,
     running: false,
     selected: -1,
     /** Starts a change (like a drag); false while running. */
     begin() {
       if (ed.running) return false;
-      before = JSON.stringify(level.boxes);
+      before = snap();
       return true;
     },
-    /** Ends it: one undo step if the boxes changed. True if they did. */
+    /** Ends it: one undo step if anything changed. True if it did. */
     commit() {
       const was = before;
       before = undefined;
-      if (was === undefined || was === JSON.stringify(level.boxes)) return false;
-      past.push(JSON.parse(was));
+      const now = snap();
+      if (!was || (was.json === now.json && sameImages(was.images, now.images))) return false;
+      past.push(was);
       future.length = 0;
       return true;
     },
@@ -92,20 +108,41 @@ export function levelEditor(level: Level) {
       change(level.boxes);
       return ed.commit();
     },
+    /** Sets or replaces a tag's own image (or its Top image); with no Blob removes it, and removing the main image resets the tag to its default art. */
+    setImage: (tag: string, blob: Blob | undefined, top = false) => ed.edit(() => putImage(level, images, tag, blob, top)),
+    /** Changes how a tag with an own image draws. */
+    setArt: (tag: string, change: Partial<TagArt>) => ed.edit(() => (level.art![tag] = { ...level.art![tag], ...change })),
     undo: () => step(past, future),
     redo: () => step(future, past),
     canUndo: () => !ed.running && past.length > 0,
     canRedo: () => !ed.running && future.length > 0,
   };
-  function step(from: Box[][], to: Box[][]) {
+  function step(from: Snap[], to: Snap[]) {
     if (ed.running || !from.length) return false;
-    to.push(structuredClone(level.boxes));
+    to.push(snap());
     put(from.pop()!);
     if (ed.selected >= level.boxes.length) ed.selected = -1;
     return true;
   }
   return ed;
 }
+
+/** setImage's change, for use inside a bigger edit. A tag's first image starts it in today's mode: built-in tiled tags tile, the rest stretch. */
+export function putImage(level: Level, images: Record<string, Blob>, tag: string, blob: Blob | undefined, top = false) {
+  if (blob) {
+    images[imageName(tag, top)] = blob;
+    level.art = { ...level.art, [tag]: level.art?.[tag] ?? { draw: TILED.includes(tag) ? "tile" : "stretch", pixel: true } };
+    return;
+  }
+  delete images[imageName(tag, top)];
+  if (top) return;
+  delete images[imageName(tag, true)];
+  const { [tag]: _, ...rest } = level.art ?? {};
+  level.art = rest;
+}
+
+/** Match image shape: the box keeps its width and takes its height from the image's aspect ratio. */
+export const matchShape = (b: Box, imageW: number, imageH: number): Box => ({ ...b, h: Math.max(1, Math.round((b.w * imageH) / imageW)) });
 
 /** The `boxes` list as it would be written in a Lesson's `lesson.ts` (spec 004), one box per line. */
 export function levelCode(boxes: Box[]) {

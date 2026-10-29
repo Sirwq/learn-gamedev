@@ -365,6 +365,15 @@
       #level-fields .xywh label { grid-template-columns: auto 1fr; }
       #inspector :is(select, input) { min-width: 0; font: inherit; color: var(--ink); background: var(--surface-editor); border: 1px solid var(--border-control); border-radius: 6px; padding: 2px 6px; }
       #inspector input { font-variant-numeric: tabular-nums; }
+      #level-art { display: grid; grid-template-columns: 48px 1fr; gap: 6px 8px; align-items: center; }
+      #level-art > :not(canvas) { grid-column: 2; }
+      #level-art canvas { image-rendering: pixelated; border: 1px solid var(--border-control); border-radius: 4px; }
+      #level-art-thumb { width: 48px; height: 48px; }
+      #level-art-thumb.dropping { outline: 2px dashed var(--focus); outline-offset: 2px; }
+      #level-art :is(.tools, #level-art-extra)[hidden], #level-art button[hidden] { display: none; }
+      #level-art label { display: inline-flex; gap: 6px; }
+      #level-art .check span { color: var(--ink-muted); }
+      #level-art-extra { display: grid; gap: 6px; }
       #level-objects { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
       #level-objects button { width: 100%; text-align: left; border-color: transparent; background: none; font-variant-numeric: tabular-nums; }
       #level-objects button:hover { background: var(--surface-raised); }
@@ -434,6 +443,27 @@
           <fieldset id="level-fields" disabled>
             <legend class="sr-only">Selected object</legend>
             <label>Tag <select id="level-tag"></select></label>
+            <div id="level-art" role="group" aria-label="The tag's image: every box of this tag looks the same">
+              <canvas id="level-art-thumb" width="48" height="48" role="img" aria-label="The tag's image. Drop a PNG or JPEG here to change it."></canvas>
+              <div class="tools">
+                <button id="level-art-change" title="PNG or JPEG; drop a file on the picture to change it too">Change image…</button>
+                <button id="level-art-reset">Reset to default</button>
+              </div>
+              <div id="level-art-own" class="tools">
+                <label>Draw <select id="level-art-draw"><option value="stretch">Stretch</option><option value="tile">Tile</option></select></label>
+                <button id="level-art-match" title="Keep the width, set the height from the image's shape">Match image shape</button>
+                <button id="level-art-more" aria-expanded="false" aria-controls="level-art-extra">More</button>
+              </div>
+              <div id="level-art-extra" hidden>
+                <label class="check"><input id="level-art-pixel" type="checkbox"> Pixel art <span>(sharp pixels; off smooths drawings and photos)</span></label>
+                <div class="tools">
+                  <canvas id="level-art-top-thumb" width="24" height="24" aria-hidden="true"></canvas>
+                  <button id="level-art-top" title="Drawn on the first row when Draw is Tile, like grass on dirt">Change Top image…</button>
+                  <button id="level-art-top-remove">Remove Top image</button>
+                </div>
+              </div>
+              <input id="level-art-file" type="file" accept="image/png,image/jpeg" hidden>
+            </div>
             <label>Script <select id="level-script"></select></label>
             <div class="xywh">
               <label>x <input id="level-x" type="number" step="1"></label>
@@ -567,8 +597,9 @@
     <dialog id="level-tag-box" aria-labelledby="level-tag-title">
       <form method="dialog">
         <h3 id="level-tag-title">New tag</h3>
-        <p>A tag with no image draws as a plain box in its colour.</p>
+        <p>Pick an image (PNG or JPEG), or leave it out for a plain box in the colour.</p>
         <label>Name <input id="level-tag-name" required maxlength="24" autocomplete="off" spellcheck="false" placeholder="Lava…"></label>
+        <label>Image… <input id="level-tag-image" type="file" accept="image/png,image/jpeg"></label>
         <label>Colour <input id="level-tag-color" type="color" value="#e05a2b"></label>
         <p><button value="ok">Create tag</button> <button value="cancel" formnovalidate>Cancel</button></p>
       </form>

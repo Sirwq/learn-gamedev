@@ -1,5 +1,6 @@
 import { type Box, Camera, type CameraStart, type World } from "./engine";
 import { withoutNoteComment } from "./lessons/ai-note";
+import type { TagArt } from "./sprites";
 
 /** A Goal or Lose event: `test` runs every frame against the game objects and the seconds since the Run started. */
 export type Check = { message: string; test: (world: World, time: number) => boolean };
@@ -10,7 +11,8 @@ export type Lesson = {
   concept: string;
   /** Markdown. */
   explanation: string;
-  level: { boxes: Box[]; width?: number; height?: number; camera?: CameraStart };
+  /** `art`: Sandbox only, how each tag with an own image draws (spec 050). */
+  level: { boxes: Box[]; width?: number; height?: number; camera?: CameraStart; art?: Record<string, TagArt> };
   goals: Check[];
   lose: Check[];
   /** Scripts this Lesson adds, by name: starter stub and Reference code. */

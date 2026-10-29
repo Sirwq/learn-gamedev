@@ -572,7 +572,7 @@ function run() {
   running = true;
   paused = false;
   canvas.focus();
-  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level } : { lesson: lessonIndex }), earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
+  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex }), earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
 
   let lastTick = performance.now();
   worker.onmessage = (e: MessageEvent<FromWorker>) => {

@@ -1,7 +1,7 @@
 ---
 title: Students' own sprites per tag
 label: build
-status: open
+status: closed
 blocked_by: [075-level-editor-tools]
 assignee:
 ---
@@ -34,3 +34,14 @@ Sandbox only, per Project, per tag, all in the Level editor inspector under Tag:
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+Done. Per Project, per tag, in the Level editor inspector under Tag.
+
+- **Data**: each tag's Draw / Pixel art settings live in `level.art` (so they save, duplicate, export and undo with the Level); images are PNG Blobs under `image:<id>:<tag>[:top]`, the tag escaped with `encodeURIComponent` so any tag name (spaces, colons) makes a safe key. Project import checks `art` and the escaped names.
+- **Undo**: the editor's snapshots now hold the boxes, `art` and the image Blobs, so set / replace / reset / Draw / Pixel art / Top are each one Ctrl+Z step. The view writes images to IndexedDB only when they changed (new and replaced set, the rest deleted), which also asks `persist()` once.
+- **Drawing**: `drawWorld` takes the decoded own sprites; Stretch flips to face left and never animates; Tile uses `tileCells` (20 px cells, first row from the Top image if any); Pixel art off turns smoothing on for that tag. The Run worker gets the Blobs in its start message, so `Instantiate`d boxes get their tag's image. Palette icons and the thumbnail show the own image.
+- **Import**: PNG / JPEG only (by MIME type), decoded, scaled to fit 256×256, stored as PNG. Refused while Projects still live in localStorage.
+- **UI**: thumbnail (drop target), Change image…, Reset to default / Remove image, Draw, Match image shape, More (Pixel art, Top image). "+ New tag…" takes an image file or a colour. 📖 Docs (`GameObject.tag`) point to Piskel and Aseprite.
+
+Not done / not checked: no real browser here, so the UI is untested by hand. Sandbox menu cards still draw default art. An image of a tag no box uses any more stays stored until Reset. Images are written in a separate step from the Project JSON (not one transaction).
+

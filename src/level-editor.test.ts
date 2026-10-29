@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ART_TAGS, boxAt, cameraStart, dropped, fitView, handleAt, levelCode, levelEditor, moved, nudged, paletteTags, resized, sizeStep, zoomed, zoomOf } from "./level-editor";
+import { ART_TAGS, boxAt, matchShape, cameraStart, dropped, fitView, handleAt, levelCode, levelEditor, moved, nudged, paletteTags, resized, sizeStep, zoomed, zoomOf } from "./level-editor";
 import { type Box, startGame } from "./engine";
 import { playground } from "./sandbox";
 import { loadScript } from "./test-helpers";
@@ -74,6 +74,44 @@ describe("undo stack", () => {
     ed.selected = 1;
     ed.undo();
     expect(ed.selected).toBe(-1);
+  });
+});
+
+describe("own sprites", () => {
+  const png = (n: string) => new Blob([n], { type: "image/png" });
+  it("Match image shape keeps the width and sets the height from the image", () => {
+    expect(matchShape(box({ w: 40, h: 40 }), 32, 64)).toMatchObject({ w: 40, h: 80 });
+    expect(matchShape(box({ w: 30, h: 40 }), 256, 150)).toMatchObject({ w: 30, h: 18 });
+  });
+  it("setting an image starts a built-in tag in today's mode and a new tag stretched; Reset brings the default back", () => {
+    const ed = levelEditor({ boxes: [box()] });
+    expect(ed.setImage("Ground", png("a"))).toBe(true);
+    expect(ed.setImage("Ground", png("t"), true)).toBe(true);
+    expect(ed.setImage("Lava", png("l"))).toBe(true);
+    expect(ed.level.art).toEqual({ Ground: { draw: "tile", pixel: true }, Lava: { draw: "stretch", pixel: true } });
+    expect(Object.keys(ed.images)).toEqual(["Ground", "Ground:top", "Lava"]);
+    expect(ed.setImage("Ground", undefined)).toBe(true);
+    expect(ed.level.art).toEqual({ Lava: { draw: "stretch", pixel: true } });
+    expect(Object.keys(ed.images)).toEqual(["Lava"]);
+  });
+  it("every image change is one undo step", () => {
+    const a = png("a"), b = png("b");
+    const ed = levelEditor({ boxes: [box()] }, { Coin: a });
+    ed.level.art = { Coin: { draw: "stretch", pixel: true } };
+    ed.setImage("Coin", b);
+    ed.setArt("Coin", { pixel: false });
+    expect(ed.undo()).toBe(true);
+    expect(ed.level.art!.Coin.pixel).toBe(true);
+    expect(ed.undo()).toBe(true);
+    expect(ed.images.Coin).toBe(a);
+    expect(ed.redo()).toBe(true);
+    expect(ed.images.Coin).toBe(b);
+    expect(ed.setImage("Coin", b)).toBe(false); // the same image again changes nothing
+  });
+  it("keys a tag's image by its escaped name, so any tag name fits", () => {
+    const ed = levelEditor({ boxes: [box()] });
+    ed.setImage("Big tree:top", png("x"), true);
+    expect(Object.keys(ed.images)).toEqual(["Big%20tree%3Atop:top"]);
   });
 });
 

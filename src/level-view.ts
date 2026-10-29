@@ -1,8 +1,8 @@
 // The 🗺 Level tab (spec 049): the stopped game view is the editor, the left column its inspector.
 import { type Box, Camera, type CameraStart, GameObject, toScreen, Vector2 } from "./engine";
-import { ART_TAGS, bounds, boxAt, cameraStart, dropped, fitView, type Handle, handleAt, handlePoints, GRID, levelCode, levelEditor, moved, nudged, paletteTags, resized, zoomed, zoomOf } from "./level-editor";
-import { drawWorld, type Images } from "./sprites";
-import type { Project } from "./sandbox";
+import { ART_TAGS, bounds, boxAt, cameraStart, dropped, fitView, type Handle, handleAt, handlePoints, GRID, levelCode, levelEditor, matchShape, moved, nudged, paletteTags, putImage, resized, sameImages, zoomed, zoomOf } from "./level-editor";
+import { drawWorld, imageName, importImage, type Images, type Own, ownSprites } from "./sprites";
+import { canStoreImages, loadImageBlobs, type Project, saveImages } from "./sandbox";
 import { toast } from "./toast";
 
 const W = 960, H = 540;
@@ -29,6 +29,31 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   let snap = true;
   let imgs: Images | undefined;
   images.then((i) => ((imgs = i), (paletteKey = ""), open && refresh()));
+
+  // Own sprites (spec 050): Blobs in the editor's state (so undo covers them), decoded into `own` for drawing.
+  let own: Record<string, Own> = {};
+  let saved: Record<string, Blob> = {};
+  let shownArt = "";
+  let decoding = 0;
+  /** After a change to the tags' art or images: stores the images and decodes them for drawing. */
+  async function syncArt() {
+    const art = JSON.stringify(project.level.art ?? {});
+    const newImages = !sameImages(saved, ed.images);
+    if (!newImages && art === shownArt) return;
+    shownArt = art;
+    if (newImages) {
+      saved = { ...ed.images };
+      // A full disk rejects again, for main.ts's "Storage is full" toast.
+      saveImages(project.id, saved).catch((e) => (e?.name === "QuotaExceededError" ? Promise.reject(e) : toast(e.message)));
+    }
+    const mine = ++decoding;
+    const decoded = await ownSprites(project.level.art, ed.images).catch(() => ({}));
+    if (mine !== decoding) return; // a newer change is decoding
+    own = decoded;
+    paletteKey = "";
+    if (!ed.running) open ? refresh() : draw();
+  }
+  loadImageBlobs(project.id).then((b) => (Object.assign(ed.images, b), (saved = { ...b }), syncArt()));
 
   /** The game canvas, or a fresh one when a Run has handed it to its worker. */
   function canvas() {
@@ -61,7 +86,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   function draw() {
     if (!imgs) return;
     const ctx = canvas();
-    drawWorld(ctx, imgs, view, boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y))));
+    drawWorld(ctx, imgs, view, boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y))), undefined, own);
     if (!open) return;
     drawMinimap();
     $("level-zoom-value").textContent = `${Math.round(zoomOf(view.orthographicSize) * 100)}%`;
@@ -156,6 +181,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
     tag.value = b?.tag ?? "";
     script.value = b?.script ?? "";
     for (const [k, input] of nums) input.value = b ? String(b[k]) : "";
+    fillArt(b);
     fillPalette();
     for (const b of palette.querySelectorAll("button")) b.disabled = ed.running;
     undoBtn.disabled = !ed.canUndo();
@@ -174,6 +200,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   function changed() {
     save();
     refresh();
+    syncArt();
   }
 
   function select(i: number, reveal = false) {
@@ -198,13 +225,94 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
       const btn = Object.assign(document.createElement("button"), { title: `Add a ${t.tag}: press, or drag it into the view` });
       const icon = Object.assign(document.createElement("canvas"), { width: 24, height: 24 });
       icon.ariaHidden = "true";
-      drawWorld(icon.getContext("2d")!, imgs!, new Camera({ x: 10, y: 10, size: 10 }), [new GameObject(t.tag, 20, 20, t.color, undefined, new Vector2(0, 0))]);
+      drawIcon(icon, t.tag, t.color);
       btn.append(icon, t.tag);
       btn.onclick = () => add(t.tag, view.transform.position);
       btn.onpointerdown = (e) => e.button === 0 && (carry = { tag: t.tag, x: e.clientX, y: e.clientY, moved: false });
       return btn;
     }));
   }
+  /** One 20×20 world-px box of the tag on a small canvas, as the game draws it. */
+  function drawIcon(c: HTMLCanvasElement, tag: string, color: string) {
+    if (imgs) drawWorld(c.getContext("2d")!, imgs, new Camera({ x: 10, y: 10, size: 10 }), [new GameObject(tag, 20, 20, color, undefined, new Vector2(0, 0))], undefined, own);
+  }
+
+  // The selected box's tag's image: Change / drop a file, Reset or Remove, Draw, Match image shape; Pixel art and the Top image under More.
+  const artThumb = $<HTMLCanvasElement>("level-art-thumb");
+  const artReset = $<HTMLButtonElement>("level-art-reset");
+  const artDraw = $<HTMLSelectElement>("level-art-draw");
+  const artMatch = $<HTMLButtonElement>("level-art-match");
+  const artMore = $<HTMLButtonElement>("level-art-more");
+  const artPixel = $<HTMLInputElement>("level-art-pixel");
+  const artFile = $<HTMLInputElement>("level-art-file");
+  const topThumb = $<HTMLCanvasElement>("level-art-top-thumb");
+  function fillArt(b: Box | undefined) {
+    const t = b?.tag ?? "";
+    const art = project.level.art?.[t];
+    const has = !!art && !!ed.images[imageName(t)];
+    artReset.hidden = !has;
+    artReset.textContent = ART_TAGS.includes(t) ? "Reset to default" : "Remove image";
+    $("level-art-own").hidden = !has;
+    $("level-art-extra").hidden = !has || artMore.ariaExpanded !== "true";
+    $("level-art-top-remove").hidden = !ed.images[imageName(t, true)];
+    if (art) (artDraw.value = art.draw), (artPixel.checked = art.pixel);
+    artMatch.disabled = !own[t];
+    if (b) drawIcon(artThumb, t, b.color);
+    const top = topThumb.getContext("2d")!;
+    top.clearRect(0, 0, 24, 24);
+    if (own[t]?.top) top.drawImage(own[t].top!, 0, 0, 24, 24);
+  }
+  /** The picked or dropped file as a stored PNG, or undefined after a toast saying why not. */
+  async function readImage(file: File) {
+    if (!canStoreImages()) return void toast("Images can't be saved in this browser right now. Reload the page and try again.");
+    try {
+      return await importImage(file);
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  }
+  async function useImage(file: File, top: boolean) {
+    const b = boxes[ed.selected];
+    if (!b) return;
+    const tagName = b.tag; // the selection may change while the image loads
+    const blob = await readImage(file);
+    if (blob && ed.setImage(tagName, blob, top)) changed();
+  }
+  let pickTop = false;
+  const pick = (top: boolean) => ((pickTop = top), artFile.click());
+  artFile.onchange = () => {
+    const f = artFile.files?.[0];
+    artFile.value = "";
+    if (f) useImage(f, pickTop);
+  };
+  $("level-art-change").onclick = () => pick(false);
+  $("level-art-top").onclick = () => pick(true);
+  artThumb.ondragover = (e) => {
+    if (fields.disabled) return;
+    e.preventDefault();
+    artThumb.classList.add("dropping");
+  };
+  artThumb.ondragleave = () => artThumb.classList.remove("dropping");
+  artThumb.ondrop = (e) => {
+    e.preventDefault();
+    artThumb.classList.remove("dropping");
+    const f = e.dataTransfer?.files[0];
+    if (f && !fields.disabled) useImage(f, false);
+  };
+  const selectedTag = () => boxes[ed.selected]?.tag ?? "";
+  artReset.onclick = () => ed.setImage(selectedTag(), undefined) && changed();
+  $("level-art-top-remove").onclick = () => ed.setImage(selectedTag(), undefined, true) && changed();
+  artDraw.onchange = () => ed.setArt(selectedTag(), { draw: artDraw.value as "stretch" | "tile" }) && changed();
+  artPixel.onchange = () => ed.setArt(selectedTag(), { pixel: artPixel.checked }) && changed();
+  artMatch.onclick = () => {
+    const img = own[selectedTag()]?.image;
+    if (img && ed.edit((bs) => (bs[ed.selected] = matchShape(bs[ed.selected], img.width, img.height)))) changed();
+  };
+  artMore.onclick = () => {
+    artMore.ariaExpanded = String(artMore.ariaExpanded !== "true");
+    fill();
+  };
+
   function add(t: string, at: { x: number; y: number }) {
     if (ed.edit((bs) => bs.push(dropped(t, at, scripts(), paletteTags(boxes))))) (ed.selected = boxes.length - 1), changed();
   }
@@ -226,12 +334,18 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   document.addEventListener("pointerup", putDown);
   document.addEventListener("pointercancel", putDown);
 
-  // "+ New tag…": a name and a colour; the selected box takes it.
+  // "+ New tag…": a name, and an image or a colour; the selected box takes it, in one undo step.
   const tagBox = $<HTMLDialogElement>("level-tag-box");
-  tagBox.onclose = () => {
+  const tagImage = $<HTMLInputElement>("level-tag-image");
+  tagBox.onclose = async () => {
     const name = $<HTMLInputElement>("level-tag-name").value.trim();
     const color = $<HTMLInputElement>("level-tag-color").value;
-    if (tagBox.returnValue !== "ok" || !name || !ed.edit((bs) => Object.assign(bs[ed.selected], { tag: name, color }))) return refresh();
+    const file = tagImage.files?.[0];
+    tagImage.value = "";
+    if (tagBox.returnValue !== "ok" || !name) return refresh();
+    const blob = file && (await readImage(file));
+    if (file && !blob) return refresh();
+    if (!ed.edit((bs) => (Object.assign(bs[ed.selected], { tag: name, color }), blob && putImage(ed.level, ed.images, name, blob)))) return refresh();
     changed();
   };
   tag.onchange = () => {
@@ -388,6 +502,8 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   });
 
   return {
+    /** The Project's own images as they are now, for a Run. */
+    images: () => ({ ...ed.images }),
     /** Shows or hides the editor; the stage moves into the code column and the inspector takes the Lesson panel's place. */
     setOpen(on: boolean) {
       if (on === open) return;

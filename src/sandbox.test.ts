@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clear, get, keys, set, setMany } from "idb-keyval";
-import { addScript, createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadProjects, migrateProjects, playground, sandboxUnlocked, saveProject, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
+import { addScript, createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadImageBlobs, loadProjects, migrateProjects, playground, sandboxUnlocked, saveImages, saveProject, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
 import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
@@ -62,6 +62,18 @@ describe("Projects", () => {
     expect(await loadProjects(s)).toEqual([{ ...copy, name: "Mine" }]);
     expect((await keys<string>()).filter((k) => k.includes(blank.id))).toEqual([]);
     expect(s.getItem("sandbox:projects")).toBeNull();
+  });
+
+  it("save their own images: new and replaced ones written, dropped ones deleted; Duplicate copies them", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    await saveImages(p.id, { Coin: new Blob(["a"]), "Big%20tree": new Blob(["b"]) }, s);
+    await saveImages(p.id, { Coin: new Blob(["c"]) }, s);
+    const mine = await loadImageBlobs(p.id);
+    expect(Object.keys(mine)).toEqual(["Coin"]);
+    expect(await mine.Coin.text()).toBe("c");
+    const copy = await duplicateProject(p, s);
+    expect(await (await loadImageBlobs(copy.id)).Coin.text()).toBe("c");
   });
 
   it("before the migration they stay in localStorage", async () => {
@@ -180,10 +192,23 @@ describe("Export / Import one Project", () => {
       "oversized image": JSON.stringify(big),
       "not a PNG": JSON.stringify({ ...good, images: { Player: "data:text/html;base64,PGI+" } }),
       "bad box": JSON.stringify({ ...good, project: { ...good.project, level: { boxes: [{ tag: "Player" }] } } }),
+      "bad art": JSON.stringify({ ...good, project: { ...good.project, level: { ...good.project.level, art: { Coin: { draw: "wobble", pixel: true } } } } }),
+      "bad image name": JSON.stringify({ ...good, images: { "a/b": good.images.Player } }),
       "bad Script name": JSON.stringify({ ...good, project: { ...good.project, scripts: { "../x": "" } } }),
     };
     for (const [why, text] of Object.entries(files)) await expect(importProject(text, s), why).rejects.toThrow(/^This file can't be opened: /);
     expect(await keys()).toEqual(before);
+  });
+
+  it("carries each tag's Draw and Pixel art settings, and images of tags with any name", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    p.level.art = { "Big tree": { draw: "tile", pixel: false } };
+    await saveProject(p, s);
+    await set(`image:${p.id}:Big%20tree:top`, png(20, 20));
+    const copy = await importProject(await exportProject(p), s);
+    expect(copy.level.art).toEqual(p.level.art);
+    expect(Object.keys(await loadImageBlobs(copy.id))).toEqual(["Big%20tree:top"]);
   });
 
   it("file names replace characters a file system doesn't allow", () => {

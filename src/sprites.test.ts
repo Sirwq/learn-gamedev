@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { v2Features } from "./run-utils";
-import { frameOf, playerFrames, tiles, urls } from "./sprites";
+import { fitSize, frameOf, imageFileError, playerFrames, tileCells, tiles, urls } from "./sprites";
 
 describe("tiles", () => {
   it("covers a box with whole tiles when it fits exactly", () => {
@@ -62,5 +62,27 @@ describe("v2Features", () => {
     for (let lesson = 0; lesson < 15; lesson++) expect(v2Features({ lesson })).toBe(false);
     expect(v2Features({ lesson: 15 })).toBe(true);
     expect(v2Features({ level: { boxes: [] } })).toBe(true);
+  });
+});
+
+describe("own sprites", () => {
+  it("refuses files that aren't PNG or JPEG", () => {
+    expect(imageFileError({ type: "image/png" })).toBe("");
+    expect(imageFileError({ type: "image/jpeg" })).toBe("");
+    for (const type of ["image/gif", "image/svg+xml", "image/webp", "text/plain", ""]) expect(imageFileError({ type })).not.toBe("");
+  });
+  it("scales a big image down to fit 256×256, keeping its shape; small ones stay", () => {
+    expect(fitSize(512, 300)).toEqual({ w: 256, h: 150 });
+    expect(fitSize(100, 1000)).toEqual({ w: 26, h: 256 });
+    expect(fitSize(16, 16)).toEqual({ w: 16, h: 16 });
+  });
+  it("tiles a box in 20 px cells, the first row with the Top image when there is one", () => {
+    const box = { x: 0, y: 0, w: 50, h: 40 };
+    const plain = tileCells(box, "fill");
+    expect(plain).toHaveLength(6);
+    expect(plain.every(([, img]) => img === "fill")).toBe(true);
+    expect(plain[2]).toEqual([{ x: 40, y: 20, w: 10, h: 20 }, "fill"]);
+    const topped = tileCells(box, "fill", "top");
+    expect(topped.map(([, img]) => img)).toEqual(["top", "top", "top", "fill", "fill", "fill"]);
   });
 });

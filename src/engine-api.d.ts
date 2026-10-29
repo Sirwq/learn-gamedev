@@ -109,7 +109,7 @@ declare class AudioSource {
  */
 declare class GameObject {
   /**
-   * The tag it was made with.
+   * The tag it was made with. The tag picks how it looks: in Sandbox, the 🗺 Level tab can give a tag your own image (PNG or JPEG, drawn facing right). Draw one in a free pixel-art editor such as Piskel (https://www.piskelapp.com) or Aseprite (https://www.aseprite.org).
    * @example if (other.tag === "Enemy") { }
    */
   readonly tag: string;

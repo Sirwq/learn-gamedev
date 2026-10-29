@@ -1,7 +1,7 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
 import { errorLine, v2Features } from "./run-utils";
 import { api, type Box, Camera, findScript, keyEvent, keysDown, labels, logs, type MonoBehaviour, releaseAllKeys, scriptSource, startGame, takeSounds, worldView } from "./engine";
-import { drawWorld, loadImages } from "./sprites";
+import { drawWorld, loadImages, ownSprites } from "./sprites";
 import { checker } from "./check";
 import { achievementChecker } from "./achievements";
 import { course } from "./lessons/course";
@@ -49,6 +49,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   let game: ReturnType<typeof startGame>;
   const v2 = v2Features(data); // Lessons 1–15 don't animate, play sounds or call OnGUI
   const sprites = await images;
+  const own = "level" in data ? await ownSprites(data.level.art, data.images).catch(() => ({})) : {}; // a broken image draws the default art
   try {
     const classes: Record<string, new () => MonoBehaviour> = {};
     for (const name in scripts) { // every Script, since Instantiate may attach one no box uses
@@ -89,7 +90,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     const gui = JSON.stringify(labels);
     if (gui !== lastLabels) send({ type: "labels", labels });
     lastLabels = gui;
-    drawWorld(ctx, sprites, Camera.main, game.objects, v2 ? frames++ / 60 : undefined);
+    drawWorld(ctx, sprites, Camera.main, game.objects, v2 ? frames++ / 60 : undefined, own);
     if (!result.lost && !result.passed) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
