@@ -295,6 +295,10 @@ function drawCover(canvas: HTMLCanvasElement, boxes: Box[]) {
   });
 }
 course.forEach((l, i) => drawCover(courseCards[i].querySelector("canvas")!, l.level.boxes));
+// Before the first Run the game shows the Level as it starts; Run swaps in a fresh canvas for the worker.
+const startLevel = project ? project.level : course[lessonIndex].level;
+images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
+  startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
 function buildProjectCards() {
   projects = loadProjects();
   projectCards = [...projects.map((p, i) => coverCard("PROJECT", p.name, i)), coverCard("", "+ New", projects.length)];
