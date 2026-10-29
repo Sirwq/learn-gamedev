@@ -136,9 +136,9 @@
       #progress i.done { background: var(--success); border-color: var(--success); }
       #progress span { margin-left: 6px; color: var(--ink-muted); font-size: 12px; }
       #progress:hover span { color: var(--ink-strong); }
-      /* Left column: the Lesson text on top (its own scroll, at most 60%), the game below in the rest. */
-      #left { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; }
-      #lesson { flex: 0 1 auto; max-height: 60%; overflow: auto; overscroll-behavior: contain; padding: 0 14px; border: 1px solid var(--border-subtle); border-radius: 6px; line-height: 1.5; overflow-wrap: anywhere; }
+      /* Hints scroll inside the lesson while the game stays visible below it. */
+      #left { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; overflow: hidden; }
+      #lesson { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 14px; border: 1px solid var(--border-subtle); border-radius: 6px; line-height: 1.5; overflow-wrap: anywhere; }
       /* A fade pinned to the bottom edge while there is more to scroll; at the end it is just blank space. */
       #lesson::after { content: ""; position: sticky; bottom: 0; display: block; height: 20px; background: linear-gradient(transparent, var(--surface-editor)); pointer-events: none; }
       #lesson:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
@@ -154,9 +154,8 @@
       #still-stuck { padding: 8px 10px; }
       #still-stuck[hidden] { display: none; }
       main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
-      /* The game is 960×540 and scales to fit the space under the Lesson text, keeping its shape. */
-      #stage { flex: 1; min-height: 0; container-type: size; display: flex; align-items: center; justify-content: center; background: var(--surface-stage); border-radius: 6px; min-width: 0; }
-      #viewport { position: relative; width: min(100cqw, 100cqh * 16 / 9); aspect-ratio: 16 / 9; }
+      #stage { flex: none; width: 100%; aspect-ratio: 16 / 9; background: var(--surface-stage); border-radius: 6px; }
+      #viewport { position: relative; width: 100%; height: 100%; }
       #game { width: 100%; height: 100%; display: block; background: #000; outline: 2px solid var(--game-outline); outline-offset: -2px; }
       #goals { position: absolute; top: 8px; left: 8px; margin: 0; padding: 6px 10px; list-style: none; background: #000a; border-radius: 6px; pointer-events: none; }
       #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; background: #000a; font-size: 18px; }
