@@ -334,7 +334,7 @@ function buildProjectCards() {
 
 const playLabel = (i: number) =>
   mode === "sandbox" ? (i === projects.length ? "Create" : "Open")
-  : states[i] === "locked" ? "Locked" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
+  : states[i] === "locked" ? "How to unlock" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
 function layoutMenu() {
   const list = cards();
   list.forEach((card, i) => {
@@ -360,7 +360,7 @@ function layoutMenu() {
     meta = p ? [["📄", Object.keys(p.scripts).map((n) => `${n}.ts`).join(", ")]] : [["", "Blank, or My platformer: a copy of your Course code"]];
   } else {
     const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))].map((n) => `${n}.ts`);
-    const state = { passed: ["✓", "Passed"], current: ["▶", "Up next"], locked: ["🔒", `Pass Lesson ${menuCurrent + 1} first`] }[states[focused]];
+    const state = { passed: ["✓", "Passed"], current: ["▶", "Up next"], locked: ["🔒", `Pass Lesson ${menuCurrent + 1} to unlock`] }[states[focused]];
     title = course[focused].title;
     meta = [["🧩", course[focused].concept], ["📄", scripts.join(", ")], state];
   }
@@ -453,7 +453,7 @@ function pick(i: number) {
     if (projects[i].id === project?.id) return closeMenu();
     return void (location.search = `?sandbox=${projects[i].id}`);
   }
-  if (states[i] === "locked") return void toast(`Pass Lesson ${menuCurrent + 1} first`);
+  if (states[i] === "locked") return void toast(`Pass Lesson ${menuCurrent + 1} to unlock`);
   if (i === lessonIndex && !project) return closeMenu();
   if (playLabel(i) === "Play" || !snapshot(course[i].title)) return go(i);
   replayBox.querySelector("h3")!.textContent = `Replay ${course[i].title}?`;
@@ -479,7 +479,6 @@ replayBox.onkeydown = newBox.onkeydown = (e) => {
   const k = options.indexOf(document.activeElement as HTMLButtonElement);
   options[(k + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length].focus();
 };
-const soon = () => toast("TypeScript is the only Course for now. C# comes later.");
 chipCourse.onclick = () => setMode("course");
 chipSandbox.onclick = () => setMode("sandbox");
 const menuKeys: Record<string, () => void> = {
@@ -487,8 +486,8 @@ const menuKeys: Record<string, () => void> = {
   ArrowRight: () => focusCard(focused + 1),
   Escape: closeMenu,
   KeyA: () => trophies.click(),
-  KeyQ: () => (chipSandbox.hidden ? soon() : setMode("course")),
-  KeyE: () => (chipSandbox.hidden ? soon() : setMode("sandbox")),
+  KeyQ: () => (chipSandbox.hidden ? toast("TypeScript is the only Course for now. C# comes later.") : setMode("course")),
+  KeyE: () => (chipSandbox.hidden ? toast("Sandbox opens when you finish the Course") : setMode("sandbox")),
 };
 document.addEventListener("keydown", (e) => {
   if (menu.hidden || !map.hidden || replayBox.open || newBox.open || map.contains(e.target as Node)) return;
@@ -500,10 +499,8 @@ document.addEventListener("keydown", (e) => {
 });
 const menuBack = document.getElementById("menu-back")!;
 menuBack.onclick = closeMenu;
-if (project) {
-  menuBack.ariaLabel = menuBack.title = "Back to Project";
-  menuBack.lastChild!.textContent = " Back to Project";
-}
+menuBack.ariaLabel = menuBack.title = project ? "Back to Project" : `Back to Lesson ${lessonIndex + 1}`;
+menuBack.lastChild!.textContent = ` ${menuBack.ariaLabel}`;
 const phoneNote = document.getElementById("menu-phone")!;
 phoneNote.querySelector("button")!.onclick = () => (phoneNote.remove(), menu.focus());
 const menuOpen = document.getElementById("menu-open")!;

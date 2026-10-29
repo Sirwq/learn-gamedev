@@ -146,7 +146,7 @@
       #menu .bar button[hidden] { display: none; }
       #menu .chip { font-weight: 600; }
       #menu .chip.on { background: #b14cff; border-color: #b14cff; color: #fff; }
-      #menu .chip:disabled { opacity: .45; }
+      #menu .soon { color: #aaa; }
       #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: #ccc; }
       #menu .bar button:focus-visible { outline: 2px solid #9cf; outline-offset: 2px; }
       #menu-stats { margin-left: auto; padding: 4px 14px; border-radius: 999px; background: #0006; white-space: pre; font-variant-numeric: tabular-nums; }
@@ -283,8 +283,8 @@
         <kbd aria-hidden="true">Q</kbd>
         <button id="chip-course" class="chip on" aria-pressed="true" aria-keyshortcuts="Q">TypeScript</button>
         <button id="chip-sandbox" class="chip" aria-pressed="false" aria-keyshortcuts="E" hidden>Sandbox</button>
-        <button class="chip" disabled title="A later Course">C# · soon</button>
         <kbd aria-hidden="true">E</kbd>
+        <span class="soon">C# — coming later</span>
         <span id="menu-stats"></span>
       </div>
       <div id="rail"></div>

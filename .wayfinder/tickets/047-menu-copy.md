@@ -1,7 +1,7 @@
 ---
 title: Course menu: copy and labels
 label: design
-status: open
+status: closed
 blocked_by: [046-menu-small-screens]
 assignee:
 ---
@@ -22,3 +22,12 @@ Design ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/de
 
 - Every control on the menu says what happens when you use it, with no tooltip needed.
 - `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- `C# · soon` (a disabled button with a tooltip) is now plain muted text "C# — coming later" after the tab keys.
+- E while the Sandbox is locked toasts "Sandbox opens when you finish the Course"; Q keeps the C# message.
+- Esc names where it goes: "Back to Lesson N" (the Lesson behind the menu, so "Back to Lesson 1" on first launch), "Back to Project" in a Project.
+- Play on a locked Lesson stays enabled and reads "How to unlock"; pressing it toasts "Pass Lesson N to unlock", the same words as the line under the title.
+- Checked user-facing copy: "Level" only means the game layout (GLOSSARY), never a Lesson.
+- Test: `src/a11y.test.ts` "says what every menu control does without a tooltip".
