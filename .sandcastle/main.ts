@@ -1,15 +1,23 @@
 import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { run, codex, type RunOptions, type RunResult } from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
-import { limitWaitMs } from "./limit";
+import { limitWaitMs } from "./limit.ts";
 
 // Run with: npm run afk
 // Each round: a worker does one ticket, then a reviewer checks and fixes its commits.
 // Rounds repeat until no ticket is left on the frontier or the worker commits nothing.
 
+if (!existsSync(".sandcastle/codex-auth/auth.json")) {
+  throw new Error("Sign in to ChatGPT for AFK first: npm run afk:login");
+}
+
 const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
-  sandbox: docker(),
+  sandbox: docker({ mounts: [{ hostPath: ".sandcastle/codex-auth", sandboxPath: "/home/agent/.afk-codex" }] }),
+
+  // The old .env can still contain API credentials; keep them out of the worker.
+  env: { CODEX_HOME: "/home/agent/.afk-codex", CODEX_API_KEY: "", OPENAI_API_KEY: "", CLAUDE_CODE_OAUTH_TOKEN: "" },
 
   // The worker and reviewer use the same Codex model.
   agent: codex("gpt-6-sol"),

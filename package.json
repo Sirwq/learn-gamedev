@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "typecheck": "tsc",
-    "afk": "npx tsx .sandcastle/main.ts"
+    "afk": "node .sandcastle/main.ts",
+    "afk:login": "node .sandcastle/login.ts"
   },
   "repository": {
     "type": "git",
