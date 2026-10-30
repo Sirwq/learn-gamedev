@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { errorLine, modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
+import { codeErrorLines, errorLine, modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
+
+describe("Run code errors", () => {
+  it("names every broken Script and its line, including chained TypeScript messages", () => {
+    expect(codeErrorLines([
+      { script: "Player", line: 3, column: 7, message: "Expression expected." },
+      { script: "Enemy", line: 8, column: 2, message: { messageText: "Type mismatch", next: [{ messageText: "Expected number" }] } },
+    ])).toEqual([
+      { level: "error", text: "Player.ts:3:7 Expression expected.", count: 1 },
+      { level: "error", text: "Enemy.ts:8:2 Type mismatch Expected number", count: 1 },
+    ]);
+  });
+});
 
 describe("transpile", () => {
   it("strips types and keeps every line on the same line number", () => {

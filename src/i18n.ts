@@ -48,6 +48,7 @@ export const english = {
   "Compare {name}.ts": "Compare {name}.ts", "Next Lesson ▶": "Next Lesson ▶",
   "Achievements {earned} / {total}": "Achievements {earned} / {total}", "Achievement unlocked": "Achievement unlocked",
   "Done: ": "Done: ", "To do: ": "To do: ", "Fix the red squiggles before running.": "Fix the red squiggles before running.",
+  "Fix the code errors below, then Run again.": "Fix the code errors below, then Run again.",
   "Click to play": "Click to play", "✓ Lesson passed": "✓ Lesson passed", "Lesson passed": "Lesson passed",
   "🔓 Sandbox and Chapter 2 unlocked": "🔓 Sandbox and Chapter 2 unlocked",
   "Your code ran forever. Look at your while / for loops.": "Your code ran forever. Look at your while / for loops.",

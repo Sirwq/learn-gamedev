@@ -3,7 +3,7 @@ import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
 import type { FromWorker, ToWorker } from "./runner-protocol";
-import { modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
+import { codeErrorLines, modKey, runShortcut, runStartLine, transpile, v2Features, type CodeError } from "./run-utils";
 import { loadMuted, playClips, saveMuted, stopSounds, unlockAudio } from "./sound";
 import { drawLabels, loadFont, textList } from "./gui";
 import type { Label } from "./engine";
@@ -128,10 +128,17 @@ showProgress();
 // One Monaco model per Script: models share one TS project, so each file type-checks against the others.
 // A Project keeps its own copy of the code, so Sandbox and Course never write to each other.
 const models: Record<string, monaco.editor.ITextModel> = {};
+const codeErrorsShown = new Set<string>();
 function addModel(name: string, code: string) {
   const model = (models[name] = monaco.editor.createModel(code, "typescript", monaco.Uri.parse(`file:///${name}.ts`)));
   model.onDidChangeContent(() => {
     monaco.editor.setModelMarkers(model, "runtime", []);
+    if (codeErrorsShown.size) {
+      for (let i = consoleLines.length - 1; i >= 0; i--)
+        if (codeErrorsShown.has(consoleLines[i].text)) consoleLines.splice(i, 1);
+      codeErrorsShown.clear();
+      log([]);
+    }
     if (!project) return saveScript(name, model.getValue());
     project.scripts[name] = model.getValue();
     saveProject(project);
@@ -524,17 +531,6 @@ function log(batch: ConsoleLine[]) {
   if (atBottom) consoleEl.scrollTop = consoleEl.scrollHeight; // follow new lines unless the student scrolled up
 }
 
-// Type errors block Run; our own "runtime" markers don't.
-const hasTypeErrors = () =>
-  Object.values(models).some((model) => monaco.editor
-    .getModelMarkers({ resource: model.uri })
-    .some((m) => m.owner !== "runtime" && m.severity === monaco.MarkerSeverity.Error));
-monaco.editor.onDidChangeMarkers(() => {
-  const blocked = hasTypeErrors();
-  if (blocked !== runBtn.disabled) status.textContent = blocked ? t("Fix the red squiggles before running.") : "";
-  runBtn.disabled = blocked;
-});
-
 // Sound and screen text exist only in Sandbox and Chapter 2; so does the mute button.
 const v2 = v2Features(project ? { level: project.level } : { lesson: lessonIndex });
 const muteBtn = document.getElementById("mute") as HTMLButtonElement;
@@ -596,8 +592,50 @@ function stop(restore = true) {
   if (restore) refreshStoppedObjects();
 }
 
-function run() {
-  if (hasTypeErrors()) return;
+let checkingCode = false;
+async function run() {
+  if (checkingCode || running) return;
+  checkingCode = true;
+  const versions = Object.fromEntries(Object.entries(models).map(([name, model]) => [name, model.getVersionId()]));
+  const errors: CodeError[] = [];
+  const scripts: Record<string, string> = {};
+  try {
+    const getWorker = await monaco.typescript.getTypeScriptWorker();
+    const ts = await getWorker(...Object.values(models).map((model) => model.uri));
+    for (const [name, model] of Object.entries(models)) {
+      const uri = model.uri.toString();
+      const diagnostics = [...await ts.getSyntacticDiagnostics(uri), ...await ts.getSemanticDiagnostics(uri)];
+      for (const diagnostic of diagnostics) {
+        if (diagnostic.category !== 1) continue;
+        const pos = model.getPositionAt(diagnostic.start ?? 0);
+        errors.push({ script: name, line: pos.lineNumber, column: pos.column, message: diagnostic.messageText });
+      }
+    }
+    if (!errors.length) {
+      for (const [name, model] of Object.entries(models)) {
+        try { scripts[name] = transpile(model.getValue()); }
+        catch (error) {
+          const at = error as Error & { loc?: { line: number; column: number } };
+          errors.push({ script: name, line: at.loc?.line ?? 1, column: (at.loc?.column ?? 0) + 1, message: at.message });
+        }
+      }
+    }
+  } catch (error) {
+    errors.push({ script: openScript, line: 1, column: 1, message: String(error) });
+  } finally { checkingCode = false; }
+  if (Object.entries(models).some(([name, model]) => model.getVersionId() !== versions[name])) return;
+  if (errors.length) {
+    clearLines(consoleLines);
+    const guidance = t("Fix the code errors below, then Run again.");
+    codeErrorsShown.add(guidance);
+    log([{ level: "log", text: guidance, count: 1 }]);
+    const lines = codeErrorLines(errors);
+    lines.forEach((line) => codeErrorsShown.add(line.text));
+    log(lines);
+    openConsole(true);
+    return;
+  }
+  codeErrorsShown.clear();
   stop(false);
   objectView.setObjects([], true);
   level?.setRunning(true);
@@ -640,7 +678,7 @@ function run() {
   running = true;
   paused = false;
   canvas.focus();
-  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex }), earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
+  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex }), earned: [...earned], scripts }, [offscreen]);
   post({ type: "inspect", open: objectViewOpen });
 
   let lastTick = performance.now();

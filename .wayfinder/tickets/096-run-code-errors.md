@@ -1,7 +1,7 @@
 ---
 title: Keep Run available and report code errors in the Console
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -21,3 +21,9 @@ Let a student press **Run** even when the editor shows code errors. When the cod
 - With a syntax or type error, clicking Run or using its shortcut opens the Console with the relevant Script and line; fixing the error allows the next Run to start.
 - Valid code still runs, and runtime errors still appear in the Console. Test both Lesson and Sandbox Scripts, including multiple files.
 - Browser-check the button and Console behavior; `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+- Run stays available while editing. It checks current Monaco syntax and type diagnostics for every Script, then transpiles all Scripts before starting the worker. Errors open the Console with Script, line, column, and message; the game and code remain intact.
+- Editing clears the reported code errors and guidance. A corrected Run starts normally; runtime errors keep their existing Console path.
+- Added a regression test for multi-Script error output. `npm run typecheck`, `npm test`, and `npm run build` pass. Chromium checks covered Lesson syntax, type, and runtime errors, correction and rerun, plus Sandbox multi-Script errors and the Run shortcut.

@@ -1,5 +1,17 @@
 import { transform } from "sucrase";
 import { t } from "./i18n";
+import type { ConsoleLine } from "./console";
+
+type DiagnosticMessage = string | { messageText: string; next?: DiagnosticMessage[] };
+export type CodeError = { script: string; line: number; column: number; message: DiagnosticMessage };
+
+export function codeErrorLines(errors: CodeError[]): ConsoleLine[] {
+  const message = (part: DiagnosticMessage): string => typeof part === "string" ? part :
+    [part.messageText, ...(part.next ?? []).map(message)].join(" ");
+  return errors.map(({ script, line, column, message: detail }) => ({
+    level: "error", text: `${script}.ts:${line}:${column} ${message(detail)}`, count: 1,
+  }));
+}
 
 // Sucrase keeps line N of the TS on line N of the JS, so stack lines are editor lines.
 export function transpile(ts: string): string {
