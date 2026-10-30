@@ -1,18 +1,18 @@
 import { execSync } from "node:child_process";
-import { run, claudeCode, type RunOptions, type RunResult } from "@ai-hero/sandcastle";
+import { run, codex, type RunOptions, type RunResult } from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 import { limitWaitMs } from "./limit";
 
 // Run with: npm run afk
-// Each round: a worker does one ticket, then a reviewer (ponytail-review) checks and fixes its commits.
+// Each round: a worker does one ticket, then a reviewer checks and fixes its commits.
 // Rounds repeat until no ticket is left on the frontier or the worker commits nothing.
 
 const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
   sandbox: docker(),
 
-  // The worker's agent; the reviewer overrides it with Sonnet below.
-  agent: claudeCode("claude-opus-5-5"),
+  // The worker and reviewer use the same Codex model.
+  agent: codex("gpt-6-sol"),
 
   // One agent invocation per run, so each finished ticket is merged before a usage
   // limit can fail a run and lose it.
@@ -63,7 +63,7 @@ while (ticketsLeft() > 0) {
     await runPastLimits({
       ...shared,
       name: "reviewer",
-      agent: claudeCode("claude-sonnet-5-5"),
+      agent: codex("gpt-6-sol"),
       promptFile: "./.sandcastle/review-prompt.md",
       promptArgs: { RANGE: `${before}..HEAD` },
     });

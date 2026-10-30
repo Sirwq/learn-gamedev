@@ -3,7 +3,7 @@ const EXTRA_MS = 5 * 60_000;
 const FALLBACK_MS = 60 * 60_000;
 
 // Returns how long to sleep before retrying, or null if `text` isn't a usage-limit message.
-// Handles "Claude AI usage limit reached|<unix secs>" and "...limit... resets 3pm (Europe/Paris)".
+// Handles unix-timestamp and clock-time usage-limit reset messages.
 export function limitWaitMs(text: string, now = new Date()): number | null {
   if (!/usage limit|limit reached|hit your limit|limit · resets|rate.?limit/i.test(text)) return null;
 

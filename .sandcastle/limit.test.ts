@@ -5,7 +5,7 @@ const min = 60_000;
 const now = new Date("2026-10-29T12:00:00Z");
 
 test("ignores other errors", () => {
-  expect(limitWaitMs("claude-code exited with code 1: boom", now)).toBeNull();
+  expect(limitWaitMs("codex exited with code 1: boom", now)).toBeNull();
 });
 
 test("unix timestamp form", () => {

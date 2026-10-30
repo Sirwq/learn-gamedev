@@ -19,15 +19,11 @@ ARG AGENT_GID=1000
 RUN groupmod -o -g $AGENT_GID node && usermod -o -u $AGENT_UID -g $AGENT_GID -d /home/agent -m -l agent node
 USER ${AGENT_UID}:${AGENT_GID}
 
-# Install Claude Code CLI
-RUN curl -fsSL https://claude.ai/install.sh | bash
+# Install Codex CLI
+RUN curl -fsSL https://chatgpt.com/codex/install.sh | sh
 
-# Add Claude to PATH
+# Add Codex to PATH
 ENV PATH="/home/agent/.local/bin:$PATH"
-
-# Ponytail plugin for the review agent. Non-fatal: without it the reviewer follows the review prompt alone.
-RUN (claude plugin marketplace add DietrichGebert/ponytail && claude plugin install ponytail@ponytail) \
-  || echo "WARNING: ponytail plugin not installed"
 
 WORKDIR /home/agent
 

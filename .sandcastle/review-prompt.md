@@ -12,7 +12,7 @@ You are the review agent. Another agent just finished one ticket. Review its com
 
 # Review
 
-1. If the `ponytail:ponytail-review` skill is available, use it to review the range `{{RANGE}}`. Otherwise review by the same rules yourself, in this order: correct, safe, tested, fast, lean (every line needed, no abstraction nobody asked for).
+1. Review the range `{{RANGE}}` in this order: correct, safe, tested, fast, lean (every line needed, no abstraction nobody asked for).
 2. Read the ticket the commits closed (in `.wayfinder/tickets/`) and the spec tickets it links. Check the change does what its **Done when** says.
 3. Read the code the diff touches, not only the diff: callers, tests, the functions it calls.
 
