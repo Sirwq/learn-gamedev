@@ -23,3 +23,9 @@ Keep Lesson and Sandbox Runs behaving exactly as they do today while making the 
 - The same Lesson and Sandbox Scripts produce the same pass/lose results, Achievements, audio clips, GUI labels, console output, and runtime errors.
 - Tests cover a representative Run through the new interface, including input, object creation/destruction, a Goal, a Lose event, an Achievement, sound, and GUI text. Keep protocol and lifecycle tests for worker-specific behavior; remove redundant tests of moved internals.
 - `npm run typecheck` and `npm test` pass. Verify a Lesson and a Sandbox Run in the browser, including Stop and restart.
+
+## Blocked
+
+The frame module and automated checks are complete, but the required Lesson and Sandbox browser runs, including Stop and restart, could not be verified here. Playwright Chromium fails to start because required system libraries (including `libnspr4.so` and `libnss3.so`) are absent. Installing them requires root access, unavailable in this environment. Ticket stays open pending that browser check.
+
+`run-frame.ts` now owns engine stepping, Goal and Lose checks, Achievements, sound, GUI labels, and console draining. The worker retains scheduling, canvas drawing, message change detection, and lifecycle handling. Tests cover frame input, object creation and destruction, passing and losing, Achievements, sound, labels, logs, Sandbox with no Goals, and runtime errors.
