@@ -2,6 +2,16 @@ const EXTRA_MS = 5 * 60_000;
 // Fallback when the reset time can't be read: retry in an hour.
 const FALLBACK_MS = 60 * 60_000;
 
+/** Sandcastle attaches dirty worktrees to the inner Effect error. */
+export function preservedWorktree(err: unknown): string | undefined {
+  const cause = err && typeof err === "object"
+    ? (err as Record<symbol, unknown>)[Symbol.for("effect/Runtime/FiberFailure/Cause")]
+    : undefined;
+  const failure = cause && typeof cause === "object" && "error" in cause ? cause.error : err;
+  return failure && typeof failure === "object" && "preservedWorktreePath" in failure
+    && typeof failure.preservedWorktreePath === "string" ? failure.preservedWorktreePath : undefined;
+}
+
 // Returns how long to sleep before retrying, or null if `text` isn't a usage-limit message.
 // Handles unix-timestamp and clock-time usage-limit reset messages.
 export function limitWaitMs(text: string, now = new Date()): number | null {

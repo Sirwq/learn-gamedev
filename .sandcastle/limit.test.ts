@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { limitWaitMs } from "./limit";
+import { limitWaitMs, preservedWorktree } from "./limit";
 
 const min = 60_000;
 const now = new Date("2026-10-29T12:00:00Z");
@@ -24,4 +24,12 @@ test("reset time already passed today rolls to tomorrow", () => {
 
 test("unreadable reset time falls back to an hour", () => {
   expect(limitWaitMs("usage limit reached", now)).toBe(60 * min);
+  expect(limitWaitMs("You've hit your usage limit. Try again at 2:25 AM.", now)).toBe(60 * min);
+});
+
+test("finds preserved worktrees on Sandcastle errors", () => {
+  const inner = { preservedWorktreePath: "/work/reviewer" };
+  expect(preservedWorktree(inner)).toBe("/work/reviewer");
+  expect(preservedWorktree({ [Symbol.for("effect/Runtime/FiberFailure/Cause")]: { _tag: "Fail", error: inner } })).toBe("/work/reviewer");
+  expect(preservedWorktree(new Error("clean run failed"))).toBeUndefined();
 });

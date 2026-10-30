@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { run, codex, type RunOptions, type RunResult } from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
-import { limitWaitMs } from "./limit.ts";
+import { limitWaitMs, preservedWorktree } from "./limit.ts";
 
 // Run with: npm run afk
 // Each round: a worker does one ticket, then a reviewer checks and fixes its commits.
@@ -12,9 +12,19 @@ if (!existsSync(".sandcastle/codex-auth/auth.json")) {
   throw new Error("Sign in to ChatGPT for AFK first: npm run afk:login");
 }
 
-const afkCodex = () => codex("gpt-6-sol", {
-  sessionStorage: { sandboxSessionsDir: "/home/agent/.afk-codex/sessions" },
-});
+const afkCodex = () => {
+  const agent = codex("gpt-6-sol", {
+    sessionStorage: { sandboxSessionsDir: "/home/agent/.afk-codex/sessions" },
+  });
+  return {
+    ...agent,
+    // Sandcastle drops Codex's JSON error when stderr contains "Reading prompt from stdin".
+    buildPrintCommand: (options: Parameters<typeof agent.buildPrintCommand>[0]) => {
+      const print = agent.buildPrintCommand(options);
+      return { ...print, command: `${print.command} 2>&1` };
+    },
+  };
+};
 
 const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
@@ -55,6 +65,12 @@ async function runPastLimits(options: RunOptions): Promise<RunResult> {
       wait = result.completionSignal ? null : limitWaitMs(result.stdout.slice(-500));
       if (wait === null) return result;
     } catch (err) {
+      // A new run cannot continue edits left in Sandcastle's preserved worktree.
+      const preserved = preservedWorktree(err);
+      if (preserved) {
+        console.error(`Uncommitted work is preserved at ${preserved}. Review and finish it before rerunning AFK.`);
+        throw err;
+      }
       const message = String(err);
       // Sandcastle reports any failed `docker image inspect` (daemon briefly down) as a missing image.
       const dockerBlip = message.includes("Provider 'docker'") && dockerRetries++ < 10;
