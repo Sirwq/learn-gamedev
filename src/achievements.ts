@@ -63,6 +63,14 @@ function doubleJump(world: World, { start, recent }: Run) {
   const n = recent.length - 1, p = player(world), s = player(start);
   const now = step(recent, n), before = step(recent, n - 1);
   if (!p || !s || !now || !before || now.y - before.y < 3) return false;
+  // A coyote jump starts after a walk off; a double jump needs an earlier rise in the same airborne stretch.
+  let roseBefore = false;
+  for (let i = n - 1; i > 0; i--) {
+    const prior = player(recent[i].world);
+    if (!prior || !airborne(recent[i].world, prior)) break;
+    if ((step(recent, i)?.y ?? 0) > 1) { roseBefore = true; break; }
+  }
+  if (!roseBefore) return false;
   for (let k = n; k >= Math.max(1, n - 3); k--) {
     const q = player(recent[k - 1].world), pk = player(recent[k].world);
     // A landing, a stomp bounce or a respawn between the press and the kick doesn't count.
