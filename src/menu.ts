@@ -6,7 +6,8 @@ import { achievements } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, type Images } from "./sprites";
 import { swipeStep } from "./swipe";
-import { createProject, importProject, loadProjects, type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
+import { type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
+import { createProject, importProject, loadProjects } from "./project-storage";
 import { toast } from "./toast";
 import { backupFileName, backupReminder, download, exportEverything, type ImportPlan, lastBackup, planImport, snoozeReminder } from "./backup";
 

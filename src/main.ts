@@ -24,7 +24,9 @@ import { levelView } from "./level-view";
 import { objectInspector, startingObjects } from "./object-inspector";
 import { toast } from "./toast";
 import { download } from "./backup";
-import { addScript, deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject } from "./sandbox";
+import { addScript, type Project, sandboxUnlocked } from "./sandbox";
+import { deleteProject, duplicateProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
+import { exportFileName } from "./project-file";
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -43,7 +45,8 @@ addEventListener("unhandledrejection", (e) => {
 });
 await migrateProjects();
 const projects = await loadProjects();
-const project: Project | undefined = projects.find((p) => p.id === askedProject);
+const projectData = askedProject ? await loadProject(askedProject) : undefined;
+const project: Project | undefined = projectData?.project;
 const current = currentLesson(course);
 const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocked(course, Number(asked)) ? Number(asked) : current;
 const replaying = !project && lessonIndex !== current;
@@ -363,7 +366,7 @@ document.getElementById("show-explanation")!.onclick = () => showLeftView(false)
 document.getElementById("show-objects")!.onclick = () => showLeftView(true);
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
-if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => { refreshStoppedObjects(); saveProject(project); }, addScript: newScript });
+if (project) level = levelView({ project, images, ownImages: projectData!.images, scripts: () => Object.keys(models), save: (own) => { refreshStoppedObjects(); saveProjectWithImages(project, own); }, addScript: newScript });
 // The Course menu and its Sandbox tab.
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)

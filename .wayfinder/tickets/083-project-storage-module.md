@@ -27,3 +27,9 @@ Give Project file encoding and validation their own pure module. The backup flow
 - Existing Project files and backups still load. Migration can run twice safely, and deleted migrated Projects do not return.
 - Tests exercise the storage module through its interface, the pure file-format module, invalid-file no-write behavior, image copy, and backup round trips. Replace tests of moved internal helpers rather than keeping duplicate layers of tests.
 - `npm run typecheck` and `npm test` pass. Verify one Project with an own image through duplicate, export, import, and backup in the browser.
+
+## Blocked
+
+Implementation and automated verification are complete, but the required browser check is blocked by this environment. Playwright Chromium downloads, then fails to start because system libraries including `libnspr4.so` and `libnss3.so` are missing. `playwright install-deps chromium` requires root access, which is unavailable here. Ticket remains open until one Project with an own image is checked through duplicate, export, import, and backup in a browser with those dependencies.
+
+The implementation moves portable file validation and encoding to `project-file.ts` and complete Project operations to `project-storage.ts`. Level edits now save Project JSON and the current image set in one transaction. Existing formats, migration, cross-tab notifications, and backup merge behavior remain covered by tests.

@@ -5,7 +5,7 @@ import { backupFileName, backupReminder, exportEverything, planImport, snoozeRem
 import { isPassed, markPassed } from "./check";
 import { saveEarned, loadEarned } from "./achievements";
 import { saveOpenedHints, saveScript, saveSnapshot } from "./lesson";
-import { createProject, exportProject, loadProjects, migrateProjects, saveProject } from "./sandbox";
+import { createProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { course } from "./lessons/course";
 import { memoryStore } from "./test-helpers";
 
@@ -113,6 +113,25 @@ describe("Import everything", () => {
     expect(after.find((p) => p.id === gone.id)?.name).toBe("My platformer");
     expect(after.find((p) => p.id === changed.id)?.scripts.Game).toBe("// edited");
     expect((await planImport(file, course, s)).summary).toBe("Everything in this file is already here. Nothing changes.");
+  });
+
+  it("round-trips a Project's own image through a backup", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    const bytes = new Uint8Array(33);
+    bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52]);
+    new DataView(bytes.buffer).setUint32(16, 8);
+    new DataView(bytes.buffer).setUint32(20, 8);
+    const image = new Blob([bytes], { type: "image/png" });
+    await saveProjectWithImages(p, { Game: image }, s);
+    const file = await exportEverything(course, s);
+    await clear();
+    const plan = await planImport(file, course, s);
+    expect(plan.summary).toBe("Adds 1 Project. Nothing here is overwritten.");
+    await plan.apply();
+    const restored = (await loadProject(p.id, s))!;
+    expect(restored.project).toEqual(p);
+    expect(new Uint8Array(await restored.images.Game.arrayBuffer())).toEqual(bytes);
   });
 
   it("refuses a bad file without writing anything", async () => {

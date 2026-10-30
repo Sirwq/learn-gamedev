@@ -2,7 +2,9 @@
 import { achievements } from "./achievements";
 import { isPassed } from "./check";
 import type { Lesson } from "./lesson";
-import { addProjectFile, checkProjectFile, exportProject, loadProjects, PROJECT_FORMAT, type Project, type ProjectFile } from "./sandbox";
+import { addProjectFile, exportProject, loadProjects } from "./project-storage";
+import { checkProjectFile, PROJECT_FORMAT, type ProjectFile } from "./project-file";
+import type { Project } from "./sandbox";
 
 const FORMAT = "learn-dev-backup";
 const VERSION = 1;

@@ -2,7 +2,8 @@
 import { type Box, Camera, type CameraStart, GameObject, toScreen, Vector2 } from "./engine";
 import { ART_TAGS, bounds, boxAt, cameraStart, dropped, fitView, type Handle, handleAt, handlePoints, GRID, levelCode, levelEditor, matchShape, moved, nudged, paletteTags, putImage, resized, sameImages, zoomed, zoomOf } from "./level-editor";
 import { drawWorld, imageName, importImage, type Images, type Own, ownSprites } from "./sprites";
-import { canStoreImages, loadImageBlobs, type Project, saveImages } from "./sandbox";
+import type { Project } from "./sandbox";
+import { canStoreImages } from "./project-storage";
 import { toast } from "./toast";
 
 const W = 960, H = 540;
@@ -12,7 +13,7 @@ const NEW = "\u0000new"; // the "+ New tag…" / "+ New Script…" option: no ta
 const MW = 960, MH = 80; // the minimap canvas
 
 /** `scripts` lists the Project's Script names; `save` keeps the Project after every change; `addScript` makes a new Script file and tab, returning what is wrong with the name or "". */
-export function levelView({ project, images, scripts, save, addScript }: { project: Project; images: Promise<Images>; scripts: () => string[]; save: () => void; addScript: (name: string) => string }) {
+export function levelView({ project, images, ownImages, scripts, save, addScript }: { project: Project; images: Promise<Images>; ownImages: Record<string, Blob>; scripts: () => string[]; save: (images: Record<string, Blob>) => void; addScript: (name: string) => string }) {
   const ed = levelEditor(project.level);
   const boxes = ed.level.boxes;
   const view = new Camera(project.level.camera); // the editor's own view: selecting from the list moves it
@@ -32,20 +33,16 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
 
   // Own sprites (spec 050): Blobs in the editor's state (so undo covers them), decoded into `own` for drawing.
   let own: Record<string, Own> = {};
-  let saved: Record<string, Blob> = {};
+  Object.assign(ed.images, ownImages);
   let shownArt = "";
+  let shownImages: Record<string, Blob> = {};
   let decoding = 0;
-  /** After a change to the tags' art or images: stores the images and decodes them for drawing. */
+  /** After a change to the tags' art or images: decodes them for drawing. */
   async function syncArt() {
     const art = JSON.stringify(project.level.art ?? {});
-    const newImages = !sameImages(saved, ed.images);
-    if (!newImages && art === shownArt) return;
+    if (art === shownArt && sameImages(shownImages, ed.images)) return;
     shownArt = art;
-    if (newImages) {
-      saved = { ...ed.images };
-      // A full disk rejects again, for main.ts's "Storage is full" toast.
-      saveImages(project.id, saved).catch((e) => (e?.name === "QuotaExceededError" ? Promise.reject(e) : toast(e.message)));
-    }
+    shownImages = { ...ed.images };
     const mine = ++decoding;
     const decoded = await ownSprites(project.level.art, ed.images).catch(() => ({}));
     if (mine !== decoding) return; // a newer change is decoding
@@ -53,7 +50,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
     paletteKey = "";
     if (!ed.running) open ? refresh() : draw();
   }
-  loadImageBlobs(project.id).then((b) => (Object.assign(ed.images, b), (saved = { ...b }), syncArt()));
+  syncArt();
 
   /** The game canvas, or a fresh one when a Run has handed it to its worker. */
   function canvas() {
@@ -198,7 +195,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   const refresh = () => (fill(), draw());
   /** After every committed change, undo or redo. */
   function changed() {
-    save();
+    save(ed.images);
     refresh();
     syncArt();
   }
@@ -406,7 +403,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
   $("level-fit").onclick = () => setView(fitView(boxes));
   $("level-camera").onclick = () => {
     project.level.camera = cameraStart(viewNow());
-    save();
+    save(ed.images);
     toast("Camera start saved: Run starts the camera here");
   };
   viewport.addEventListener("wheel", (e) => {

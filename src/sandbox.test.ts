@@ -2,7 +2,9 @@ import "fake-indexeddb/auto";
 import ts from "typescript";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clear, get, keys, set, setMany } from "idb-keyval";
-import { addScript, createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadImageBlobs, loadProjects, migrateProjects, playground, sandboxUnlocked, saveImages, saveProject, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
+import { addScript, playground, sandboxUnlocked, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
+import { createProject, deleteProject, duplicateProject, exportProject, importProject, loadImageBlobs, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
+import { exportFileName, checkProjectFile, encodeProjectFile } from "./project-file";
 import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
@@ -113,13 +115,23 @@ describe("Projects", () => {
   it("save their own images: new and replaced ones written, dropped ones deleted; Duplicate copies them", async () => {
     const s = await migrated();
     const p = await createProject("blank", course, s);
-    await saveImages(p.id, { Coin: new Blob(["a"]), "Big%20tree": new Blob(["b"]) }, s);
-    await saveImages(p.id, { Coin: new Blob(["c"]) }, s);
-    const mine = await loadImageBlobs(p.id);
+    await saveProjectWithImages(p, { Coin: new Blob(["a"]), "Big%20tree": new Blob(["b"]) }, s);
+    await saveProjectWithImages(p, { Coin: new Blob(["c"]) }, s);
+    const mine = (await loadProject(p.id, s))!.images;
     expect(Object.keys(mine)).toEqual(["Coin"]);
     expect(await mine.Coin.text()).toBe("c");
     const copy = await duplicateProject(p, s);
     expect(await (await loadImageBlobs(copy.id)).Coin.text()).toBe("c");
+  });
+
+  it("keeps the prior Project and images if a complete save fails", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    await saveProjectWithImages(p, { Game: png(8, 8) }, s);
+    await expect(saveProjectWithImages({ ...p, name: "Changed" }, { Game: Symbol("bad") as unknown as Blob }, s)).rejects.toThrow();
+    const after = (await loadProject(p.id, s))!;
+    expect(after.project.name).toBe("Blank");
+    expect(await bytesOf(after.images.Game)).toEqual(await bytesOf(png(8, 8)));
   });
 
   it("before the migration they stay in localStorage", async () => {
@@ -255,6 +267,15 @@ describe("Export / Import one Project", () => {
     const copy = await importProject(await exportProject(p), s);
     expect(copy.level.art).toEqual(p.level.art);
     expect(Object.keys(await loadImageBlobs(copy.id))).toEqual(["Big%20tree:top"]);
+  });
+
+  it("validates and encodes a file without storage", async () => {
+    const project = { name: "Test", scripts: { Game: "class Game {}" }, level: { boxes: [] } };
+    const image = png(16, 16);
+    const file = await encodeProjectFile(project, { Game: image });
+    const checked = checkProjectFile(file);
+    expect(checked.project).toEqual(project);
+    expect(await bytesOf(checked.pngs[0][1])).toEqual(await bytesOf(image));
   });
 
   it("file names replace characters a file system doesn't allow", () => {
