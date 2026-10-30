@@ -11,6 +11,20 @@ it("includes Sounds and Coin counter, with Lesson 15 Player as Sounds' hidden st
   expect(course[15].scripts.Player.stub).toBe(lesson15Player);
 });
 
+it("accepts Jump on the first rising frame or the next, including a slow rise", () => {
+  const lesson = course[15];
+  const jumpMet = (frames: { y: number; sound?: boolean }[]) => {
+    const check = checker(lesson);
+    return frames.map(({ y, sound }) => {
+      const world = lesson.level.boxes.map((box) => box.tag === "Player" ? { ...box, y } : box);
+      return check(world, { sounds: sound ? ["Jump"] : [] }).met[0];
+    });
+  };
+  expect(jumpMet([{ y: 40 }, { y: 41, sound: true }])).toEqual([false, true]);
+  expect(jumpMet([{ y: 40 }, { y: 41 }, { y: 42, sound: true }])).toEqual([false, false, true]);
+  expect(jumpMet([{ y: 40 }, { y: 41 }, { y: 42 }, { y: 43, sound: true }])).toEqual([false, false, false, false]);
+});
+
 
 // Keys a player holds on each frame to pass a Lesson with its Reference code.
 const play: Record<string, (frame: number) => string[]> = {

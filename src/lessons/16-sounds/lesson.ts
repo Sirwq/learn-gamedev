@@ -21,15 +21,18 @@ export const coinLevel: Lesson["level"] = {
   ],
 };
 
-function soundOnEvent(clip: "Jump" | "Coin", value: (world: Parameters<Lesson["goals"][number]["test"]>[0]) => number, happened: (before: number, now: number) => boolean) {
+function soundOnEvent(clip: "Jump" | "Coin", value: (world: Parameters<Lesson["goals"][number]["test"]>[0]) => number, happened: (before: number, now: number) => boolean, onStart = false) {
   let previous: number | undefined;
   let pending = false;
+  let wasHappening = false;
   return (world: Parameters<Lesson["goals"][number]["test"]>[0], time: number) => {
-    if (time <= Time.deltaTime) { previous = undefined; pending = false; }
+    if (time <= Time.deltaTime) { previous = undefined; pending = false; wasHappening = false; }
     const now = value(world);
-    const event = previous !== undefined && happened(previous, now);
+    const happening = previous !== undefined && happened(previous, now);
+    const event = happening && (!onStart || !wasHappening);
     const matched = (event || pending) && world.sounds.includes(clip);
     pending = event;
+    wasHappening = happening;
     previous = now;
     return matched;
   };
@@ -41,7 +44,7 @@ export const lesson: Lesson = {
   explanation,
   level: coinLevel,
   goals: [
-    { message: "Play Jump when you jump", test: soundOnEvent("Jump", (world) => find(world, "Player").y, (before, now) => now > before + 2) },
+    { message: "Play Jump when you jump", test: soundOnEvent("Jump", (world) => find(world, "Player").y, (before, now) => now > before, true) },
     { message: "Play Coin when you pick up a coin", test: soundOnEvent("Coin", (world) => world.filter((box) => box.tag === "Coin").length, (before, now) => now < before) },
     { message: "Collect all coins", test: (world) => !world.some((box) => box.tag === "Coin") },
   ],
