@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto";
+import ts from "typescript";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clear, get, keys, set, setMany } from "idb-keyval";
 import { addScript, createProject, deleteProject, duplicateProject, exportFileName, exportProject, importProject, loadImageBlobs, loadProjects, migrateProjects, playground, sandboxUnlocked, saveImages, saveProject, scriptNameError, scriptStub, setDevUnlock, type Project } from "./sandbox";
@@ -6,8 +7,10 @@ import { isPassed, markPassed } from "./check";
 import { loadScripts, saveScript } from "./lesson";
 import { legacyAiNote } from "./lessons/ai-note";
 import { course } from "./lessons/course";
-import { api, keyEvent, KeyCode, releaseAllKeys, startGame, worldView } from "./engine";
+import { api, keyEvent, KeyCode, labels, releaseAllKeys, startGame, takeSounds, worldView } from "./engine";
 import { loadScript, memoryStore } from "./test-helpers";
+import engineApi from "./engine-api.d.ts?raw";
+import { sandboxEmptyMessage } from "./menu";
 
 
 describe("Sandbox unlock", () => {
@@ -50,6 +53,42 @@ const migrated = async () => {
 
 describe("Projects", () => {
   beforeEach(() => clear());
+
+  it("creates an ordinary Sandbox tour whose Scripts type-check and Run", async () => {
+    const s = await migrated();
+    const project = await createProject("tour", course, s);
+    expect(project.name).toBe("Example: Sandbox tour");
+    expect(Object.keys(project.scripts)).toEqual(["Player", "HUD"]);
+    expect(project.level.boxes.some((box) => box.tag === "Friend" && !project.level.art?.Friend)).toBe(true);
+    const files: Record<string, string> = { "/api.d.ts": engineApi, ...Object.fromEntries(Object.entries(project.scripts).map(([name, code]) => [`/${name}.ts`, code])) };
+    const options = { strict: true, noEmit: true, target: ts.ScriptTarget.ES2022, lib: ["lib.es2022.d.ts"], types: [] };
+    const host = ts.createCompilerHost(options);
+    const read = host.getSourceFile;
+    host.getSourceFile = (name, lang) => name in files ? ts.createSourceFile(name, files[name], lang) : read.call(host, name, lang);
+    expect(ts.getPreEmitDiagnostics(ts.createProgram(Object.keys(files), options, host)).map((d) => ts.flattenDiagnosticMessageText(d.messageText, "\n"))).toEqual([]);
+    const classes = Object.fromEntries(Object.entries(project.scripts).map(([name, code]) => [name, loadScript(code, name)]));
+    const game = startGame(project.level.boxes, classes);
+    const played = new Set<string>();
+    keyEvent(KeyCode.RightArrow, true);
+    for (let frame = 0; frame < 90; frame++) {
+      if (frame === 20) keyEvent(KeyCode.Space, true);
+      if (frame === 21) keyEvent(KeyCode.Space, false);
+      expect(() => game.step()).not.toThrow();
+      for (const clip of takeSounds()) played.add(clip);
+    }
+    releaseAllKeys();
+    expect([...played]).toEqual(expect.arrayContaining(["Jump", "Coin"]));
+    expect(labels.some((label) => label.text.startsWith("Coins: "))).toBe(true);
+    expect(worldView(game.objects).filter((box) => box.tag === "Coin").length).toBeLessThan(3);
+    expect(await loadProjects(s)).toEqual([project]);
+    project.scripts.Player = "changed in this Project";
+    expect((await createProject("tour", course, s)).scripts.Player).not.toBe("changed in this Project");
+  });
+
+  it("shows the Sandbox suggestion only when there are no Projects", () => {
+    expect(sandboxEmptyMessage(0)).toBe("New here? Try Example: Sandbox tour, or carry on with Chapter 2 in the Course.");
+    expect(sandboxEmptyMessage(1)).toBe("");
+  });
 
   it("are created, duplicated and deleted in IndexedDB, images and all", async () => {
     const s = await migrated();

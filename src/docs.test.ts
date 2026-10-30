@@ -1,7 +1,11 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import api from "./engine-api.d.ts?raw";
-import { anchor, docLink, docPages } from "./docs";
+import { anchor, docLink, docPageAvailable, docPages } from "./docs";
+import { sandboxUnlocked } from "./sandbox";
+import { course } from "./lessons/course";
+import { markPassed } from "./check";
+import { memoryStore } from "./test-helpers";
 
 const pages = docPages(api);
 
@@ -28,6 +32,26 @@ describe("Docs", () => {
       ["Vector2", "Transform", "MonoBehaviour", "AudioSource", "GameObject", "Time", "Input", "KeyCode", "Debug", "Camera", "GUI", "GUISkin", "GUIStyle", "Rect", "Color", "TextAnchor", "TypeScript vs Unity C#"],
     );
     expect(pages.find((p) => p.title === "GameObject")!.ids).toEqual(expect.arrayContaining(["Instantiate", "Destroy", "Prefab"]));
+  });
+
+  it("shows the hand-written Sandbox guide only after unlock, with class links", () => {
+    const store = memoryStore();
+    expect(docPageAvailable("Sandbox", sandboxUnlocked(course, store))).toBe(false);
+    expect(docPageAvailable("GameObject", sandboxUnlocked(course, store))).toBe(true);
+    markPassed(course[14].title, store);
+    expect(docPageAvailable("Sandbox", sandboxUnlocked(course, store))).toBe(true);
+    expect(docPages(api, false).some((p) => p.title === "Sandbox")).toBe(false);
+    const guide = docPages(api, true).find((p) => p.title === "Sandbox")!;
+    expect(guide.markdown).toContain("Piskel");
+    expect(guide.markdown).toContain("Aseprite");
+    for (const id of ["GameObject", "AudioSource", "GUI"])
+      expect(guide.markdown).toContain(`#${anchor(id)}`);
+    const ids = new Set(docPages(api, true).flatMap((page) => page.ids));
+    for (const [, id] of guide.markdown.matchAll(/#doc-([A-Za-z.]+)/g)) expect(ids.has(id)).toBe(true);
+    for (const clip of ["Jump", "Coin", "Hit", "Hurt", "Shoot", "Explosion", "Powerup", "Win", "Lose", "Click"])
+      expect(guide.markdown).toContain(clip);
+    expect(guide.markdown).toContain("y goes down");
+    expect(guide.markdown).toContain("Export it and send the file");
   });
 
   it("lists every Differs from Unity C# note on the C# page", () => {

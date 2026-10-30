@@ -4,6 +4,8 @@ import { chapterTwoUnlocked } from "./check";
 import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
 import { delMany, get, getMany, keys, set, setMany } from "idb-keyval";
+import tourPlayer from "./sandbox-tour/Player.ts?raw";
+import tourHUD from "./sandbox-tour/HUD.ts?raw";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -62,6 +64,22 @@ export const playground: Lesson["level"] = {
     { tag: "Flag", x: 2360, y: 40, w: 24, h: 64, color: "gold" },
     { tag: "Wall", x: 2440, y: 40, w: 40, h: 300, color: "#888" },
   ],
+};
+
+const tour: Omit<Project, "id"> = {
+  name: "Example: Sandbox tour",
+  scripts: { Player: tourPlayer, HUD: tourHUD },
+  level: { boxes: [
+    { tag: "Player", x: 80, y: 40, w: 32, h: 32, color: "orange", script: "Player" },
+    { tag: "Ground", x: 0, y: 0, w: 960, h: 40, color: "#5a3" },
+    { tag: "Platform", x: 260, y: 80, w: 140, h: 20, color: "#a86" },
+    { tag: "Coin", x: 300, y: 120, w: 20, h: 20, color: "gold" },
+    { tag: "Coin", x: 440, y: 50, w: 20, h: 20, color: "gold" },
+    { tag: "Coin", x: 600, y: 50, w: 20, h: 20, color: "gold" },
+    { tag: "Friend", x: 740, y: 40, w: 32, h: 32, color: "#a86" },
+    { tag: "Flag", x: 850, y: 40, w: 24, h: 64, color: "gold" },
+    { tag: "HUD", x: 0, y: 0, w: 0, h: 0, color: "transparent", script: "HUD" },
+  ] },
 };
 
 // Projects live in IndexedDB (spec 051): `project:<id>` the JSON, `image:<id>:<tag>[:top]` PNG Blobs.
@@ -173,10 +191,11 @@ async function add(project: Omit<Project, "id">, store: Local) {
   return p;
 }
 
-/** Blank: one hidden box tagged Game runs Game.ts. My platformer: a one-time copy of the Course code in the playground. */
-export const createProject = (kind: "blank" | "platformer", lessons: Pick<Lesson, "scripts">[], store: Local = localStorage) =>
+/** Each + New choice saves an ordinary Project; My platformer copies the student's Course code once. */
+export const createProject = (kind: "blank" | "platformer" | "tour", lessons: Pick<Lesson, "scripts">[], store: Local = localStorage) =>
   add(kind === "blank"
     ? { name: "Blank", scripts: { Game: scriptStub("Game") }, level: { boxes: [{ tag: "Game", x: 0, y: 0, w: 0, h: 0, color: "transparent", script: "Game" }] } }
+    : kind === "tour" ? structuredClone(tour)
     : { name: "My platformer", scripts: loadScripts(lessons, lessons.length - 1, store), level: playground }, store);
 
 /** A copy with a new id; the Project and its images are written in one transaction. */

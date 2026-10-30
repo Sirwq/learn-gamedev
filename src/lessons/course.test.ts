@@ -7,8 +7,12 @@ import { achievementChecker, achievements } from "../achievements";
 import lesson15Player from "./14-health/reference/Player.ts?raw";
 
 it("includes Sounds and Coin counter, with Lesson 15 Player as Sounds' hidden stub", () => {
-  expect(course.slice(15).map((lesson) => lesson.title)).toEqual(["16. Sounds", "17. Coin counter"]);
+  expect(course.slice(15, 17).map((lesson) => lesson.title)).toEqual(["16. Sounds", "17. Coin counter"]);
   expect(course[15].scripts.Player.stub).toBe(lesson15Player);
+});
+
+it("includes Short and long jumps and Coyote time", () => {
+  expect(course.slice(17).map((lesson) => lesson.title)).toEqual(["18. Short and long jumps", "19. Coyote time"]);
 });
 
 it("accepts Jump on the first rising frame or the next, including a slow rise", () => {
@@ -57,6 +61,10 @@ const play: Record<string, (frame: number) => string[]> = {
     f === 3 || f === 345 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 40 || f > 345 ? [KeyCode.RightArrow] : [],
   "16. Sounds": (f) => (f === 70 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
   "17. Coin counter": (f) => (f === 70 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  "18. Short and long jumps": (f) =>
+    f >= 22 && f <= 26 || f >= 48 && f <= 90 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
+  "19. Coyote time": (f) =>
+    f === 41 || f >= 63 && f <= 110 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
 };
 
 // Achievements each Lesson's playthrough should earn, every one checked as if unlocked.
@@ -90,7 +98,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
   });
 
   // Frames until the Lesson passes, or 601 if not within 10 simulated seconds or on a Lose event.
-  const framesToPass = (code: Record<string, string>, earned = new Set<string>(), keysOn = play[lesson.title] ?? (() => [])) => {
+  const framesToPass = (code: Record<string, string>, earned = new Set<string>(), keysOn = play[lesson.title] ?? (() => []), onLose?: (message: string) => void) => {
     const classes = Object.fromEntries(Object.entries(code).map(([n, s]) => [n, loadScript(s, n)]));
     const game = startGame(lesson.level.boxes, classes);
     const check = checker(lesson);
@@ -106,7 +114,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
       const world = worldView(game.objects);
       const result = check(world, { keysDown: keysDown(), sounds: takeSounds(), labels });
       checkAchievements(world, { keysDown: keysDown() });
-      if (result.lost) break;
+      if (result.lost) { onLose?.(result.lost); break; }
       if (result.passed) return frame;
     }
     return 601;
@@ -144,5 +152,26 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
 
   it.runIf(index > 0)("is not passed by the previous Lesson's Reference code", () => {
     expect(framesToPass({ ...code([lesson], "stub"), ...earlier })).toBe(601);
+  });
+
+  it.runIf(lesson.title === "19. Coyote time")("allows a real mid-air double jump", () => {
+    const player = lesson.scripts.Player.reference
+      .replace("  coyote = 0;", "  coyote = 0;\n  doubleJumpUsed = false;")
+      .replace("  Update() {", `  Update() {
+    if (Input.GetKeyDown(KeyCode.Space) && this.transform.position.x > 650 && !this.onGround && !this.doubleJumpUsed) {
+      this.velocityY = this.jumpSpeed;
+      this.doubleJumpUsed = true;
+    }`);
+    const keys = (f: number) => [
+      ...(f <= 105 || f >= 151 ? [KeyCode.RightArrow] : []),
+      ...(f === 63 || f === 80 ? [KeyCode.Space] : []),
+    ];
+    expect(framesToPass({ ...earlier, Player: player }, new Set(), keys)).toBeLessThanOrEqual(600);
+  });
+
+  it.runIf(lesson.title === "19. Coyote time")("rejects the old Player's late jump after walking off", () => {
+    let lost = "";
+    framesToPass(earlier, new Set(), play[lesson.title], (message) => { lost = message; });
+    expect(lost).toContain("long after leaving the edge");
   });
 });

@@ -1,7 +1,7 @@
 ---
 title: Docs Sandbox page and the Example Sandbox tour Project
 label: build
-status: open
+status: closed
 blocked_by: [076-own-sprites, 078-lessons-16-17, 073-saves-dialog]
 assignee:
 ---
@@ -27,3 +27,8 @@ UI ticket: follow the Vercel Web Interface Guidelines (https://vercel.com/design
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+- Added an unlock-gated Sandbox Docs page covering the Level editor, own sprites, all ten sound clips, screen text, sharing, and backups, with links to the relevant API pages. The page also responds to the dev unlock toggle.
+- Added Example: Sandbox tour as an ordinary, independent Project with a one-screen Level, Player and HUD Scripts, Jump and Coin sounds, a coin counter, and a Friend tag whose image slot is ready for the student.
+- Added the + New choice and the specified suggestion beside + New when the Sandbox menu has no Projects.
+- Tests cover Docs visibility and links, the empty-menu condition, the tour Scripts' student-API type checking, headless Run, sounds, counter, and independent copies. `npm run typecheck` and `npm test` pass.
