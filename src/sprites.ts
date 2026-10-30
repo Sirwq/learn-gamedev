@@ -1,4 +1,4 @@
-// Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack, plus our own Player critter drawn by scripts/draw-player.mjs): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
+// Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack, plus Null Signal Player art drawn by scripts/draw-player.mjs): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
 import Brick from "./sprites/Brick.png";
 import Box from "./sprites/Box.png";
 import Bullet from "./sprites/Bullet.png";
@@ -11,6 +11,7 @@ import FlagWave from "./sprites/FlagWave.png";
 import GrassTop from "./sprites/GrassTop.png";
 import Dirt from "./sprites/Dirt.png";
 import PlayerIdle from "./sprites/PlayerIdle.png";
+import PlayerIdleBlink from "./sprites/PlayerIdleBlink.png";
 import PlayerJump from "./sprites/PlayerJump.png";
 import PlayerWalk1 from "./sprites/PlayerWalk1.png";
 import PlayerWalk2 from "./sprites/PlayerWalk2.png";
@@ -21,14 +22,14 @@ import WaterTop from "./sprites/WaterTop.png";
 import { type Camera, type GameObject, toScreen } from "./engine";
 
 const sprites = { Player: PlayerIdle, Enemy, Coin, Flag, Bullet, Box };
-/** The Player critter's frames (16×16, drawn at 2× on its 32×32 box); Lessons draw idle only. */
-export const playerFrames = { PlayerIdle, PlayerWalk1, PlayerWalk2, PlayerJump };
+/** Null Signal's native 32×32 frames; Lessons 1–15 draw idle only. */
+export const playerFrames = { PlayerIdle, PlayerIdleBlink, PlayerWalk1, PlayerWalk2, PlayerJump };
 export const urls = { ...sprites, ...playerFrames, EnemyWalk, CoinSpin, FlagWave, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
 type Tile = keyof typeof urls;
 
 /** Animation frames per tag: only frames the art really has. A missing walk or jump falls back to idle. */
 const animations: Record<keyof typeof sprites, { idle: Tile[]; walk?: Tile[]; jump?: Tile[] }> = {
-  Player: { idle: ["PlayerIdle"], walk: ["PlayerWalk1", "PlayerWalk2"], jump: ["PlayerJump"] },
+  Player: { idle: ["PlayerIdle", "PlayerIdle", "PlayerIdle", "PlayerIdle", "PlayerIdle", "PlayerIdle", "PlayerIdle", "PlayerIdleBlink"], walk: ["PlayerWalk1", "PlayerWalk2"], jump: ["PlayerJump"] },
   Enemy: { idle: ["Enemy"], walk: ["Enemy", "EnemyWalk"] },
   Coin: { idle: ["Coin", "CoinSpin"] },
   Flag: { idle: ["Flag", "FlagWave"] },

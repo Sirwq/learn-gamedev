@@ -22,12 +22,12 @@ describe("tiles", () => {
 
 const pngs: Record<string, string> = import.meta.glob("./sprites/Player*.png", { query: "?inline", import: "default", eager: true });
 
-describe("Player critter", () => {
-  it("has its four 16×16 frames loadable by name, and the Player tag draws idle", () => {
-    for (const name of ["PlayerIdle", "PlayerWalk1", "PlayerWalk2", "PlayerJump"] as const) {
+describe("Null Signal Player", () => {
+  it("loads five native 32×32 frames, and the Player tag draws the still idle pose", () => {
+    for (const name of ["PlayerIdle", "PlayerIdleBlink", "PlayerWalk1", "PlayerWalk2", "PlayerJump"] as const) {
       expect(urls[name]).toBe(playerFrames[name]);
       const png = new DataView(Uint8Array.from(atob(pngs[`./sprites/${name}.png`].split(",")[1]), (c) => c.charCodeAt(0)).buffer);
-      expect([png.getUint32(16), png.getUint32(20)]).toEqual([16, 16]); // IHDR width, height
+      expect([png.getUint32(16), png.getUint32(20)]).toEqual([32, 32]); // IHDR width, height
     }
     expect(urls.Player).toBe(playerFrames.PlayerIdle);
   });
@@ -37,6 +37,8 @@ describe("frameOf", () => {
   const still = { x: 0, y: 0 };
   it("idles when still, cycling an idle loop at 8 fps", () => {
     expect(frameOf("Player", still, 0)).toBe("PlayerIdle");
+    expect(frameOf("Player", still, 0.875)).toBe("PlayerIdleBlink");
+    expect(frameOf("Player", still, 1)).toBe("PlayerIdle");
     expect(frameOf("Player", { x: 0, y: -3 }, 0.5)).toBe("PlayerIdle"); // falling is not jumping
     expect([0, 0.125, 0.25].map((t) => frameOf("Coin", still, t))).toEqual(["Coin", "CoinSpin", "Coin"]);
   });

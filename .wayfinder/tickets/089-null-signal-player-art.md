@@ -26,3 +26,7 @@ Replace the current orange Player critter with a pixel-art adaptation of the use
 - The Player is visibly Null Signal at normal game zoom, with clean idle, walk, and jump frames and no clipping or jitter against its hitbox.
 - Sprite tests cover frame loading and movement-to-frame selection; `npm run typecheck` and `npm test` pass.
 - Browser-check a Chapter 1 Lesson, a Chapter 2 Lesson, Sandbox, left/right movement, jump, pause, and a Course cover at normal size.
+
+## Progress (2026-10-30)
+
+The preserved worker draft now contains reproducible 32×32 idle, blink, walk, and jump art, sprite wiring, and tests. Typecheck and all 321 active tests pass. A host browser check showed Null Signal on the Lesson 1 stage, Course cover, and Sandbox stage. Still verify a Chapter 2 Lesson and live left/right, jump, and pause behavior before closing this ticket.
