@@ -11,8 +11,8 @@ it("includes Sounds and Coin counter, with Lesson 15 Player as Sounds' hidden st
   expect(course[15].scripts.Player.stub).toBe(lesson15Player);
 });
 
-it("includes Short and long jumps and Coyote time", () => {
-  expect(course.slice(17).map((lesson) => lesson.title)).toEqual(["18. Short and long jumps", "19. Coyote time"]);
+it("includes the game feel Lessons", () => {
+  expect(course.slice(17).map((lesson) => lesson.title)).toEqual(["18. Short and long jumps", "19. Coyote time", "20. Jump buffering", "21. Screen shake"]);
 });
 
 it("accepts Jump on the first rising frame or the next, including a slow rise", () => {
@@ -65,6 +65,8 @@ const play: Record<string, (frame: number) => string[]> = {
     f >= 22 && f <= 26 || f >= 48 && f <= 90 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
   "19. Coyote time": (f) =>
     f === 41 || f >= 63 && f <= 110 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
+  "20. Jump buffering": (f) => f === 16 || f === 36 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
+  "21. Screen shake": (f) => f === 80 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow],
 };
 
 // Achievements each Lesson's playthrough should earn, every one checked as if unlocked.
