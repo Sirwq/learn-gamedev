@@ -1,7 +1,7 @@
 ---
 title: Deepen the Project storage module
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -28,8 +28,8 @@ Give Project file encoding and validation their own pure module. The backup flow
 - Tests exercise the storage module through its interface, the pure file-format module, invalid-file no-write behavior, image copy, and backup round trips. Replace tests of moved internal helpers rather than keeping duplicate layers of tests.
 - `npm run typecheck` and `npm test` pass. Verify one Project with an own image through duplicate, export, import, and backup in the browser.
 
-## Blocked
+## Verified
 
-Implementation and automated verification are complete, but the required browser check is blocked by this environment. Playwright Chromium downloads, then fails to start because system libraries including `libnspr4.so` and `libnss3.so` are missing. `playwright install-deps chromium` requires root access, which is unavailable here. Ticket remains open until one Project with an own image is checked through duplicate, export, import, and backup in a browser with those dependencies.
+The implementation moves portable file validation and encoding to `project-file.ts` and complete Project operations to `project-storage.ts`. Level edits save Project JSON and the current image set in one transaction. Existing formats, migration, cross-tab notifications, and backup merge behavior remain covered by tests.
 
-The implementation moves portable file validation and encoding to `project-file.ts` and complete Project operations to `project-storage.ts`. Level edits now save Project JSON and the current image set in one transaction. Existing formats, migration, cross-tab notifications, and backup merge behavior remain covered by tests.
+On 2026-10-31, `npm run typecheck` and `npm test` passed (336 passed, 70 skipped). In Chrome, a Project with Scripts and an own Player image retained that image after Duplicate and after Project export/import. The exported backup contained the original, duplicate, and imported Projects with their images; importing it into the same browser showed that nothing would be overwritten. In a fresh standard Safari session, importing that backup restored all three Projects and the Player image. Safari Private did not complete the restore, so the fresh restore check used standard Safari.
