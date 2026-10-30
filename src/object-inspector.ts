@@ -89,7 +89,8 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
       objects = next;
       selected = nextSelection(selected, next, reset);
       const ids = new Set(next.map((object) => object.id));
-      for (const [id, button] of buttons) if (!ids.has(id)) (button.remove(), buttons.delete(id));
+      const focusedId = [...buttons].find(([, button]) => button === document.activeElement)?.[0];
+      for (const [id, button] of buttons) if (!ids.has(id)) (button.parentElement?.remove(), buttons.delete(id));
       for (const object of next) {
         let button = buttons.get(object.id);
         if (!button) {
@@ -101,7 +102,14 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
         const label = `${object.tag} · ${object.id.replace(":", " #")}`;
         if (button.textContent !== label) button.textContent = label;
         button.setAttribute("aria-current", object.id === selected ? "true" : "false");
-        if (button.parentElement !== list) list.append(button);
+        if (!button.parentElement) {
+          const item = document.createElement("li");
+          item.append(button);
+          list.append(item);
+        }
+      }
+      if (focusedId && !ids.has(focusedId)) {
+        (buttons.get(selected ?? "") ?? buttons.values().next().value ?? list).focus();
       }
       renderDetails();
     },

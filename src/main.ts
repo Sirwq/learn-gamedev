@@ -18,7 +18,7 @@ import { anchor, docLink, docPageAvailable, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import { Camera, GameObject, Vector2 } from "./engine";
-import { drawWorld, loadImages } from "./sprites";
+import { drawWorld, loadImages, ownSprites } from "./sprites";
 import { courseMenu } from "./menu";
 import { levelView } from "./level-view";
 import { objectInspector, startingObjects } from "./object-inspector";
@@ -552,24 +552,28 @@ function ended() {
   if (hadFocus) runBtn.focus();
 }
 
-function stop() {
+function stop(restore = true) {
   worker?.terminate();
   worker = undefined;
   stopSounds();
   showLabels([]);
-  const old = document.getElementById("game") as HTMLCanvasElement;
-  const canvas = old.cloneNode() as HTMLCanvasElement;
-  old.replaceWith(canvas);
+  let canvas: HTMLCanvasElement | undefined;
+  if (restore) {
+    const old = document.getElementById("game") as HTMLCanvasElement;
+    canvas = old.cloneNode() as HTMLCanvasElement;
+    old.replaceWith(canvas);
+  }
   ended();
-  if (document.getElementById("level-area")!.hidden)
-    images.then((imgs) => drawWorld(canvas.getContext("2d")!, imgs, new Camera(startLevel.camera),
-      startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, b.script, new Vector2(b.x, b.y)))));
-  refreshStoppedObjects();
+  if (canvas && document.getElementById("level-area")!.hidden)
+    images.then(async (imgs) => drawWorld(canvas.getContext("2d")!, imgs, new Camera(startLevel.camera),
+      startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, b.script, new Vector2(b.x, b.y))), undefined,
+      project ? await ownSprites(startLevel.art, level!.images()).catch(() => ({})) : {}));
+  if (restore) refreshStoppedObjects();
 }
 
 function run() {
   if (hasTypeErrors()) return;
-  stop();
+  stop(false);
   objectView.setObjects([], true);
   level?.setRunning(true);
   for (const model of Object.values(models)) monaco.editor.setModelMarkers(model, "runtime", []);
@@ -675,7 +679,7 @@ runBtn.onclick = overlayRun.onclick = run;
 overlay.onclick = (e) => {
   if (running && e.target !== overlayRun) document.getElementById("game")!.focus(); // "Click to play"
 };
-stopBtn.onclick = stop;
+stopBtn.onclick = () => stop();
 
 // Ask DeepSeek: copy the Tutor prompt, open a plain chat (no ?q= prefill, spec 010).
 const promptBox = document.getElementById("prompt-box") as HTMLDialogElement;
