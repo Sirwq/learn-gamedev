@@ -17,6 +17,15 @@ const readLocal = (store: Pick<Storage, "getItem">) => JSON.parse(store.getItem(
 const projectKey = (id: string) => `project:${id}`;
 const entry = (p: Project): [string, unknown] => [projectKey(p.id), p];
 const imageKeys = async (id: string) => (await keys<string>()).filter((k) => k.startsWith(`image:${id}:`));
+const pending = new Map<string, Promise<unknown>>();
+/** Keep edits to one Project in the order the student made them. A failed save does not block later edits. */
+function ordered<T>(id: string, write: () => Promise<T>): Promise<T> {
+  const next = (pending.get(id) ?? Promise.resolve()).catch(() => {}).then(write);
+  pending.set(id, next);
+  void next.then(() => { if (pending.get(id) === next) pending.delete(id); },
+    () => { if (pending.get(id) === next) pending.delete(id); });
+  return next;
+}
 const clean = (p: Project): Project => ({
   ...p, scripts: Object.fromEntries(Object.entries(p.scripts).map(([n, c]) => [n, withoutNoteComment(c)])),
 });
@@ -26,6 +35,12 @@ function changed(store: Pick<Storage, "setItem">) {
   const channel = new BroadcastChannel("projects");
   channel.postMessage("changed");
   channel.close();
+}
+function writeLocalProject(project: Project, store: Local) {
+  const list = readLocal(store);
+  const i = list.findIndex((p) => p.id === project.id);
+  list.splice(i < 0 ? list.length : i, i < 0 ? 0 : 1, project);
+  store.setItem(KEY, JSON.stringify(list));
 }
 
 /** One-time copy of `sandbox:projects` into IndexedDB, flagged only once read back. Safe to run twice; never deletes the old key. */
@@ -65,20 +80,19 @@ function askPersist(store: Local) {
 }
 
 /** Saves a new Project at the end, or replaces the one with its id. */
-export async function saveProject(project: Project, store: Local = localStorage) {
-  askPersist(store);
-  if (onIdb(store)) await set(projectKey(project.id), project);
-  else {
-    const list = readLocal(store);
-    const i = list.findIndex((p) => p.id === project.id);
-    list.splice(i < 0 ? list.length : i, i < 0 ? 0 : 1, project);
-    store.setItem(KEY, JSON.stringify(list));
-  }
-  changed(store);
+export function saveProject(project: Project, store: Local = localStorage) {
+  const snapshot = structuredClone(project);
+  return ordered(project.id, async () => {
+    askPersist(store);
+    if (onIdb(store)) await set(projectKey(snapshot.id), snapshot);
+    else writeLocalProject(snapshot, store);
+    changed(store);
+  });
 }
 
 /** Removes the Project and its images. */
 export async function deleteProject(id: string, store: Local = localStorage) {
+  await pending.get(id)?.catch(() => {});
   if (onIdb(store)) await delMany([projectKey(id), ...(await imageKeys(id))]);
   else store.setItem(KEY, JSON.stringify(readLocal(store).filter((p) => p.id !== id)));
   changed(store);
@@ -101,27 +115,34 @@ export async function loadProject(id: string, store: Pick<Storage, "getItem"> = 
 }
 
 /** Saves the Project and its current image set in one IndexedDB transaction. */
-export async function saveProjectWithImages(project: Project, images: Record<string, Blob>, store: Local = localStorage) {
-  if (!onIdb(store)) {
-    if (Object.keys(images).length) throw new Error("Images can't be saved in this browser right now. Reload the page and try again.");
-    return saveProject(project, store);
-  }
-  askPersist(store);
-  const prefix = `image:${project.id}:`;
-  const stale = (await imageKeys(project.id)).filter((k) => !Object.hasOwn(images, k.slice(prefix.length)));
-  const useStore = createStore("keyval-store", "keyval");
-  await useStore("readwrite", (objectStore) => {
-    try {
-      objectStore.put(project, projectKey(project.id));
-      for (const [name, blob] of Object.entries(images)) objectStore.put(blob, prefix + name);
-      for (const key of stale) objectStore.delete(key);
-    } catch (error) {
-      objectStore.transaction.abort();
-      throw error;
+export function saveProjectWithImages(project: Project, images: Record<string, Blob>, store: Local = localStorage) {
+  const snapshot = structuredClone(project);
+  const imageSnapshot = { ...images };
+  return ordered(project.id, async () => {
+    if (!onIdb(store)) {
+      if (Object.keys(imageSnapshot).length) throw new Error("Images can't be saved in this browser right now. Reload the page and try again.");
+      askPersist(store);
+      writeLocalProject(snapshot, store);
+      changed(store);
+      return;
     }
-    return promisifyRequest(objectStore.transaction);
+    askPersist(store);
+    const prefix = `image:${snapshot.id}:`;
+    const stale = (await imageKeys(snapshot.id)).filter((k) => !Object.hasOwn(imageSnapshot, k.slice(prefix.length)));
+    const useStore = createStore("keyval-store", "keyval");
+    await useStore("readwrite", (objectStore) => {
+      try {
+        objectStore.put(snapshot, projectKey(snapshot.id));
+        for (const [name, blob] of Object.entries(imageSnapshot)) objectStore.put(blob, prefix + name);
+        for (const key of stale) objectStore.delete(key);
+      } catch (error) {
+        objectStore.transaction.abort();
+        throw error;
+      }
+      return promisifyRequest(objectStore.transaction);
+    });
+    changed(store);
   });
-  changed(store);
 }
 
 let lastTime = 0;
@@ -143,6 +164,7 @@ export const createProject = (kind: "blank" | "platformer" | "tour", lessons: Pi
 
 /** A copy with a new id; the Project and its images are written in one transaction. */
 export async function duplicateProject(project: Project, store: Local = localStorage) {
+  await pending.get(project.id)?.catch(() => {});
   const copy = { ...structuredClone(project), name: `${project.name} copy`, id: newId() };
   if (!onIdb(store)) return saveProject(copy, store).then(() => copy);
   askPersist(store);
@@ -155,6 +177,7 @@ export async function duplicateProject(project: Project, store: Local = localSto
 
 /** The Project and all its images in the portable JSON file. */
 export async function exportProject(project: Project) {
+  await pending.get(project.id)?.catch(() => {});
   const images = await loadImageBlobs(project.id);
   const { id: _, ...rest } = project;
   return JSON.stringify(await encodeProjectFile(rest, images));

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Debug, Destroy, GameObject, GUI, Input, Instantiate, KeyCode, MonoBehaviour, Rect, releaseAllKeys, Vector2, type Box } from "./engine";
-import { createRun } from "./run-frame";
+import { createRun, runInput } from "./run-frame";
 
 const boxes: Box[] = [
   { tag: "Player", x: 0, y: 0, w: 20, h: 20, color: "orange", script: "Player" },
@@ -50,10 +50,10 @@ describe("one Run frame", () => {
     const run = createRun({ level: { boxes }, goals: [{ message: "move", test: (w) => w.some((o) => o.tag === "Player" && o.x >= 2) }],
       lose: [{ test: (w) => w.some((o) => o.tag === "Player" && o.y < 0), message: "fell" }],
       classes: { Player }, earned: new Set<string>(), v2: true });
-    run.input(KeyCode.RightArrow, true);
+    runInput(KeyCode.RightArrow, true);
     const first = run.step();
     if ("error" in first) throw first.error;
-    expect(first.objects.map((o) => o.tag)).toEqual(["Player", "Bullet"]);
+    expect(run.objects.map((o) => o.tag)).toEqual(["Player", "Bullet"]);
     expect(first.check).toEqual({ met: [false], passed: false });
     expect(first.sounds).toEqual(["Coin"]);
     expect(first.labels.map((l) => l.text)).toEqual(["Hello"]);
@@ -62,7 +62,7 @@ describe("one Run frame", () => {
     if ("error" in second) throw second.error;
     expect(second.check).toEqual({ met: [true], passed: true });
     expect(second.earned).toContain("steps");
-    run.input(KeyCode.DownArrow, true);
+    runInput(KeyCode.DownArrow, true);
     const lost = run.step();
     if ("error" in lost) throw lost.error;
     expect(lost.check).toEqual({ met: [false], passed: false, lost: "fell" });

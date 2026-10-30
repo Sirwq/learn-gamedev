@@ -6,7 +6,7 @@ import { type Box, type CameraStart, type Clip, type GameObject, keyEvent, keysD
 import type { Check } from "./lesson";
 
 export type FrameResult =
-  | { objects: GameObject[]; check: CheckResult; earned: string[]; sounds: Clip[]; labels: Label[]; lines: ConsoleLine[] }
+  | { check: CheckResult; earned: string[]; sounds: Clip[]; labels: Label[]; lines: ConsoleLine[] }
   | { error: unknown; lines: ConsoleLine[] };
 
 export const runInput = (code: string, down: boolean) => keyEvent(code, down);
@@ -27,8 +27,6 @@ export function createRun({ level, goals, lose, classes, earned, v2 }: {
   const achieve = achievementChecker(level.boxes, earned);
   return {
     objects: game.objects,
-    input: runInput,
-    releaseKeys: releaseRunKeys,
     step(): FrameResult {
       try {
         game.step();
@@ -36,7 +34,7 @@ export function createRun({ level, goals, lose, classes, earned, v2 }: {
         const sounds = takeSounds();
         const result = check(world, v2 ? { keysDown: keysDown(), sounds, labels } : undefined);
         const ids = achieve(world, { logged: logs.length > 0, keysDown: keysDown() });
-        return { objects: game.objects, check: result, earned: ids, sounds, labels, lines: drainRunLogs() };
+        return { check: result, earned: ids, sounds, labels, lines: drainRunLogs() };
       } catch (error) {
         return { error, lines: drainRunLogs() };
       }

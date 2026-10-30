@@ -134,6 +134,34 @@ describe("Projects", () => {
     expect(await bytesOf(after.images.Game)).toEqual(await bytesOf(png(8, 8)));
   });
 
+  it("keeps rapid Project and image edits in request order", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    p.name = "First";
+    const first = saveProjectWithImages(p, { Game: png(8, 8) }, s);
+    p.name = "Second";
+    const second = saveProject(p, s);
+    p.name = "Final";
+    const third = saveProjectWithImages(p, {}, s);
+    await Promise.all([first, second, third]);
+    const saved = (await loadProject(p.id, s))!;
+    expect(saved.project.name).toBe("Final");
+    expect(saved.images).toEqual({});
+  });
+
+  it("copies the latest images after a pending save and continues after a failed save", async () => {
+    const s = await migrated();
+    const p = await createProject("blank", course, s);
+    const failed = saveProjectWithImages(p, { Game: Symbol("bad") as unknown as Blob }, s);
+    const saved = saveProjectWithImages(p, { Game: png(8, 8) }, s);
+    const copy = duplicateProject(p, s);
+    const file = exportProject(p);
+    await expect(failed).rejects.toThrow();
+    await saved;
+    expect(await bytesOf((await loadProject((await copy).id, s))!.images.Game)).toEqual(await bytesOf(png(8, 8)));
+    expect(checkProjectFile(JSON.parse(await file)).pngs).toHaveLength(1);
+  });
+
   it("before the migration they stay in localStorage", async () => {
     const s = memoryStore();
     const blank = await createProject("blank", course, s);
