@@ -260,7 +260,8 @@
       #menu-back { justify-self: start; }
       #menu .bar .end { justify-self: end; display: flex; gap: 10px; white-space: nowrap; }
       /* One segment per Lesson filling the middle column: passed bright, locked dim, the focused one purple and thicker. */
-      #menu-dots { display: flex; gap: 4px; min-width: 0; }
+      #menu-dots { position: relative; display: flex; gap: 4px; min-width: 0; }
+      #menu-dots .chapter-label { position: absolute; bottom: 100%; color: var(--ink-strong); font-size: 11px; font-weight: 700; white-space: nowrap; }
       #menu #menu-dots button { flex: 1; min-width: 0; height: 32px; padding: 0; border: 0; border-radius: 4px; background: none; display: grid; align-items: center; }
       #menu-dots button::before { content: ""; height: 4px; border-radius: 2px; background: #ffffff38; transition: height .15s, background-color .15s; }
       #menu-dots button.passed::before { background: #ffffffb3; }

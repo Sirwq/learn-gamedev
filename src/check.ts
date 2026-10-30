@@ -1,17 +1,40 @@
-import { Time, type World } from "./engine";
+import { Time, type Clip, type Label, type World } from "./engine";
 import type { Lesson } from "./lesson";
 
+export const CHAPTER_ONE_COUNT = 15;
+export const CHAPTER_TWO_COUNT = 6;
+
+/** Chapter 2 and Sandbox open together, regardless of later Chapter 2 progress. */
+export const chapterTwoUnlocked = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) =>
+  lessons.length >= CHAPTER_ONE_COUNT && isPassed(lessons[CHAPTER_ONE_COUNT - 1].title, store);
+
+export function chapterProgress(lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) {
+  const done = progress(lessons, store);
+  return { chapterOne: done.slice(0, CHAPTER_ONE_COUNT).filter(Boolean).length,
+    chapterTwo: done.slice(CHAPTER_ONE_COUNT).filter(Boolean).length,
+    unlocked: chapterTwoUnlocked(lessons, store) };
+}
+
 export type CheckResult = { met: boolean[]; passed: boolean; lost?: string };
+
+/** A read-only frame for Lesson Goals. These fields are not part of the student API. */
+export type CheckWorld = World & { readonly keysDown: ReadonlySet<string>; readonly sounds: readonly Clip[]; readonly labels: readonly Readonly<Label>[] };
+export type CheckFrame = { keysDown?: ReadonlySet<string>; sounds?: readonly Clip[]; labels?: readonly Label[] };
 
 /** One per Run: call every frame. A Goal stays ✓ for the rest of the Run; a Lose event resets them all. No Goals (Sandbox) never passes. */
 export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
   const met = goals.map(() => false);
   let frames = 0;
-  return (world: World): CheckResult => {
+  return (world: World, frame: CheckFrame = {}): CheckResult => {
+    const view: CheckWorld = Object.assign([...world], {
+      keysDown: new Set(frame.keysDown ?? []),
+      sounds: [...(frame.sounds ?? [])],
+      labels: (frame.labels ?? []).map((label) => ({ ...label })),
+    });
     const time = ++frames * Time.deltaTime;
-    const lost = lose.find((l) => l.test(world, time));
+    const lost = lose.find((l) => l.test(view, time));
     if (lost) return { met: met.fill(false).slice(), passed: false, lost: lost.message };
-    goals.forEach((g, i) => (met[i] ||= g.test(world, time)));
+    goals.forEach((g, i) => (met[i] ||= g.test(view, time)));
     return { met: met.slice(), passed: met.length > 0 && met.every(Boolean) };
   };
 }

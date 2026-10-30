@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { errorLine, modKey, runShortcut, runStartLine, transpile } from "./run-utils";
+import { errorLine, modKey, runShortcut, runStartLine, transpile, v2Features } from "./run-utils";
 
 describe("transpile", () => {
   it("strips types and keeps every line on the same line number", () => {
@@ -51,5 +51,13 @@ describe("modKey", () => {
   it("is ⌘ on Apple platforms and Ctrl+ elsewhere", () => {
     expect(modKey("MacIntel")).toBe("⌘");
     expect(modKey("Win32")).toBe("Ctrl+");
+  });
+});
+
+describe("Chapter 2 features", () => {
+  it("keeps Lessons 1–15 silent and enables sound, labels and animation after them", () => {
+    expect(v2Features({ lesson: 14 })).toBe(false);
+    expect(v2Features({ lesson: 15 })).toBe(true);
+    expect(v2Features({ level: {} })).toBe(true);
   });
 });

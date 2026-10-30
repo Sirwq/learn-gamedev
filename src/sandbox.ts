@@ -1,15 +1,15 @@
 // Sandbox mode (spec 015): the engine on its own, with Projects saved apart from the Course code.
 import { api } from "./engine";
-import { isPassed } from "./check";
+import { chapterTwoUnlocked } from "./check";
 import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
 import { delMany, get, getMany, keys, set, setMany } from "idb-keyval";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
-/** A secret until the Course's last Lesson is passed, or the dev build's unlock flag is set. */
+/** A secret until Lesson 15 is passed, or the dev build's unlock flag is set. */
 export const sandboxUnlocked = (lessons: Pick<Lesson, "title">[], store: Pick<Storage, "getItem"> = localStorage) =>
-  (lessons.length > 0 && isPassed(lessons[lessons.length - 1].title, store)) ||
+  chapterTwoUnlocked(lessons, store) ||
   (import.meta.env.DEV && store.getItem("dev:sandbox-unlocked") === "1");
 
 /** Dev build only: open Sandbox without passing the Course. Locking keeps the Projects. */

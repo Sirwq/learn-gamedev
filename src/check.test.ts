@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardStates, checker, currentLesson, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
+import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, cardStates, chapterProgress, checker, currentLesson, isPassed, markPassed, progress, referenceFor, unlocked } from "./check";
 import type { World } from "./engine";
 import type { Lesson } from "./lesson";
 import { memoryStore } from "./test-helpers";
@@ -40,6 +40,32 @@ describe("checker", () => {
     expect(check(at(0)).lost).toBeUndefined(); // 1/60 s
     check(at(0)); check(at(0));
     expect(check(at(0)).lost).toBe("Too slow"); // 4/60 s
+  });
+
+  it("lets Goals read this frame's sounds and labels without adding them to game objects", () => {
+    const world = at(0);
+    const label = { x: 2, y: 3, w: 80, h: 20, text: "Coins: 1", color: "white", size: 16, anchor: "UpperLeft" as const, outline: true };
+    const check = checker({
+      goals: [{ message: "Sound and text", test: (view) => view.keysDown.has("Space") && view.sounds.includes("Coin") && view.labels.some((l) => l.text === "Coins: 1" && l.x === 2) }],
+      lose: [],
+    });
+    expect(check(world)).toEqual({ met: [false], passed: false });
+    expect(check(world, { keysDown: new Set(["Space"]), sounds: ["Coin"], labels: [label] })).toEqual({ met: [true], passed: true });
+    expect("sounds" in world).toBe(false);
+    expect("labels" in world).toBe(false);
+  });
+});
+
+describe("Chapter 2 progress", () => {
+  const all = Array.from({ length: CHAPTER_ONE_COUNT + CHAPTER_TWO_COUNT }, (_, i) => ({ title: `Lesson ${i + 1}` }));
+  it("stays hidden until Lesson 15 passes, then counts Chapter 2 separately", () => {
+    const s = memoryStore();
+    for (const l of all.slice(0, CHAPTER_ONE_COUNT - 1)) markPassed(l.title, s);
+    expect(chapterProgress(all, s)).toEqual({ chapterOne: 14, chapterTwo: 0, unlocked: false });
+    markPassed(all[CHAPTER_ONE_COUNT - 1].title, s);
+    expect(chapterProgress(all, s)).toEqual({ chapterOne: 15, chapterTwo: 0, unlocked: true });
+    markPassed(all[CHAPTER_ONE_COUNT].title, s);
+    expect(chapterProgress(all, s)).toEqual({ chapterOne: 15, chapterTwo: 1, unlocked: true });
   });
 });
 

@@ -1,7 +1,7 @@
 ---
 title: Chapter 2 on the Course menu and in the checker
 label: build
-status: open
+status: closed
 blocked_by: [069-sound, 070-ui-text, 068-mechanic-achievements]
 assignee:
 ---
@@ -32,3 +32,9 @@ The frame Lessons 16–21 slot into, without the Lessons themselves:
 - `npm run typecheck` and `npm test` pass.
 
 ## Resolution
+
+Done. Lesson 15 now unlocks both Sandbox and the Chapter 2 menu state, even when Lessons 16–21 are added later. The Course menu keeps Chapter 1 at `✓ n / 15`, reveals `Chapter 2` and `Ch. 2 n / 6` after unlock, and the Lesson strip switches to Chapter 2 progress on those Lessons. The unlock toast names both destinations and still slides to Sandbox.
+
+Lesson Goals and Lose events receive read-only frame snapshots of `keysDown`, `sounds` and `labels` on `world`; the worker supplies them only for Chapter 2. Lessons 1–15 stay silent and have no labels. The existing checker time remains in seconds, and the existing backup code iterates the full Course list.
+
+Verified with `npm run typecheck`, `npm test` (275 passed, 4 skipped), `npm run build`, and desktop Chrome before and after a temporary Lesson 15 pass. Lessons 16–21 themselves belong to tickets 078–080.

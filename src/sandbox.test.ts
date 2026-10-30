@@ -19,6 +19,13 @@ describe("Sandbox unlock", () => {
     expect(sandboxUnlocked(course, s)).toBe(true);
   });
 
+  it("still opens at Lesson 15 after Chapter 2 Lessons are appended", () => {
+    const s = memoryStore();
+    const extended = [...course, { title: "16. Sounds" }];
+    markPassed(course[14].title, s);
+    expect(sandboxUnlocked(extended, s)).toBe(true);
+  });
+
   it("opens with the dev flag without passing any Lesson", () => {
     const s = memoryStore();
     setDevUnlock(true, s);

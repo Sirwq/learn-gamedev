@@ -11,7 +11,7 @@ import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
 import { marked } from "marked";
 import { course } from "./lessons/course";
 import { loadScripts, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot } from "./lesson";
-import { currentLesson, markPassed, progress, referenceFor, unlocked } from "./check";
+import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, chapterProgress, currentLesson, markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPages } from "./docs";
@@ -88,17 +88,21 @@ showHints(opened);
 
 function showProgress() {
   const done = progress(course);
+  const chapters = chapterProgress(course);
   const label = document.createElement("span");
-  label.textContent = `${done.filter(Boolean).length} / ${course.length}`;
+  label.textContent = lessonIndex >= CHAPTER_ONE_COUNT && !project
+    ? `Ch. 2 ${chapters.chapterTwo} / ${CHAPTER_TWO_COUNT}`
+    : `${chapters.chapterOne} / ${CHAPTER_ONE_COUNT}`;
   const button = document.getElementById("progress")!;
   button.ariaLabel = `${label.textContent} Lessons passed, back to Lessons`;
   button.replaceChildren(...done.map((d, i) => {
+    if (i >= CHAPTER_ONE_COUNT && !chapters.unlocked) return null;
     const pip = document.createElement("i");
     pip.className = d ? "done" : "";
     pip.title = course[i].title;
     pip.ariaHidden = "true";
     return pip;
-  }), label);
+  }).filter((pip) => pip !== null), label);
 }
 showProgress();
 
@@ -594,7 +598,7 @@ function run() {
         showOverlay("✓ Lesson passed", false, true);
         toast("Lesson passed");
         if (!wasUnlocked && sandboxUnlocked(course)) {
-          toast("🔓 Sandbox unlocked");
+          toast("🔓 Sandbox and Chapter 2 unlocked");
           setTimeout(() => {
             openMenu("course");
             setMode("sandbox");

@@ -1,9 +1,10 @@
 import { type Box, Camera, type CameraStart, type World } from "./engine";
+import type { CheckWorld } from "./check";
 import { withoutNoteComment } from "./lessons/ai-note";
 import type { TagArt } from "./sprites";
 
 /** A Goal or Lose event: `test` runs every frame against the game objects and the seconds since the Run started. */
-export type Check = { message: string; test: (world: World, time: number) => boolean };
+export type Check = { message: string; test: (world: CheckWorld, time: number) => boolean };
 
 export type Lesson = {
   title: string;

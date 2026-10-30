@@ -72,16 +72,17 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     if (paused) return void (pausedFrame = frame);
     send({ type: "tick" });
     let result, earned;
+    let sounds;
     try {
       game.step();
       const world = worldView(game.objects);
-      result = check(world);
+      sounds = takeSounds();
+      result = check(world, v2 ? { keysDown: keysDown(), sounds, labels } : undefined);
       earned = achieve(world, { logged: logs.length > 0, keysDown: keysDown() }); // also on the frame the game stops
     } catch (err) {
       return report(err); // stop the loop: the game pauses on the error
     }
     flushLogs();
-    const sounds = takeSounds();
     if (v2 && sounds.length) send({ type: "sounds", names: sounds });
     if (earned.length) send({ type: "achievements", ids: earned });
     const json = JSON.stringify(result);

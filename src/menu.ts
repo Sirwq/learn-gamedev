@@ -1,7 +1,7 @@
 // Course menu: a cover carousel, one card per Lesson. Once unlocked, a Sandbox tab: one card per Project, then "+ New".
 import { course } from "./lessons/course";
 import { loadSnapshot, snapshot } from "./lesson";
-import { cardStates, currentLesson } from "./check";
+import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, cardStates, chapterProgress, currentLesson } from "./check";
 import { achievements } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, type Images } from "./sprites";
@@ -44,6 +44,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   let mode: "course" | "sandbox" = "course";
   let focused = lessonIndex;
   let states = cardStates(course);
+  let chapters = chapterProgress(course);
   let menuCurrent = current; // moves on when a Lesson is passed on this page
   let projects = loaded;
   function coverCard(small: string, title: string, i: number) {
@@ -57,7 +58,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   }
   const courseCards = course.map((l, i) => coverCard(`LESSON ${i + 1}`, l.title.replace(/^\d+\.\s*/, ""), i));
   let projectCards: HTMLButtonElement[] = [];
-  const cards = () => (mode === "course" ? courseCards : projectCards);
+  const cards = () => (mode === "course" ? courseCards.slice(0, chapters.unlocked ? course.length : CHAPTER_ONE_COUNT) : projectCards);
   const coverOf = (i: number) => cards()[i].querySelector("canvas")!;
   const menuBg = document.getElementById("menu-bg") as HTMLCanvasElement;
   const drawBg = () => menuBg.getContext("2d")!.drawImage(coverOf(focused), 0, 0);
@@ -130,10 +131,11 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     nextBtn.disabled = focused === list.length - 1;
     if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
     document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
-    const passed = states.filter((s) => s === "passed").length;
+    const chapterTwoStat = chapters.unlocked ? ` · Ch. 2 ${chapters.chapterTwo} / ${CHAPTER_TWO_COUNT}` : "";
+    const chapterTwoSpoken = chapters.unlocked ? `, Chapter 2: ${chapters.chapterTwo} of ${CHAPTER_TWO_COUNT} Lessons passed` : "";
     document.getElementById("menu-stats")!.innerHTML =
-      `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${passed} / ${course.length} passed</span>` +
-      `<span class="sr-only">${earned.size} of ${achievements.length} Achievements, ${passed} of ${course.length} Lessons passed</span>`;
+      `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${chapters.chapterOne} / ${CHAPTER_ONE_COUNT}${chapterTwoStat}</span>` +
+      `<span class="sr-only">${earned.size} of ${achievements.length} Achievements, Chapter 1: ${chapters.chapterOne} of ${CHAPTER_ONE_COUNT} Lessons passed${chapterTwoSpoken}</span>`;
   }
   const menuLive = document.getElementById("menu-live")!;
   const announce = () =>
@@ -153,12 +155,18 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     dots.ariaLabel = `${noun}s`;
     prevBtn.ariaLabel = `Previous ${noun}`;
     nextBtn.ariaLabel = `Next ${noun}`;
-    dots.replaceChildren(...cards().map((_, i) => {
+    const dotButtons = cards().map((_, i) => {
       const dot = document.createElement("button");
       dot.ariaLabel = m === "course" ? course[i].title : projects[i]?.name ?? "New Project";
       dot.onclick = () => focusCard(i);
       return dot;
-    }));
+    });
+    const chapterLabel = document.createElement("span");
+    chapterLabel.className = "chapter-label";
+    chapterLabel.textContent = "Chapter 2";
+    chapterLabel.style.left = dotButtons.length > CHAPTER_ONE_COUNT
+      ? `${100 * CHAPTER_ONE_COUNT / dotButtons.length}%` : "calc(100% - 72px)";
+    dots.replaceChildren(...dotButtons, ...(m === "course" && chapters.unlocked ? [chapterLabel] : []));
     for (const [chip, on] of [[chipCourse, m === "course"], [chipSandbox, m === "sandbox"]] as const) {
       chip.classList.toggle("on", on);
       chip.ariaPressed = String(on);
@@ -187,6 +195,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     if (menu.hidden) opener = document.activeElement;
     for (const el of behind) el.inert = true;
     states = cardStates(course);
+    chapters = chapterProgress(course);
     menuCurrent = currentLesson(course);
     chipSandbox.hidden = !sandboxUnlocked(course);
     const due = backupReminder(course);
