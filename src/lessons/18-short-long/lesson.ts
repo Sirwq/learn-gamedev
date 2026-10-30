@@ -1,9 +1,23 @@
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
+import { Time } from "../../engine";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
 import stub from "../16-sounds/reference/Player.ts?raw";
 import reference from "./reference/Player.ts?raw";
+
+// The carried-over Player teleports home on a spike hit before the checker sees the frame.
+function hitSpikes() {
+  let previous: { x: number; y: number } | undefined;
+  return (world: Parameters<Lesson["lose"][number]["test"]>[0], time: number) => {
+    if (time <= Time.deltaTime) previous = undefined;
+    const player = world.find((box) => box.tag === "Player");
+    const hit = !player || world.some((box) => box.tag === "Spikes" && overlaps(player, box))
+      || !!previous && previous.x > 270 && player.x === 100 && player.y === 40;
+    previous = player;
+    return hit;
+  };
+}
 
 export const lesson: Lesson = {
   title: "18. Short and long jumps",
@@ -22,7 +36,7 @@ export const lesson: Lesson = {
   },
   goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [
-    { message: "You touched the spikes. Press Run to try again.", test: (world) => world.some((box) => box.tag === "Spikes" && overlaps(find(world, "Player"), box)) },
+    { message: "You touched the spikes. Press Run to try again.", test: hitSpikes() },
     offScreen,
   ],
   scripts: { Player: { stub, reference } },

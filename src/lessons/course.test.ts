@@ -174,4 +174,11 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     framesToPass(earlier, new Set(), play[lesson.title], (message) => { lost = message; });
     expect(lost).toContain("long after leaving the edge");
   });
+
+  it.runIf(lesson.title === "18. Short and long jumps")("loses when a full jump hits the overhead spikes", () => {
+    let lost = "";
+    const fullJump = (f: number) => f >= 22 && f <= 90 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow];
+    framesToPass({ ...earlier, Player: lesson.scripts.Player.reference }, new Set(), fullJump, (message) => { lost = message; });
+    expect(lost).toContain("spikes");
+  });
 });
