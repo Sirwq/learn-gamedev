@@ -252,9 +252,9 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     try {
       location.search = `?sandbox=${(await importProject(await file.text())).id}`;
     } catch (e) {
-      if ((e as Error).name === "QuotaExceededError") throw e; // main.ts's storage-full toast
+      if (e instanceof Error && e.name === "QuotaExceededError") throw e; // main.ts's storage-full toast
       newBox.close(); // the toast would sit under the modal dialog
-      toast((e as Error).message);
+      toast(e instanceof Error ? e.message : t("Projects with images can't be saved in this browser right now. Reload the page and try again."));
     }
   }
   const fileInput = document.getElementById("new-file-input") as HTMLInputElement;
@@ -310,9 +310,9 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     try {
       done = await plan!.apply();
     } catch (e) {
-      if ((e as Error).name === "QuotaExceededError") throw e; // main.ts's storage-full toast
+      if (e instanceof Error && e.name === "QuotaExceededError") throw e; // main.ts's storage-full toast
       savesBox.close();
-      return void toast((e as Error).message);
+      return void toast(e instanceof Error ? e.message : t("Projects with images can't be saved in this browser right now. Reload the page and try again."));
     }
     if (!plan!.single) return location.reload(); // progress and Projects changed under the whole page
     if (sandboxUnlocked(course)) return void (location.search = `?sandbox=${(done as Project).id}`);
