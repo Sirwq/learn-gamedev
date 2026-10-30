@@ -3,7 +3,7 @@ import type { CheckResult } from "./check";
 import type { ConsoleLine } from "./console";
 import type { Clip, Label } from "./engine";
 import type { Project } from "./sandbox";
-import type { ObjectSnapshot } from "./object-inspector";
+import type { ObjectSnapshot } from "./object-snapshots";
 
 export type ToWorker =
   /** Starts the Run: a Lesson by index, or a Sandbox Project's Level and own images; `scripts` is transpiled JS by Script name. */

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { Destroy, Instantiate, MonoBehaviour, startGame, Vector2 } from "./engine";
-import { nextSelection, objectInspector, objectSnapshots, startingObjects, selectedObject } from "./object-inspector";
+import { objectInspector } from "./object-inspector";
+import { objectSnapshots, startingObjects } from "./object-snapshots";
 
 describe("Objects snapshots", () => {
   it("keeps identity across movement, distinguishes duplicate tags, and follows creation and destruction", () => {
@@ -30,15 +31,13 @@ describe("Objects snapshots", () => {
     game.step();
     const second = snapshot(game.objects);
     expect(second.map((o) => o.id).slice(0, 3)).toEqual(first.map((o) => o.id));
-    expect(selectedObject(second, first[0].id)?.x).toBe(1);
+    expect(second.find((o) => o.id === first[0].id)?.x).toBe(1);
     expect(second[3]).toMatchObject({ tag: "Coin", x: 5, y: 5, script: undefined });
     game.step();
     const third = snapshot(game.objects);
-    expect(selectedObject(third, first[0].id)).toBeUndefined();
-    expect(nextSelection(first[0].id, third)).toBe(first[0].id);
-    expect(selectedObject(third, second[3].id)?.tag).toBe("Coin");
+    expect(third.find((o) => o.id === first[0].id)).toBeUndefined();
+    expect(third.find((o) => o.id === second[3].id)?.tag).toBe("Coin");
     const restored = startingObjects(boxes);
-    expect(nextSelection(first[0].id, restored, true)).toBe(restored[0].id);
     expect(restored[0].x).toBe(0);
   });
 });
@@ -60,6 +59,11 @@ describe("Objects view", () => {
       expect([...list.children].every((item) => item.tagName === "LI")).toBe(true);
       expect(list.querySelectorAll("button")).toHaveLength(3);
       expect(details.textContent).toContain("Player.ts");
+      const firstButton = list.querySelector("button")!;
+      firstButton.focus();
+      firstButton.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      expect(document.activeElement).toBe(list.querySelectorAll("button")[1]);
+      expect(details.textContent).toContain("Ground");
       const running = stopped.map((object, i) => ({ ...object, id: `run:${i + 1}` }));
       view.setObjects(running, true);
       const player = list.querySelector("button")!;

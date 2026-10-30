@@ -1,28 +1,10 @@
-import type { Box, GameObject } from "./engine";
+import type { ObjectSnapshot } from "./object-snapshots";
 
-export type ObjectSnapshot = Box & { id: string };
-
-/** Saved Level boxes have stable positions until the Level editor changes them. */
-export const startingObjects = (boxes: readonly Box[]): ObjectSnapshot[] =>
-  boxes.map((box, index) => ({ ...box, id: `level:${index}` }));
-
-/** One instance per Run: object identity survives movement and duplicate tags. */
-export function objectSnapshots() {
-  const ids = new WeakMap<GameObject, string>();
-  let next = 0;
-  return (objects: readonly GameObject[]): ObjectSnapshot[] => objects.map((object) => {
-    let id = ids.get(object);
-    if (!id) ids.set(object, (id = `run:${++next}`));
-    const { x, y } = object.transform.position;
-    return { id, tag: object.tag, x, y, w: object.w, h: object.h, color: object.color, script: object.script };
-  });
-}
-
-export const selectedObject = (objects: readonly ObjectSnapshot[], id: string | undefined) =>
+const selectedObject = (objects: readonly ObjectSnapshot[], id: string | undefined) =>
   objects.find((object) => object.id === id);
 
 /** A missing runtime selection stays missing until the student chooses another row or stops. */
-export const nextSelection = (current: string | undefined, objects: readonly ObjectSnapshot[], reset = false) =>
+const nextSelection = (current: string | undefined, objects: readonly ObjectSnapshot[], reset = false) =>
   reset || !current ? objects[0]?.id : current;
 
 const builtInImages = new Set(["Player", "Ground", "Platform", "Wall", "Water", "Spikes", "Coin", "Enemy", "Flag", "Bullet", "Box"]);

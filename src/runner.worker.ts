@@ -5,7 +5,7 @@ import { drawWorld, loadImages, ownSprites } from "./sprites";
 import { createRun, drainRunLogs, releaseRunKeys, runInput } from "./run-frame";
 import { course } from "./lessons/course";
 import type { FromWorker, ToWorker } from "./runner-protocol";
-import { objectSnapshots } from "./object-inspector";
+import { objectSnapshots } from "./object-snapshots";
 
 const scriptOf: Record<string, string> = {}; // blob URL -> Script name
 let paused = false;
