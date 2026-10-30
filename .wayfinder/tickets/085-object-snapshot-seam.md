@@ -1,7 +1,7 @@
 ---
 title: Separate runtime object snapshots from the Objects view
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---

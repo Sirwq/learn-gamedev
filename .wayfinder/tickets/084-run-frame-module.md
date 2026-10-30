@@ -1,7 +1,7 @@
 ---
 title: Put one Run's frame logic behind a small interface
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
