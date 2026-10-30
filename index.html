@@ -191,9 +191,11 @@
       #docs nav { flex: none; display: flex; flex-direction: column; gap: 2px; padding: 6px; border-right: 1px solid var(--border-subtle); overflow: auto; }
       #docs nav button { text-align: left; border: 0; background: none; color: var(--ink-muted); font-size: 12px; }
       #docs nav button:hover { background: var(--surface-raised); color: var(--ink-strong); }
-      #docs .docs-tip { order: 1; width: 0; min-width: 100%; margin: 12px 4px 4px; font-size: 11px; color: var(--ink-muted); }
       #docs nav button[aria-current="page"] { background: var(--surface-button); color: var(--ink-strong); }
-      #docs article { flex: 1; font-size: 14px; min-width: 0; overflow: auto; padding: 0 12px; overflow-wrap: anywhere; }
+      #docs article { flex: 1; font-size: 14px; line-height: 1.55; min-width: 0; overflow: auto; padding: 0 16px; overflow-wrap: anywhere; }
+      #docs article a { text-underline-offset: 2px; }
+      #docs article a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      #docs article :is(h2, h3) { scroll-margin-top: 12px; }
       #docs article h3 { margin: 20px 0 4px; font-size: 1em; }
       #docs article blockquote, #lesson blockquote { color: var(--ink-muted); margin-left: 0; padding-left: 8px; border-left: 3px solid var(--stone-dark); }
       #docs code { background: var(--surface-raised); padding: 1px 4px; }
@@ -506,7 +508,7 @@
           </div>
           <canvas id="level-minimap" width="960" height="80" tabindex="0" aria-label="Minimap of the whole Level: click or drag to move the view"></canvas>
         </div>
-        <div id="docs" hidden><nav aria-label="Docs pages"><p class="docs-tip">Share a Project: Export it and send the file. Your friend opens it with + New → From a file….</p></nav><article></article></div>
+        <div id="docs" hidden><nav aria-label="Docs pages"></nav><article></article></div>
         <div id="console-panel">
           <button id="console-toggle" aria-expanded="false" aria-controls="console">Console <span id="console-count">0 lines</span></button>
           <pre id="console" role="log" aria-label="Console" hidden></pre>
@@ -566,6 +568,7 @@
       <h3>New Project</h3>
       <button id="new-blank" autofocus>Blank<small>An empty world with one hidden box running Game.ts. Build everything with Instantiate.</small></button>
       <button id="new-platformer">My platformer<small>A copy of your Course code in a big playground Level. Changes here never touch your Lessons.</small></button>
+      <button id="new-tour">Example: Sandbox tour<small>A small Level with Jump and Coin sounds, a coin counter, and a tag ready for your own sprite.</small></button>
       <button id="new-file">From a file…<small>A Project someone Exported, or your own. It comes in as a new Project.</small></button>
       <input id="new-file-input" type="file" accept=".json,application/json" hidden>
       <button id="new-cancel">Cancel</button>

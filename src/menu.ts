@@ -10,6 +10,10 @@ import { createProject, importProject, loadProjects, type Project, sandboxUnlock
 import { toast } from "./toast";
 import { backupFileName, backupReminder, download, exportEverything, type ImportPlan, lastBackup, planImport, snoozeReminder } from "./backup";
 
+export const sandboxEmptyMessage = (count: number) => count === 0
+  ? "New here? Try Example: Sandbox tour, or carry on with Chapter 2 in the Course."
+  : "";
+
 type Page = {
   /** The Lesson this page shows (the open Project's page still has one). */
   lessonIndex: number;
@@ -23,9 +27,10 @@ type Page = {
   images: Promise<Images>;
   /** Where focus goes when the menu closes and nothing else had it. */
   focusEditor: () => void;
+  refreshDocs: () => void;
 };
 
-export function courseMenu({ lessonIndex, project, projects: loaded, askedProject, earned, images, focusEditor }: Page) {
+export function courseMenu({ lessonIndex, project, projects: loaded, askedProject, earned, images, focusEditor, refreshDocs }: Page) {
   const current = currentLesson(course);
   const lessonTitle = document.getElementById("lesson-title")!;
   const trophies = document.getElementById("trophies")!;
@@ -117,7 +122,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     if (mode === "sandbox") {
       const p = projects[focused];
       title = p ? p.name : "New Project";
-      meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", "Blank, or My platformer: a copy of your Course code");
+      meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", sandboxEmptyMessage(projects.length) || "Blank, My platformer, or Example: Sandbox tour");
     } else {
       const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))];
       const state = { passed: [CHECK, "Passed"], current: [PLAY, "Up next"], locked: [LOCK, `Pass Lesson ${menuCurrent + 1} to unlock`] }[states[focused]];
@@ -234,9 +239,10 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   }
   document.getElementById("replay-cancel")!.onclick = () => replayBox.close();
   document.getElementById("new-cancel")!.onclick = () => newBox.close();
-  const create = (kind: "blank" | "platformer") => async () => (location.search = `?sandbox=${(await createProject(kind, course)).id}`);
+  const create = (kind: "blank" | "platformer" | "tour") => async () => (location.search = `?sandbox=${(await createProject(kind, course)).id}`);
   document.getElementById("new-blank")!.onclick = create("blank");
   document.getElementById("new-platformer")!.onclick = create("platformer");
+  document.getElementById("new-tour")!.onclick = create("tour");
   // Import always makes a new Project; a bad file gets importProject's plain message and writes nothing.
   async function importFile(file: File) {
     try {
@@ -348,6 +354,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       setDevUnlock(!localStorage.getItem("dev:sandbox-unlocked"));
       devLabel();
       chipSandbox.hidden = !sandboxUnlocked(course);
+      refreshDocs();
       if (chipSandbox.hidden) setMode("course");
     };
     devLabel();

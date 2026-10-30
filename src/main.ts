@@ -14,7 +14,7 @@ import { loadScripts, openedHints, restoreStash, saveOpenedHints, saveScript, sa
 import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, chapterProgress, currentLesson, markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
-import { anchor, docLink, docPages } from "./docs";
+import { anchor, docLink, docPageAvailable, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import { Camera, GameObject, Vector2 } from "./engine";
@@ -54,7 +54,7 @@ document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
 if (!project) explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
-const pages = docPages(engineApi);
+const pages = docPages(engineApi, true);
 // API names in the Explanation link to their Docs member.
 for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code"))) {
   const id = docLink(pages, code.textContent!);
@@ -215,12 +215,14 @@ const docsArticle = docsEl.querySelector("article")!;
 const docsNav = pages.map((page) => {
   const b = document.createElement("button");
   b.textContent = page.title;
+  b.hidden = !docPageAvailable(page.title, sandboxUnlocked(course));
   b.onclick = () => openDocs(page.title);
   return b;
 });
 docsEl.querySelector("nav")!.append(...docsNav);
 let docsPage = pages[0].title;
 function openDocs(target = docsPage) {
+  if (!docPageAvailable(target, sandboxUnlocked(course))) return;
   const page = pages.find((p) => p.title === target || p.ids.includes(target))!;
   if (page.title !== docsPage || !docsArticle.hasChildNodes()) {
     docsPage = page.title;
@@ -233,6 +235,11 @@ function openDocs(target = docsPage) {
   docsEl.hidden = false;
   selectTab("📖 Docs");
   if (target !== page.title) document.getElementById(anchor(target))?.scrollIntoView();
+}
+function refreshDocs() {
+  const unlocked = sandboxUnlocked(course);
+  docsNav.find((b) => b.textContent === "Sandbox")!.hidden = !docPageAvailable("Sandbox", unlocked);
+  if (!unlocked && docsPage === "Sandbox") openDocs(pages[0].title);
 }
 function openLevel() {
   editorEl.hidden = docsEl.hidden = true;
@@ -339,7 +346,7 @@ images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasEl
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
 if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => saveProject(project), addScript: newScript });
 // The Course menu and its Sandbox tab.
-const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus() });
+const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
 // The Lesson strip of a Project: its name, Rename / Duplicate / Export / Delete.
@@ -598,6 +605,7 @@ function run() {
         showOverlay("✓ Lesson passed", false, true);
         toast("Lesson passed");
         if (!wasUnlocked && sandboxUnlocked(course)) {
+          refreshDocs();
           toast("🔓 Sandbox and Chapter 2 unlocked");
           setTimeout(() => {
             openMenu("course");
