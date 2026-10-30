@@ -11,8 +11,8 @@ The `return` line needs four checks joined with `&&`: two for `x` and `w`, two f
 Fill in the blank at the end of `Update()`:
 
 ```ts
-const box = GameObject.FindGameObjectsWithTag("Platform")[0];
-if (this.velocityY < 0 && Overlaps(this.gameObject, box)) {
+const box = GameObject.FindGameObjectsWithTag("Box")[0];
+if (box && this.velocityY < 0 && Overlaps(this.gameObject, box)) {
   this.transform.position = new Vector2(this.transform.position.x, ___);
   this.velocityY = 0;
   this.onGround = true;

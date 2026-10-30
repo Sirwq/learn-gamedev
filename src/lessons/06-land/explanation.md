@@ -1,4 +1,4 @@
-The flag floats too high to reach from the ground. Jump onto the brown box, then jump again from up there.
+The flag floats too high to reach from the ground. Jump onto the crate, then jump again from up there.
 
 First you need to know when two boxes touch. That is a job for a *function*: a named piece of code you can call again and again. Write it above your class:
 
@@ -12,7 +12,7 @@ function Overlaps(a: GameObject, b: GameObject): boolean {
 
 `a.w` and `a.h` are a box's width and height. Two boxes overlap when each one starts before the other one ends, left-right **and** bottom-top. Finish the `return` line with the two checks for `y` and `h`.
 
-At the end of `Update()`, get the box with `GameObject.FindGameObjectsWithTag("Platform")[0]`. If you are falling (`this.velocityY < 0`) and `Overlaps(this.gameObject, box)`, put yourself on top of it: your `y` becomes `box.transform.position.y + box.h`. Then do what you do on the ground: `velocityY` back to `0`, `onGround` to `true`.
+At the end of `Update()`, get the box with `GameObject.FindGameObjectsWithTag("Box")[0]`. If the box exists, you are falling (`this.velocityY < 0`), and `Overlaps(this.gameObject, box)`, put yourself on top of it: your `y` becomes `box.transform.position.y + box.h`. Then do what you do on the ground: `velocityY` back to `0`, `onGround` to `true`.
 
 Coming from below, you fly up through the box and land on it on the way down.
 

@@ -131,7 +131,7 @@ export const achievements: Achievement[] = [
   { id: "jump", after: "fall", col: 5, row: 4, icon: "🦘", title: "First jump", message: "Jump for the first time", test: moved((p, q) => p.y > q.y + 1) },
   {
     id: "land", after: "jump", col: 5, row: 2, icon: "📦", title: "Touchdown", message: "Land on a box",
-    test: moved((p, _, w) => w.some((o) => (o.tag === "Platform" || o.tag === "Wall") && standsOn(p, o))),
+    test: moved((p, _, w) => w.some((o) => (o.tag === "Box" || o.tag === "Platform" || o.tag === "Wall") && standsOn(p, o))),
   },
   {
     id: "bonk", after: "land", col: 5, row: 0, icon: "🧱", title: "Bonk", message: "Walk into a wall",

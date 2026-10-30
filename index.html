@@ -442,7 +442,7 @@
             <button id="level-code" aria-haspopup="dialog">View Level as Code</button>
           </div>
           <p id="level-locked" role="status" hidden>The game is running: press Stop to edit the Level.</p>
-          <p id="level-none">Click an object in the game view to select it. Drag to move it, drag its handles to resize it. Drag empty sky or use the wheel to look around; arrows move the view.</p>
+          <p id="level-none">Click an object in the game view to select it. Drag to move it, drag its handles to resize it. Hold Ctrl/⌘ while resizing to keep its shape. Drag empty sky or use the wheel to look around; arrows move the view.</p>
           <fieldset id="level-fields" disabled>
             <legend class="sr-only">Selected object</legend>
             <label>Tag <select id="level-tag"></select></label>
@@ -474,6 +474,7 @@
               <label>w <input id="level-w" type="number" step="1" min="1"></label>
               <label>h <input id="level-h" type="number" step="1" min="1"></label>
             </div>
+            <p>Hold Ctrl/⌘ while changing width or height to keep the same shape.</p>
             <div class="tools"><button id="level-duplicate">Duplicate</button><button id="level-delete">Delete</button></div>
           </fieldset>
           <h3>Objects</h3>

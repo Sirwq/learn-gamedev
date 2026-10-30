@@ -11,7 +11,7 @@ export const GRID = 20;
 /** Tags drawn as 20 px tiles (sprites.ts): their size snaps to the grid too. */
 export const TILED = ["Ground", "Platform", "Wall", "Water", "Spikes"];
 /** Every tag with art, for the Tag dropdown next to the Level's own tags. */
-export const ART_TAGS = ["Player", "Enemy", "Coin", "Flag", "Bullet", ...TILED];
+export const ART_TAGS = ["Player", "Enemy", "Coin", "Flag", "Bullet", "Box", ...TILED];
 
 /** Tiled tags resize in whole tiles, sprite tags in 4 px steps. */
 export const sizeStep = (tag: string) => (TILED.includes(tag) ? GRID : 4);
@@ -29,7 +29,7 @@ export type Handle = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 export const HANDLES: Handle[] = ["n", "ne", "e", "se", "s", "sw", "w", "nw"];
 
 /** The box with this handle dragged by (dx, dy): the opposite edges stay put; with snap the size moves in its tag's steps. Never smaller than one step. */
-export function resized(start: Box, handle: Handle, dx: number, dy: number, snap: boolean): Box {
+export function resized(start: Box, handle: Handle, dx: number, dy: number, snap: boolean, proportional = false): Box {
   const step = snap ? sizeStep(start.tag) : 1;
   const size = (v: number) => Math.max(step, near(v, step));
   let { x, y, w, h } = start;
@@ -37,6 +37,14 @@ export function resized(start: Box, handle: Handle, dx: number, dy: number, snap
   if (handle.includes("w")) (w = size(start.w - dx), (x = start.x + start.w - w));
   if (handle.includes("n")) h = size(start.h + dy);
   if (handle.includes("s")) (h = size(start.h - dy), (y = start.y + start.h - h));
+  if (proportional && start.w > 0 && start.h > 0) {
+    const horizontal = handle.includes("e") || handle.includes("w");
+    const vertical = handle.includes("n") || handle.includes("s");
+    if (horizontal && (!vertical || Math.abs(w / start.w - 1) >= Math.abs(h / start.h - 1))) h = Math.max(1, Math.round(w * start.h / start.w));
+    else w = Math.max(1, Math.round(h * start.w / start.h));
+    x = handle.includes("w") ? start.x + start.w - w : horizontal ? start.x : start.x + (start.w - w) / 2;
+    y = handle.includes("s") ? start.y + start.h - h : vertical ? start.y : start.y + (start.h - h) / 2;
+  }
   return { ...start, x, y, w, h };
 }
 
@@ -185,19 +193,19 @@ export const cameraStart = ({ x, y, size }: CameraStart): CameraStart => ({ x: M
 const ARROWS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] };
 
 /** An arrow key on the selected box: moves it by 20 (Alt: 1); Shift resizes from the top-right corner in its size steps. Undefined for other keys. */
-export function nudged(b: Box, key: string, shift: boolean, alt: boolean, snap: boolean): Box | undefined {
+export function nudged(b: Box, key: string, shift: boolean, alt: boolean, snap: boolean, proportional = false): Box | undefined {
   const dir = ARROWS[key];
   if (!dir) return undefined;
   const free = alt || !snap;
   if (!shift) return moved(b, dir[0] * (alt ? 1 : GRID), dir[1] * (alt ? 1 : GRID), !free);
   const step = alt ? 1 : sizeStep(b.tag);
-  return resized(b, dir[0] ? "e" : "n", dir[0] * step, dir[1] * step, !free);
+  return resized(b, dir[0] ? "e" : "n", dir[0] * step, dir[1] * step, !free, proportional);
 }
 
 /** A new box's size and colour per art tag, as the playground has them. */
 const NEW: Record<string, Omit<Box, "tag" | "x" | "y">> = {
   Player: { w: 32, h: 32, color: "orange" }, Enemy: { w: 40, h: 40, color: "crimson" }, Coin: { w: 24, h: 24, color: "gold" },
-  Flag: { w: 24, h: 64, color: "gold" }, Bullet: { w: 8, h: 4, color: "white" }, Ground: { w: 200, h: 40, color: "#5a3" },
+  Flag: { w: 24, h: 64, color: "gold" }, Bullet: { w: 8, h: 4, color: "white" }, Box: { w: 40, h: 40, color: "#a86" }, Ground: { w: 200, h: 40, color: "#5a3" },
   Platform: { w: 120, h: 20, color: "#a86" }, Wall: { w: 40, h: 100, color: "#888" }, Water: { w: 200, h: 40, color: "#36c" },
   Spikes: { w: 80, h: 20, color: "#ccd" },
 };

@@ -1,4 +1,4 @@
-Now there are three platforms, like stairs, and the flag floats above the top one. Your code only lands on the first platform.
+Now there are three platforms, like stairs, and the flag floats above the top one. Your starter code looks for `"Platform"` instead of the previous lesson's `"Box"`, but it only lands on the first platform.
 
 `FindGameObjectsWithTag("Platform")` gives back an *array*: a list of every platform. `platforms.length` is how many there are, and `platforms[i]` is the one at place `i`, counting from `0`.
 

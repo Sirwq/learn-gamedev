@@ -32,8 +32,8 @@ class Player extends MonoBehaviour {
       this.onGround = true;
     }
 
-    const box = GameObject.FindGameObjectsWithTag("Platform")[0];
-    if (this.velocityY < 0 && Overlaps(this.gameObject, box)) {
+    const box = GameObject.FindGameObjectsWithTag("Box")[0];
+    if (box && this.velocityY < 0 && Overlaps(this.gameObject, box)) {
       this.transform.position = new Vector2(this.transform.position.x, box.transform.position.y + box.h);
       this.velocityY = 0;
       this.onGround = true;

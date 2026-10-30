@@ -369,12 +369,23 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
     })) changed();
     else refresh();
   };
+  let proportionalKey = false;
+  document.addEventListener("keydown", (e) => (proportionalKey = e.ctrlKey || e.metaKey));
+  document.addEventListener("keyup", (e) => (proportionalKey = e.ctrlKey || e.metaKey));
+  window.addEventListener("blur", () => (proportionalKey = false));
   for (const [k, input] of nums) {
     input.onchange = () => {
       const v = Math.round(Number(input.value));
       // Width and height stay positive, as a drawn box needs.
       if (!input.value || !Number.isFinite(v) || ((k === "w" || k === "h") && v < 1)) return refresh();
-      if (ed.edit((bs) => (bs[ed.selected][k] = v))) changed();
+      if (ed.edit((bs) => {
+        const b = bs[ed.selected];
+        if (proportionalKey && (k === "w" || k === "h") && b.w > 0 && b.h > 0) {
+          if (k === "w") b.h = Math.max(1, Math.round((v * b.h) / b.w));
+          else b.w = Math.max(1, Math.round((v * b.w) / b.h));
+        }
+        b[k] = v;
+      })) changed();
     };
   }
   const duplicate = () => {
@@ -465,7 +476,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
       return;
     }
     const s = scale(), dx = (sx - drag.sx) / s, dy = -(sy - drag.sy) / s;
-    boxes[ed.selected] = drag.handle ? resized(drag.start, drag.handle, dx, dy, snap && !e.altKey) : moved(drag.start, dx, dy, snap && !e.altKey);
+    boxes[ed.selected] = drag.handle ? resized(drag.start, drag.handle, dx, dy, snap && !e.altKey, e.ctrlKey || e.metaKey) : moved(drag.start, dx, dy, snap && !e.altKey);
     draw();
   });
   const drop = () => {
@@ -482,7 +493,7 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
     const t = e.target as HTMLElement;
     if (!open || ed.running || (t !== document.body && !t.closest("#level-area, #inspector")) || t.closest("input, select, textarea, dialog")) return;
     const b = boxes[ed.selected];
-    const next = b && nudged(b, e.key, e.shiftKey, e.altKey, snap);
+    const next = b && nudged(b, e.key, e.shiftKey, e.altKey, snap, e.ctrlKey || e.metaKey);
     if (next) ed.edit((bs) => (bs[ed.selected] = next)) && changed();
     else if (!b && e.key.startsWith("Arrow")) {
       const d = 100 / scale(); // 100 screen pixels

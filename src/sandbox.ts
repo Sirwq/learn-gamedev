@@ -53,6 +53,7 @@ export const playground: Lesson["level"] = {
     { tag: "Platform", x: 300, y: 40, w: 120, h: 20, color: "#a86", script: "MovingPlatform" },
     { tag: "Water", x: 300, y: 0, w: 1000, h: 50, color: "#36c" },
     { tag: "Ground", x: 1300, y: 0, w: 1180, h: 40, color: "#5a3" },
+    { tag: "Box", x: 1320, y: 40, w: 40, h: 40, color: "#a86" },
     { tag: "Platform", x: 1380, y: 130, w: 140, h: 20, color: "#a86" },
     { tag: "Platform", x: 1560, y: 230, w: 140, h: 20, color: "#a86" },
     { tag: "Coin", x: 1438, y: 170, w: 24, h: 24, color: "gold" },

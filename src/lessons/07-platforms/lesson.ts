@@ -2,8 +2,11 @@ import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
 import hints from "./hints.md?raw";
-import stub from "../06-land/reference/Player.ts?raw"; // code carries over: the Lesson starts from the last one's Reference code
+import previous from "../06-land/reference/Player.ts?raw";
 import reference from "./reference/Player.ts?raw";
+
+// The next level uses grass platforms instead of the single crate.
+const stub = previous.replace('FindGameObjectsWithTag("Box")', 'FindGameObjectsWithTag("Platform")');
 
 export const lesson: Lesson = {
   title: "7. Many platforms",

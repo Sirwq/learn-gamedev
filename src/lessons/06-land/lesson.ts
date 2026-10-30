@@ -12,7 +12,7 @@ export const lesson: Lesson = {
   level: {
     boxes: [
       { tag: "Player", x: 100, y: 40, w: 32, h: 32, color: "orange", script: "Player" },
-      { tag: "Platform", x: 400, y: 120, w: 160, h: 20, color: "#a86" },
+      { tag: "Box", x: 440, y: 120, w: 40, h: 40, color: "#a86" },
       { tag: "Flag", x: 468, y: 230, w: 24, h: 64, color: "gold" },
       { tag: "Ground", x: 0, y: 0, w: 960, h: 40, color: "#5a3" },
     ],

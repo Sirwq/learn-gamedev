@@ -1,5 +1,6 @@
 // Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack, plus our own Player critter drawn by scripts/draw-player.mjs): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
 import Brick from "./sprites/Brick.png";
+import Box from "./sprites/Box.png";
 import Bullet from "./sprites/Bullet.png";
 import Coin from "./sprites/Coin.png";
 import CoinSpin from "./sprites/CoinSpin.png";
@@ -19,7 +20,7 @@ import Water from "./sprites/Water.png";
 import WaterTop from "./sprites/WaterTop.png";
 import { type Camera, type GameObject, toScreen } from "./engine";
 
-const sprites = { Player: PlayerIdle, Enemy, Coin, Flag, Bullet };
+const sprites = { Player: PlayerIdle, Enemy, Coin, Flag, Bullet, Box };
 /** The Player critter's frames (16×16, drawn at 2× on its 32×32 box); Lessons draw idle only. */
 export const playerFrames = { PlayerIdle, PlayerWalk1, PlayerWalk2, PlayerJump };
 export const urls = { ...sprites, ...playerFrames, EnemyWalk, CoinSpin, FlagWave, GrassTop, Dirt, Brick, WaterTop, Water, Spikes, Sky };
@@ -32,6 +33,7 @@ const animations: Record<keyof typeof sprites, { idle: Tile[]; walk?: Tile[]; ju
   Coin: { idle: ["Coin", "CoinSpin"] },
   Flag: { idle: ["Flag", "FlagWave"] },
   Bullet: { idle: ["Bullet"] },
+  Box: { idle: ["Box"] },
 };
 const FPS = 8;
 

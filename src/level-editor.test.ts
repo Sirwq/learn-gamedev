@@ -23,6 +23,13 @@ describe("snap", () => {
     expect(resized(box(), "w", 500, 0, true)).toMatchObject({ x: 80, w: 20 });
     expect(resized(box(), "n", 0, -500, false)).toMatchObject({ y: 0, h: 1 });
   });
+  it("keeps the starting shape when proportional resizing is requested", () => {
+    expect(resized(box(), "ne", 20, 0, true, true)).toMatchObject({ x: 0, y: 0, w: 120, h: 48 });
+    expect(resized(box(), "sw", -20, 0, true, true)).toMatchObject({ x: -20, y: -8, w: 120, h: 48 });
+    expect(resized(box(), "n", 0, 20, false, true)).toMatchObject({ x: -25, y: 0, w: 150, h: 60 });
+    expect(resized(box(), "e", 20, 0, false, true)).toMatchObject({ x: 0, y: -4, w: 120, h: 48 });
+    expect(resized(box(), "e", -500, 0, true, true)).toMatchObject({ w: 20, h: 8 });
+  });
 });
 
 describe("hit-testing", () => {
@@ -191,6 +198,10 @@ describe("keyboard", () => {
     expect(keys(box({ tag: "Coin", w: 24 }), "ArrowLeft", { shift: true })).toMatchObject({ w: 20 });
     expect(keys(box(), "ArrowDown", { shift: true, alt: true })).toMatchObject({ h: 39 });
     expect(keys(box({ h: 20 }), "ArrowDown", { shift: true })).toMatchObject({ h: 20 });
+  });
+  it("keeps the shape with Ctrl/Command and Shift arrows", () => {
+    expect(nudged(box(), "ArrowRight", true, false, true, true)).toMatchObject({ w: 120, h: 48 });
+    expect(nudged(box(), "ArrowUp", true, false, true, true)).toMatchObject({ w: 150, h: 60 });
   });
   it("ignores other keys", () => expect(nudged(box(), "a", false, false, true)).toBeUndefined());
 });
