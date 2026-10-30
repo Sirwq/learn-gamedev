@@ -4,6 +4,7 @@ import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
 import { playground, scriptStub, tour, type Project } from "./sandbox";
 import { checkProjectFile, encodeProjectFile, type ProjectFile } from "./project-file";
+import { t } from "./i18n";
 
 // Projects live in IndexedDB (spec 051): `project:<id>` the JSON, `image:<id>:<tag>[:top]` PNG Blobs.
 // Until the one-time migration from localStorage's `sandbox:projects` has succeeded they stay in localStorage.
@@ -120,7 +121,7 @@ export function saveProjectWithImages(project: Project, images: Record<string, B
   const imageSnapshot = { ...images };
   return ordered(project.id, async () => {
     if (!onIdb(store)) {
-      if (Object.keys(imageSnapshot).length) throw new Error("Images can't be saved in this browser right now. Reload the page and try again.");
+      if (Object.keys(imageSnapshot).length) throw new Error(t("Images can't be saved in this browser right now. Reload the page and try again."));
       askPersist(store);
       writeLocalProject(snapshot, store);
       changed(store);
@@ -187,7 +188,7 @@ export async function exportProject(project: Project) {
 export async function addProjectFile({ project: p, pngs }: ProjectFile, store: Local = localStorage, id = newId()) {
   const project: Project = { id, ...p };
   if (!onIdb(store)) {
-    if (pngs.length) throw new Error("Projects with images can't be saved in this browser right now. Reload the page and try again.");
+    if (pngs.length) throw new Error(t("Projects with images can't be saved in this browser right now. Reload the page and try again."));
     return saveProject(project, store).then(() => project);
   }
   askPersist(store);
@@ -202,7 +203,7 @@ export async function importProject(text: string, store: Local = localStorage) {
   try {
     file = JSON.parse(text);
   } catch {
-    throw new Error("This file can't be opened: it isn't a learn-dev Project file.");
+    throw new Error(t("This file can't be opened: it isn't a learn-dev Project file."));
   }
   return addProjectFile(checkProjectFile(file), store);
 }

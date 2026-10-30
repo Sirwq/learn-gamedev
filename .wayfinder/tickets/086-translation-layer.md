@@ -29,3 +29,7 @@ Make the app ready for more languages while keeping English as the current visib
 Added an English message catalog with typed placeholders, locale-aware plurals, safe locale fallback, and document language selection. Fixed HTML labels, accessible names, screen messages, and storage and import errors now use the catalog. Added content overrides for Lessons, Docs, and Achievements, with English field fallback; canonical Lesson titles and Project IDs remain the storage and routing identities. The language picker appears only after another catalog is registered. Documented how to add one in `LOCALIZATION.md`.
 
 An alternate-locale fixture covers message lookup, fallback, plural forms, content, document language, and unchanged progress and Project keys. `npm run typecheck` and `npm test` pass. Chromium checks passed in Lesson 1 and a newly created Sandbox Project, with no page errors.
+
+## Review follow-up
+
+- The Ask DeepSeek prompt's own rules and section headings remain in English. Ticket 087 explicitly includes translating the tutor prompt text; this review localized the Lesson content supplied to it, leaving that wording for the Russian content work.

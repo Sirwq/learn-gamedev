@@ -174,7 +174,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     fields.disabled = ed.running || !b;
     $("level-none").hidden = !!b;
     const tags = [...new Set([...ART_TAGS, ...boxes.map((x) => x.tag)])];
-    tag.replaceChildren(...tags.map((t) => option(t)), option(NEW, "+ New tag…"));
+    tag.replaceChildren(...tags.map((t) => option(t)), option(NEW, tr("+ New tag…")));
     script.replaceChildren(option("", tr("(none)")), ...scripts().map((s) => option(s, `${s}.ts`)), option(NEW, tr("+ New Script…")));
     tag.value = b?.tag ?? "";
     script.value = b?.script ?? "";

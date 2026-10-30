@@ -59,9 +59,11 @@ export const english = {
   "There is already a {name}.ts.": "There is already a {name}.ts.",
   "{name} is part of the engine API. Pick another name.": "{name} is part of the engine API. Pick another name.",
   "Images can't be saved in this browser right now. Reload the page and try again.": "Images can't be saved in this browser right now. Reload the page and try again.",
+  "Projects with images can't be saved in this browser right now. Reload the page and try again.": "Projects with images can't be saved in this browser right now. Reload the page and try again.",
+  "This file can't be opened: it isn't a learn-dev Project file.": "This file can't be opened: it isn't a learn-dev Project file.",
   "Camera start saved: Run starts the camera here": "Camera start saved: Run starts the camera here",
   "Level code copied": "Level code copied", "Copying didn't work: the code is selected, press Ctrl/Cmd+C.": "Copying didn't work: the code is selected, press Ctrl/Cmd+C.",
-  "Reset to default": "Reset to default", "Remove image": "Remove image", "+ New Script…": "+ New Script…", "(none)": "(none)",
+  "Reset to default": "Reset to default", "Remove image": "Remove image", "+ New Script…": "+ New Script…", "+ New tag…": "+ New tag…", "(none)": "(none)",
   "Add a {tag}: press, or drag it into the view": "Add a {tag}: press, or drag it into the view",
   "This file can't be opened: it isn't a learn-dev backup or Project file.": "This file can't be opened: it isn't a learn-dev backup or Project file.",
   "This file can't be opened: it comes from a newer learn-dev. Reload the page and try again.": "This file can't be opened: it comes from a newer learn-dev. Reload the page and try again.",
@@ -104,6 +106,8 @@ type Args<S extends string> = [Slots<S>] extends [never] ? [] : [values: Record<
 export type Catalog = {
   locale: string;
   messages: Partial<Record<Message, string>>;
+  /** Extra CLDR forms for counted messages; absent forms use the English plural. */
+  plurals?: Partial<Record<Message, Partial<Record<Intl.LDMLPluralRule, string>>>>;
   /** Canonical English Lesson title is the key. Entries may supply any subset of fields. */
   lessons?: Record<string, Partial<Pick<Lesson, "title" | "concept" | "explanation">> & { hints?: readonly string[]; goals?: readonly string[]; lose?: readonly string[] }>;
   /** Canonical page or API member id is the key; Markdown must preserve code and links. */
@@ -114,12 +118,19 @@ export type Catalog = {
 const fill = (pattern: string, values: Record<string, string | number>) =>
   pattern.replace(/\{(\w+)\}/g, (match, name: string) => name in values ? String(values[name]) : match);
 
+export const escapeHtml = (text: string) => text.replace(/[&<>"']/g, (char) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+
 export function createTranslator(catalog: Catalog) {
   const t = <K extends Message>(key: K, ...args: Args<K>) => fill(catalog.messages[key] ?? english[key], (args[0] ?? {}) as Record<string, string | number>);
+  const rules = new Intl.PluralRules(catalog.locale);
   return Object.assign(t, {
-    count: <O extends Message, M extends Message>(one: O, many: M, count: number) =>
-      fill(catalog.messages[new Intl.PluralRules(catalog.locale).select(count) === "one" ? one : many] ??
-        english[new Intl.PluralRules(catalog.locale).select(count) === "one" ? one : many], { count }),
+    count: <O extends Message, M extends Message>(one: O, many: M, count: number) => {
+      const form = rules.select(count);
+      const key = form === "one" ? one : many;
+      return fill(catalog.plurals?.[one]?.[form] ??
+        (form === "one" || form === "other" ? catalog.messages[key] : undefined) ?? english[key], { count });
+    },
   });
 }
 
@@ -131,9 +142,11 @@ export function resolveLocale(saved: string | null, browser: string, supported =
   for (const candidate of [saved, browser]) {
     if (!candidate) continue;
     const exact = candidate.toLowerCase();
-    if (supported.includes(exact)) return exact;
+    const match = supported.find((locale) => locale.toLowerCase() === exact);
+    if (match) return match;
     const base = exact.split("-")[0];
-    if (supported.includes(base)) return base;
+    const baseMatch = supported.find((locale) => locale.toLowerCase() === base);
+    if (baseMatch) return baseMatch;
   }
   return "en";
 }

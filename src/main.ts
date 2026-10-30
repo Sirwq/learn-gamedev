@@ -28,7 +28,7 @@ import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { deleteProject, duplicateProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { exportFileName } from "./project-file";
-import { activeCatalog, catalogs, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
+import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
 
 translateStatic();
 if (Object.keys(catalogs).length > 1) {
@@ -319,7 +319,10 @@ function earn(ids: string[]) {
     saveEarned(id);
     const notice = toast("");
     notice.className = "achievement";
-    notice.innerHTML = `<i class="tile">${a.icon}</i><span><small>${t("Achievement unlocked")}</small><b>${localizeAchievement(a).title}</b></span>`; // our own data
+    notice.innerHTML = `<i class="tile">${a.icon}</i><span><small></small><b></b></span>`;
+    notice.querySelector("i")!.textContent = a.icon;
+    notice.querySelector("small")!.textContent = t("Achievement unlocked");
+    notice.querySelector("b")!.textContent = localizeAchievement(a).title;
   }
   showTrophies();
   if (!map.hidden) drawMap();
@@ -344,7 +347,8 @@ function drawMap() {
     const state = stateOf(a, earned), [x, y] = centre(a);
     const shown = localizeAchievement(a);
     const tip = state === "hidden" ? `???\n${t("Earn the one before it first")}` : `${shown.title}\n${shown.message}${a.extra ? `\n${EXTRA}` : ""}${state === "earned" ? `\n${t("✓ earned")}` : ""}`;
-    return `<i class="tile ${state}" role="img" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
+    const safeTip = escapeHtml(tip);
+    return `<i class="tile ${state}" role="img" style="left:${x}px;top:${y}px" title="${safeTip}" aria-label="${safeTip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
   });
   map.querySelector("#tree")!.innerHTML = `<svg width="${w}" height="${h}"><defs>${arrow("arrow")}${arrow("arrowlit")}</defs>${lines.join("")}</svg>${tiles.join("")}`;
   (map.querySelector("#tree") as HTMLElement).style.cssText = `width:${w}px;height:${h}px`;
@@ -494,6 +498,7 @@ showGoals([]);
 
 const consoleEl = document.getElementById("console")!;
 const consoleLines: ConsoleLine[] = [];
+document.getElementById("console-count")!.textContent = t.count("{count} line", "{count} lines", 0);
 const consoleToggle = document.getElementById("console-toggle")!;
 function openConsole(open: boolean) {
   consoleToggle.ariaExpanded = String(open);
@@ -714,9 +719,9 @@ document.getElementById("prompt-close")!.onclick = () => promptBox.close();
 document.getElementById("ask")!.onclick = async () => {
   const prompt = tutorPrompt({
     lesson: project ? undefined : {
-      title: lesson.title,
-      explanation: lesson.explanation,
-      goals: goals.map((g, i) => ({ message: g.message, met: !!goalsMet[i] })),
+      title: displayLesson.title,
+      explanation: displayLesson.explanation,
+      goals: goals.map((_, i) => ({ message: localizeCheck(lesson, "goals", i), met: !!goalsMet[i] })),
       hints: hints.slice(0, opened),
     },
     script: { name: openScript, code: models[openScript].getValue() },
