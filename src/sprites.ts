@@ -1,4 +1,5 @@
 // Pixel-art look of the game (Kenney's CC0 Pixel Platformer pack, plus Null Signal Player art drawn by scripts/draw-player.mjs): one sprite per tag, stretched exactly onto its box, so drawn shape = hitbox.
+import { t } from "./i18n";
 import Brick from "./sprites/Brick.png";
 import Box from "./sprites/Box.png";
 import Bullet from "./sprites/Bullet.png";
@@ -102,7 +103,7 @@ export async function importImage(file: Blob) {
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    throw new Error("This image can't be opened. Try saving it again as a PNG.");
+    throw new Error(t("This image can't be opened. Try saving it again as a PNG."));
   }
   const { w, h } = fitSize(bitmap.width, bitmap.height);
   const canvas = new OffscreenCanvas(w, h);

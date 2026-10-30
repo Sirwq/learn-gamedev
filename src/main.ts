@@ -28,6 +28,18 @@ import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { deleteProject, duplicateProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { exportFileName } from "./project-file";
+import { activeCatalog, catalogs, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
+
+translateStatic();
+if (Object.keys(catalogs).length > 1) {
+  const picker = document.createElement("select");
+  picker.ariaLabel = t("Language");
+  const names = new Intl.DisplayNames([activeCatalog.locale], { type: "language" });
+  for (const code of Object.keys(catalogs)) picker.add(new Option(names.of(code) ?? code, code));
+  picker.value = activeCatalog.locale;
+  picker.onchange = () => { localStorage.setItem("locale", picker.value); location.reload(); };
+  document.getElementById("theme")!.before(picker);
+}
 
 self.MonacoEnvironment = {
   getWorker: (_, label) => (label === "typescript" || label === "javascript" ? new TsWorker() : new EditorWorker()),
@@ -42,7 +54,7 @@ const asked = params.get("lesson");
 const askedProject = sandboxUnlocked(course) ? params.get("sandbox") : null;
 // Project writes are async: a full disk surfaces here, so the student knows the change was not kept.
 addEventListener("unhandledrejection", (e) => {
-  if (e.reason?.name === "QuotaExceededError") toast("Storage is full: your last Project change was not saved. Delete a Project you no longer need and try again.");
+  if (e.reason?.name === "QuotaExceededError") toast(t("Storage is full: your last Project change was not saved. Delete a Project you no longer need and try again."));
 });
 await migrateProjects();
 const projects = await loadProjects();
@@ -53,13 +65,14 @@ const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocke
 const replaying = !project && lessonIndex !== current;
 if (!replaying && !project) restoreStash(); // before the editor loads the code
 const lesson = course[lessonIndex];
+const displayLesson = localizeLesson(lesson);
 const lessonTitle = document.getElementById("lesson-title")!;
-lessonTitle.textContent = project ? project.name : lesson.title;
+lessonTitle.textContent = project ? project.name : displayLesson.title;
 document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
-if (!project) explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
-else explanation.textContent = "This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.";
+if (!project) explanation.innerHTML = marked.parse(displayLesson.explanation, { async: false }); // our own trusted Markdown
+else explanation.textContent = t("This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.");
 const pages = docPages(engineApi, true);
 // API names in the Explanation link to their Docs member.
 for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code"))) {
@@ -71,17 +84,17 @@ for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code")))
   a.append(code);
 }
 
-const hints = project ? [] : (lesson.hints ?? []);
+const hints = project ? [] : (displayLesson.hints ?? []);
 const stillStuck = document.getElementById("still-stuck")!;
 const nextHint = document.getElementById("next-hint") as HTMLButtonElement;
 function showHints(opened: number) {
   document.getElementById("hints")!.replaceChildren(...hints.slice(0, opened).map((hint, i) => {
     const div = document.createElement("div");
-    div.innerHTML = marked.parse(`**💡 Hint ${i + 1}**\n\n${hint}`, { async: false });
+    div.innerHTML = marked.parse(`**💡 ${t("Hint {number}", { number: i + 1 })}**\n\n${hint}`, { async: false });
     return div;
   }));
-  nextHint.textContent = `💡 Hint ${opened + 1} of ${hints.length}`;
-  nextHint.ariaLabel = `Hint ${opened + 1} of ${hints.length}`;
+  nextHint.textContent = `💡 ${t("Hint {number} of {total}", { number: opened + 1, total: hints.length })}`;
+  nextHint.ariaLabel = t("Hint {number} of {total}", { number: opened + 1, total: hints.length });
   nextHint.hidden = opened >= hints.length;
   stillStuck.hidden = !nextHint.hidden || !!project;
 }
@@ -97,15 +110,15 @@ function showProgress() {
   const chapters = chapterProgress(course);
   const label = document.createElement("span");
   label.textContent = lessonIndex >= CHAPTER_ONE_COUNT && !project
-    ? `Ch. 2 ${chapters.chapterTwo} / ${CHAPTER_TWO_COUNT}`
+    ? t("Ch. 2 {done} / {total}", { done: chapters.chapterTwo, total: CHAPTER_TWO_COUNT })
     : `${chapters.chapterOne} / ${CHAPTER_ONE_COUNT}`;
   const button = document.getElementById("progress")!;
-  button.ariaLabel = `${label.textContent} Lessons passed, back to Lessons`;
+  button.ariaLabel = t("{progress} Lessons passed, back to Lessons", { progress: label.textContent ?? "" });
   button.replaceChildren(...done.map((d, i) => {
     if (i >= CHAPTER_ONE_COUNT && !chapters.unlocked) return null;
     const pip = document.createElement("i");
     pip.className = d ? "done" : "";
-    pip.title = course[i].title;
+    pip.title = localizeLesson(course[i]).title;
     pip.ariaHidden = "true";
     return pip;
   }).filter((pip) => pip !== null), label);
@@ -143,7 +156,7 @@ function applyTheme() {
   });
   monaco.editor.setTheme("page");
   themeButton.textContent = light ? "☾" : "☀";
-  themeButton.title = themeButton.ariaLabel = light ? "Switch to dark theme" : "Switch to light theme";
+  themeButton.title = themeButton.ariaLabel = light ? t("Switch to dark theme") : t("Switch to light theme");
 }
 const themeButton = document.getElementById("theme")!;
 themeButton.onclick = () => {
@@ -156,7 +169,7 @@ const editor = monaco.editor.create(document.getElementById("editor")!, {
   theme: "page",
   automaticLayout: true,
   minimap: { enabled: false },
-  ariaLabel: "Code editor. Press Escape, then Tab to leave it.",
+  ariaLabel: t("Code editor. Press Escape, then Tab to leave it."),
 });
 // Tab indents, so Esc turns on Monaco's "Tab moves focus" until the next other key or leaving the editor.
 editor.onKeyDown((e) => {
@@ -167,9 +180,10 @@ editor.onDidBlurEditorText(() => editor.updateOptions({ tabFocusMode: false }));
 function makeTab(label: string) {
   const tab = document.createElement("button");
   tab.role = "tab";
-  tab.textContent = label;
-  if (label === "📖 Docs") tab.ariaLabel = "Docs";
-  if (label === LEVEL) tab.ariaLabel = "Level";
+  tab.dataset.key = label;
+  tab.textContent = label === "📖 Docs" ? `📖 ${t("Docs")}` : label === LEVEL ? `🗺 ${t("Level")}` : label;
+  if (label === "📖 Docs") tab.ariaLabel = t("Docs");
+  if (label === LEVEL) tab.ariaLabel = t("Level");
   tab.onclick = () => (label === "📖 Docs" ? openDocs() : label === LEVEL ? openLevel() : show(label.slice(0, -3)));
   return tab;
 }
@@ -178,10 +192,10 @@ const tabs = [...(project ? [LEVEL] : []), ...Object.keys(models).map((name) => 
 document.getElementById("tabs")!.append(...tabs);
 if (project) {
   const addScript = document.createElement("button");
-  addScript.textContent = "+ Script";
-  addScript.title = "Add a new Script file";
+  addScript.textContent = t("+ Script");
+  addScript.title = t("Add a new Script file");
   addScript.onclick = () => {
-    const name = prompt("Name of the new Script (its class name, like Coin):")?.trim();
+    const name = prompt(t("Name of the new Script (its class name, like Coin):"))?.trim();
     if (!name) return;
     const error = newScript(name);
     if (error) return void toast(error);
@@ -201,7 +215,7 @@ function newScript(name: string) {
   return "";
 }
 const selectTab = (label: string) => {
-  for (const tab of tabs) tab.ariaSelected = String(tab.textContent === label);
+  for (const tab of tabs) tab.ariaSelected = String(tab.dataset.key === label);
 };
 const editorEl = document.getElementById("editor")!;
 const docsEl = document.getElementById("docs")!;
@@ -220,7 +234,8 @@ function show(name: string) {
 const docsArticle = docsEl.querySelector("article")!;
 const docsNav = pages.map((page) => {
   const b = document.createElement("button");
-  b.textContent = page.title;
+  b.dataset.page = page.title;
+  b.textContent = page.title === "Sandbox" ? t("Sandbox") : page.title === "TypeScript vs Unity C#" ? t("TypeScript vs Unity C#") : page.title;
   b.hidden = !docPageAvailable(page.title, sandboxUnlocked(course));
   b.onclick = () => openDocs(page.title);
   return b;
@@ -232,9 +247,9 @@ function openDocs(target = docsPage) {
   const page = pages.find((p) => p.title === target || p.ids.includes(target))!;
   if (page.title !== docsPage || !docsArticle.hasChildNodes()) {
     docsPage = page.title;
-    docsArticle.innerHTML = marked.parse(page.markdown, { async: false }); // generated from our own typings
+    docsArticle.innerHTML = marked.parse(localizeDocs(page.title, page.markdown), { async: false }); // generated from our own typings
     docsArticle.scrollTop = 0;
-    for (const b of docsNav) b.ariaCurrent = b.textContent === page.title ? "page" : null;
+    for (const b of docsNav) b.ariaCurrent = b.dataset.page === page.title ? "page" : null;
   }
   level?.setOpen(false);
   editorEl.hidden = true;
@@ -244,7 +259,7 @@ function openDocs(target = docsPage) {
 }
 function refreshDocs() {
   const unlocked = sandboxUnlocked(course);
-  docsNav.find((b) => b.textContent === "Sandbox")!.hidden = !docPageAvailable("Sandbox", unlocked);
+  docsNav.find((b) => b.dataset.page === "Sandbox")!.hidden = !docPageAvailable("Sandbox", unlocked);
   if (!unlocked && docsPage === "Sandbox") openDocs(pages[0].title);
 }
 function openLevel() {
@@ -264,7 +279,7 @@ editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => run());
 const runBtn = document.getElementById("run") as HTMLButtonElement;
 const stopBtn = document.getElementById("stop")!;
 runBtn.querySelector("kbd")!.textContent = runShortcut(navigator.platform);
-runBtn.title = `Run (${runShortcut(navigator.platform)})`;
+runBtn.title = t("Run ({shortcut})", { shortcut: runShortcut(navigator.platform) });
 const status = document.getElementById("status")!;
 const goalsList = document.getElementById("goals")!;
 const overlay = document.getElementById("overlay")!;
@@ -275,7 +290,7 @@ const passBox = document.getElementById("pass")!;
 // Pass screen: one Compare per Script this Lesson touched, then Next Lesson (unlocked by this pass).
 passBox.append(...Object.keys(lesson.scripts).map((name) => {
   const b = document.createElement("button");
-  b.textContent = `Compare ${name}.ts`;
+  b.textContent = t("Compare {name}.ts", { name });
   b.onclick = () => openCompare(name);
   return b;
 }));
@@ -283,7 +298,7 @@ const nextIndex = replaying ? current : lessonIndex + 1;
 if (nextIndex < course.length) {
   const next = document.createElement("button");
   next.id = "next";
-  next.textContent = replaying ? `Back to Lesson ${current + 1}` : "Next Lesson ▶";
+  next.textContent = replaying ? t("Back to Lesson {number}", { number: current + 1 }) : t("Next Lesson ▶");
   next.onclick = () => (location.search = `?lesson=${nextIndex}`);
   passBox.append(next);
 }
@@ -294,7 +309,7 @@ const trophies = document.getElementById("trophies")!;
 const map = document.getElementById("achievements")!;
 function showTrophies() {
   trophies.textContent = `🏆 ${earned.size} / ${achievements.length}`;
-  trophies.ariaLabel = `Achievements ${earned.size} / ${achievements.length}`;
+  trophies.ariaLabel = t("Achievements {earned} / {total}", { earned: earned.size, total: achievements.length });
 }
 showTrophies();
 function earn(ids: string[]) {
@@ -302,18 +317,18 @@ function earn(ids: string[]) {
     const a = achievements.find((a) => a.id === id)!;
     earned.add(id);
     saveEarned(id);
-    const t = toast("");
-    t.className = "achievement";
-    t.innerHTML = `<i class="tile">${a.icon}</i><span><small>Achievement unlocked</small><b>${a.title}</b></span>`; // our own data
+    const notice = toast("");
+    notice.className = "achievement";
+    notice.innerHTML = `<i class="tile">${a.icon}</i><span><small>${t("Achievement unlocked")}</small><b>${localizeAchievement(a).title}</b></span>`; // our own data
   }
   showTrophies();
   if (!map.hidden) drawMap();
 }
 const CELL = 76;
-const EXTRA = "Extra: no Lesson teaches this. Build it in your own Player code, in any Lesson or a Sandbox Project.";
+const EXTRA = t("Extra: no Lesson teaches this. Build it in your own Player code, in any Lesson or a Sandbox Project.");
 const centre = (a: (typeof achievements)[number]) => [a.col * CELL + CELL / 2, a.row * CELL + CELL / 2];
 function drawMap() {
-  map.querySelector("header span")!.textContent = `${earned.size} earned · gold = earned · grey = can earn now · ? = earn the one before it first`;
+  map.querySelector("header span")!.textContent = t("{earned} earned · gold = earned · grey = can earn now · ? = earn the one before it first", { earned: earned.size });
   const [w, h] = [13 * CELL, 10 * CELL];
   // Right-angled arrows, each stopping at the edge of the tile it points to.
   const lines = achievements.filter((a) => a.after).map((a) => {
@@ -327,7 +342,8 @@ function drawMap() {
   const arrow = (id: string) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z"/></marker>`;
   const tiles = achievements.map((a) => {
     const state = stateOf(a, earned), [x, y] = centre(a);
-    const tip = state === "hidden" ? "???\nEarn the one before it first" : `${a.title}\n${a.message}${a.extra ? `\n${EXTRA}` : ""}${state === "earned" ? "\n✓ earned" : ""}`;
+    const shown = localizeAchievement(a);
+    const tip = state === "hidden" ? `???\n${t("Earn the one before it first")}` : `${shown.title}\n${shown.message}${a.extra ? `\n${EXTRA}` : ""}${state === "earned" ? `\n${t("✓ earned")}` : ""}`;
     return `<i class="tile ${state}" role="img" style="left:${x}px;top:${y}px" title="${tip}" aria-label="${tip}">${state === "hidden" ? "?" : `<span>${a.icon}</span>`}</i>`;
   });
   map.querySelector("#tree")!.innerHTML = `<svg width="${w}" height="${h}"><defs>${arrow("arrow")}${arrow("arrowlit")}</defs>${lines.join("")}</svg>${tiles.join("")}`;
@@ -376,7 +392,7 @@ if (asked === null && !project) openMenu(); // the app opens on the Course menu 
 if (project) {
   document.getElementById("project-actions")!.hidden = false;
   document.getElementById("rename")!.onclick = () => {
-    const name = prompt("Project name:", project.name)?.trim();
+    const name = prompt(t("Project name:"), project.name)?.trim();
     if (!name) return;
     project.name = lessonTitle.textContent = name;
     saveProject(project);
@@ -384,7 +400,7 @@ if (project) {
   document.getElementById("duplicate")!.onclick = async () => (location.search = `?sandbox=${(await duplicateProject(project)).id}`);
   document.getElementById("export")!.onclick = async () => download(await exportProject(project), exportFileName(project.name));
   document.getElementById("delete")!.onclick = () => {
-    if (!confirm(`Delete "${project.name}"? Its Scripts are gone for good.`)) return;
+    if (!confirm(t("Delete \"{name}\"? Its Scripts are gone for good.", { name: project.name }))) return;
     deleteProject(project.id).then(() => (location.search = "?sandbox"));
   };
 }
@@ -403,7 +419,7 @@ function openCompare(name: string) {
   comparing = name;
   diff.getModel()?.modified.dispose();
   diff.setModel({ original: models[name], modified: monaco.editor.createModel(reference, "javascript") });
-  document.getElementById("compare-title")!.textContent = `Compare ${name}.ts`;
+  document.getElementById("compare-title")!.textContent = t("Compare {name}.ts", { name });
   compare.hidden = false;
   diff.getModifiedEditor().focus(); // so Esc closes it
 }
@@ -438,9 +454,9 @@ function setFontSize(size: number) {
 setFontSize(fontSize);
 const mod = modKey(navigator.platform);
 for (const [button, step, label, key, code] of [
-  [zoomOut, -1, "Smaller code", "-", monaco.KeyCode.Minus],
-  [zoomReset, 0, "Reset code size", "0", monaco.KeyCode.Digit0],
-  [zoomIn, 1, "Bigger code", "=", monaco.KeyCode.Equal],
+  [zoomOut, -1, t("Smaller code"), "-", monaco.KeyCode.Minus],
+  [zoomReset, 0, t("Reset code size"), "0", monaco.KeyCode.Digit0],
+  [zoomIn, 1, t("Bigger code"), "=", monaco.KeyCode.Equal],
 ] as const) {
   button.ariaLabel = label;
   button.title = `${label} (${mod}${key})`;
@@ -462,8 +478,8 @@ function showGoals(met: boolean[]) {
     mark.textContent = met[i] ? "✓ " : "⬜ ";
     const state = document.createElement("span");
     state.className = "sr-only";
-    state.textContent = met[i] ? "Done: " : "To do: ";
-    li.append(mark, state, g.message);
+    state.textContent = met[i] ? t("Done: ") : t("To do: ");
+    li.append(mark, state, localizeCheck(lesson, "goals", i));
     return li;
   }));
 }
@@ -491,7 +507,7 @@ consoleToggle.onclick = () => openConsole(consoleEl.hidden);
 function log(batch: ConsoleLine[]) {
   const wasEmpty = !consoleLines.length;
   for (const l of batch) addLine(consoleLines, l.level, l.text, l.count);
-  document.getElementById("console-count")!.textContent = `${consoleLines.length} ${consoleLines.length === 1 ? "line" : "lines"}`;
+  document.getElementById("console-count")!.textContent = t.count("{count} line", "{count} lines", consoleLines.length);
   if (wasEmpty && consoleLines.length) openConsole(true); // once per Run, so a student who closes it keeps it closed
   const atBottom = consoleEl.scrollTop + consoleEl.clientHeight >= consoleEl.scrollHeight - 4;
   consoleEl.replaceChildren(...consoleLines.map((l) => {
@@ -510,7 +526,7 @@ const hasTypeErrors = () =>
     .some((m) => m.owner !== "runtime" && m.severity === monaco.MarkerSeverity.Error));
 monaco.editor.onDidChangeMarkers(() => {
   const blocked = hasTypeErrors();
-  if (blocked !== runBtn.disabled) status.textContent = blocked ? "Fix the red squiggles before running." : "";
+  if (blocked !== runBtn.disabled) status.textContent = blocked ? t("Fix the red squiggles before running.") : "";
   runBtn.disabled = blocked;
 });
 
@@ -602,7 +618,7 @@ function run() {
     if (!running) return;
     post({ type: "pause" });
     stopSounds();
-    showOverlay("Click to play", false);
+    showOverlay(t("Click to play"), false);
   };
   canvas.onfocus = () => {
     if (!running) return;
@@ -634,17 +650,21 @@ function run() {
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose
-      if (e.data.lost) showOverlay(e.data.lost, true);
+      if (e.data.lost) {
+        const lost = e.data.lost;
+        const index = lesson.lose.findIndex((item) => item.message === lost);
+        showOverlay(index < 0 ? lost : localizeCheck(lesson, "lose", index), true);
+      }
       if (e.data.passed) {
         const wasUnlocked = sandboxUnlocked(course);
         markPassed(lesson.title);
         saveSnapshot(lesson.title, Object.fromEntries(Object.entries(models).map(([n, m]) => [n, m.getValue()])));
         showProgress();
-        showOverlay("✓ Lesson passed", false, true);
-        toast("Lesson passed");
+        showOverlay(t("✓ Lesson passed"), false, true);
+        toast(t("Lesson passed"));
         if (!wasUnlocked && sandboxUnlocked(course)) {
           refreshDocs();
-          toast("🔓 Sandbox and Chapter 2 unlocked");
+          toast(t("🔓 Sandbox and Chapter 2 unlocked"));
           setTimeout(() => {
             openMenu("course");
             setMode("sandbox");
@@ -655,13 +675,14 @@ function run() {
     if (e.data.type === "error") {
       ended(); // the worker already stopped its loop; terminating now would blank the last frame
       const where = e.data.script && e.data.line ? `${e.data.script}.ts:${e.data.line} ` : "";
-      log([{ level: "error", text: `${where}${e.data.message}`, count: 1 }]);
+      const message = localizeRuntimeError(e.data.message);
+      log([{ level: "error", text: `${where}${message}`, count: 1 }]);
       const model = e.data.script && models[e.data.script];
       if (model && e.data.line) {
         show(e.data.script!);
         monaco.editor.setModelMarkers(model, "runtime", [{
           severity: monaco.MarkerSeverity.Error,
-          message: e.data.message,
+          message,
           startLineNumber: e.data.line,
           startColumn: e.data.col ?? 1,
           endLineNumber: e.data.line,
@@ -674,7 +695,7 @@ function run() {
     if (document.hidden || paused) lastTick = performance.now(); // hidden tabs pause animation frames, that's not a hang
     else if (performance.now() - lastTick > 1000) {
       stop();
-      status.textContent = "Your code ran forever. Look at your while / for loops.";
+      status.textContent = t("Your code ran forever. Look at your while / for loops.");
     }
   }, 250);
 }
@@ -710,9 +731,9 @@ document.getElementById("ask")!.onclick = async () => {
     return;
   }
   window.open("https://chat.deepseek.com", "_blank"); // after copying: a focused new tab would make the copy fail
-  toast("Prompt copied. In DeepSeek: Ctrl/Cmd+V, type your question at the end, Enter.");
+  toast(t("Prompt copied. In DeepSeek: Ctrl/Cmd+V, type your question at the end, Enter."));
   if (!localStorage.getItem("asked-deepseek")) {
     localStorage.setItem("asked-deepseek", "1");
-    toast("You need a free DeepSeek account.");
+    toast(t("You need a free DeepSeek account."));
   }
 };

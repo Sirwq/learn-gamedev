@@ -1,4 +1,5 @@
 import type { ObjectSnapshot } from "./object-snapshots";
+import { t } from "./i18n";
 
 const selectedObject = (objects: readonly ObjectSnapshot[], id: string | undefined) =>
   objects.find((object) => object.id === id);
@@ -19,7 +20,7 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
   function renderDetails() {
     const object = selectedObject(objects, selected);
     if (!object) {
-      details.textContent = objects.length ? (selected ? "The selected object no longer exists. Select another object." : "Select an object to inspect it.") : "This Level has no objects yet.";
+      details.textContent = objects.length ? (selected ? t("The selected object no longer exists. Select another object.") : t("Select an object to inspect it.")) : t("This Level has no objects yet.");
       return;
     }
     const line = (label: string, value: string) => {
@@ -35,7 +36,7 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
       list.append(...rows);
       return list;
     };
-    const colour = line("Colour", object.color);
+    const colour = line(t("Colour"), object.color);
     const swatch = document.createElement("span");
     swatch.className = "object-swatch";
     swatch.style.backgroundColor = object.color;
@@ -43,13 +44,13 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
     colour.querySelector("dd")!.prepend(swatch);
     const heading = (text: string) => Object.assign(document.createElement("h3"), { textContent: text });
     const hint = document.createElement("p");
-    hint.innerHTML = '<code>this.transform.position</code> gives x and y; <code>this.gameObject.tag</code> is the tag; <code>this.gameObject.w</code> / <code>h</code> give the box size.';
-    details.replaceChildren(heading(object.tag), dl(line("Tag", object.tag)),
-      heading("Transform"), dl(line("Position x", number(object.x)), line("Position y", number(object.y))),
-      heading("Box / hitbox"), dl(line("Width", number(object.w)), line("Height", number(object.h))),
-      heading("Script"), dl(line("Attached", object.script ? `${object.script}.ts` : "No Script")),
-      heading("Appearance"), dl(colour, line("Image", Object.hasOwn(art(), object.tag) ? "Project image" : builtInImages.has(object.tag) ? "Built-in image" : "No image")),
-      heading("In code"), hint);
+    hint.innerHTML = t("<code>this.transform.position</code> gives x and y; <code>this.gameObject.tag</code> is the tag; <code>this.gameObject.w</code> / <code>h</code> give the box size.");
+    details.replaceChildren(heading(object.tag), dl(line(t("Tag"), object.tag)),
+      heading(t("Transform")), dl(line(t("Position x"), number(object.x)), line(t("Position y"), number(object.y))),
+      heading(t("Box / hitbox")), dl(line(t("Width"), number(object.w)), line(t("Height"), number(object.h))),
+      heading(t("Script")), dl(line(t("Attached"), object.script ? `${object.script}.ts` : t("No Script"))),
+      heading(t("Appearance")), dl(colour, line(t("Image"), Object.hasOwn(art(), object.tag) ? t("Project image") : builtInImages.has(object.tag) ? t("Built-in image") : t("No image"))),
+      heading(t("In code")), hint);
   }
   function select(id: string) {
     selected = id;

@@ -1,4 +1,5 @@
 import { transform } from "sucrase";
+import { t } from "./i18n";
 
 // Sucrase keeps line N of the TS on line N of the JS, so stack lines are editor lines.
 export function transpile(ts: string): string {
@@ -18,7 +19,7 @@ export const runShortcut = (platform: string) => `${modKey(platform)}↵`;
 
 /** The one Console line each Run starts with. */
 export const runStartLine = (lessonIndex: number, projectName?: string) =>
-  `▶ Running ${projectName ?? `Lesson ${lessonIndex + 1}`}…`;
+  t("▶ Running {target}…", { target: projectName ?? t("Lesson {number}", { number: lessonIndex + 1 }) });
 
 /** Sandbox and Chapter 2 (Lesson 16 on) animate sprites and play sounds; Lessons 1–15 draw still frames and stay silent. */
 export const v2Features = (start: { lesson: number } | { level: unknown }) => !("lesson" in start) || start.lesson >= 15;

@@ -1,4 +1,5 @@
 // The 📖 Docs tab, generated from the doc comments in engine-api.d.ts (spec 007), so docs and Monaco hover can't drift.
+import { localizeDocs, t } from "./i18n";
 
 export type Doc = { id: string; signature: string; text: string; example?: string; unity?: string };
 export type Page = { title: string; markdown: string; ids: string[] };
@@ -43,9 +44,9 @@ export const docPageAvailable = (title: string, unlocked: boolean) => title !== 
 const docMarkdown = (d: Doc) =>
   [
     "```ts\n" + d.signature + "\n```",
-    d.text,
-    d.example && "Example:\n\n```ts\n" + d.example + "\n```",
-    d.unity && `**Differs from Unity C#**: ${d.unity}`,
+    localizeDocs(`${d.id}.text`, d.text),
+    d.example && `${t("Example:")}\n\n\`\`\`ts\n${d.example}\n\`\`\``,
+    d.unity && `**${t("Differs from Unity C#")}**: ${localizeDocs(`${d.id}.unity`, d.unity)}`,
   ].filter(Boolean).join("\n\n");
 
 /** One page per class, an optional Sandbox guide, then the TypeScript vs Unity C# page. */
@@ -85,7 +86,7 @@ export function docPages(source: string, sandboxUnlocked = false): Page[] {
     markdown: [
       "## TypeScript vs Unity C#",
       "Everything here works like Unity C#, except:",
-      differences.map((d) => `- [${d.id}](#${anchor(d.id)}): ${d.unity}`).join("\n"),
+      differences.map((d) => `- [${d.id}](#${anchor(d.id)}): ${localizeDocs(`${d.id}.unity`, d.unity!)}`).join("\n"),
     ].join("\n\n"),
   });
   return pages;

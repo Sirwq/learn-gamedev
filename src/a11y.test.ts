@@ -99,10 +99,10 @@ describe("Course menu on small screens", () => {
   it("says what every menu control does without a tooltip", () => {
     expect(html).not.toMatch(/<button[^>]*disabled[^>]*>C#/); // a disabled button can't be hovered or focused
     expect(html).toContain("C# — coming later");
-    expect(main).toContain('KeyE: () => (chipSandbox.hidden ? toast("Sandbox opens when you finish the Course")');
-    expect(main).toContain("Back to Lesson ${lessonIndex + 1}");
+    expect(main).toContain('KeyE: () => (chipSandbox.hidden ? toast(t("Sandbox opens when you finish the Course"))');
+    expect(main).toContain('t("Back to Lesson {number}", { number: lessonIndex + 1 })');
     expect(main).not.toContain('"Locked"');
-    expect(main.match(/`Pass Lesson \$\{menuCurrent \+ 1\} to unlock`/g)).toHaveLength(2); // the Play toast and the line under the title
+    expect(main.match(/t\("Pass Lesson \{number\} to unlock", \{ number: menuCurrent \+ 1 \}\)/g)).toHaveLength(2); // the Play toast and the line under the title
   });
   it("shows no minimap in the code editor or Compare, and no overview ruler as a second scrollbar", () => {
     expect(main.match(/minimap: \{ enabled: false \}/g)).toHaveLength(2);

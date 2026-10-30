@@ -1,5 +1,6 @@
 // Portable Project files: validation and encoding never read browser storage.
 import type { Project } from "./sandbox";
+import { t } from "./i18n";
 
 export const PROJECT_FORMAT = "learn-dev-project";
 const VERSION = 1;
@@ -29,17 +30,17 @@ const isBox = (b: unknown) => isObj(b) && typeof b.tag === "string" && typeof b.
 
 /** The PNG's bytes, or why the data URL is refused. Reads the header only: nothing from the file is decoded or drawn. */
 function pngBytes(url: unknown): Uint8Array | string {
-  if (typeof url !== "string" || !url.startsWith(PNG_URL)) return "an image that isn't a PNG";
+  if (typeof url !== "string" || !url.startsWith(PNG_URL)) return t("an image that isn't a PNG");
   let bytes: Uint8Array;
   try {
     bytes = Uint8Array.from(atob(url.slice(PNG_URL.length)), (c) => c.charCodeAt(0));
   } catch {
-    return "a broken image";
+    return t("a broken image");
   }
   const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-  if (bytes.length < 24 || sig.some((b, i) => bytes[i] !== b)) return "an image that isn't a PNG";
+  if (bytes.length < 24 || sig.some((b, i) => bytes[i] !== b)) return t("an image that isn't a PNG");
   const view = new DataView(bytes.buffer);
-  if (view.getUint32(16) > MAX_IMAGE || view.getUint32(20) > MAX_IMAGE) return `an image bigger than ${MAX_IMAGE}×${MAX_IMAGE}`;
+  if (view.getUint32(16) > MAX_IMAGE || view.getUint32(20) > MAX_IMAGE) return t("an image bigger than {size}×{size}", { size: MAX_IMAGE });
   return bytes;
 }
 
@@ -48,9 +49,9 @@ export type ProjectFile = { project: Omit<Project, "id">; pngs: [string, Blob][]
 
 /** Checks one exported Project (the parsed file); throws a plain message for a bad one. */
 export function checkProjectFile(file: unknown): ProjectFile {
-  const bad = (why: string) => new Error(`This file can't be opened: ${why}.`);
-  if (!isObj(file) || file.format !== PROJECT_FORMAT) throw bad("it isn't a learn-dev Project file");
-  if (!isNum(file.version) || (file.version as number) > VERSION) throw bad("it comes from a newer learn-dev. Reload the page and try again");
+  const bad = (why: string) => new Error(t("This file can't be opened: {why}.", { why }));
+  if (!isObj(file) || file.format !== PROJECT_FORMAT) throw bad(t("it isn't a learn-dev Project file"));
+  if (!isNum(file.version) || (file.version as number) > VERSION) throw bad(t("it comes from a newer learn-dev. Reload the page and try again"));
   const { project: p, images = {} } = file;
   const level = isObj(p) ? p.level : undefined;
   if (!isObj(p) || typeof p.name !== "string" || !isObj(p.scripts) || !isObj(level) || !Array.isArray(level.boxes) ||
@@ -59,12 +60,12 @@ export function checkProjectFile(file: unknown): ProjectFile {
     !(level.art === undefined || (isObj(level.art) && Object.values(level.art).every(isArt))) ||
     !(level.camera === undefined || (isObj(level.camera) && ["x", "y", "size"].every((k) => isNum((level.camera as Record<string, unknown>)[k])))) ||
     !isObj(images))
-    throw bad("the Project in it is damaged");
+    throw bad(t("the Project in it is damaged"));
   const pngs: [string, Blob][] = [];
   for (const [k, url] of Object.entries(images)) {
-    if (!/^[\w%.!~*'()-]+(:top)?$/.test(k)) throw bad("the Project in it is damaged"); // imageName: an escaped tag
+    if (!/^[\w%.!~*'()-]+(:top)?$/.test(k)) throw bad(t("the Project in it is damaged")); // imageName: an escaped tag
     const bytes = pngBytes(url);
-    if (typeof bytes === "string") throw bad(`it has ${bytes}`);
+    if (typeof bytes === "string") throw bad(t("it has {problem}", { problem: bytes }));
     pngs.push([k, new Blob([bytes as BlobPart], { type: "image/png" })]);
   }
   return { project: { name: p.name, scripts: p.scripts as Project["scripts"], level: level as Project["level"] }, pngs };

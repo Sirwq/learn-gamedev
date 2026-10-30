@@ -5,6 +5,7 @@ import { drawWorld, imageName, importImage, type Images, type Own, ownSprites } 
 import type { Project } from "./sandbox";
 import { canStoreImages } from "./project-storage";
 import { toast } from "./toast";
+import { t as tr } from "./i18n";
 
 const W = 960, H = 540;
 const CURSORS: Record<Handle, string> = { n: "ns-resize", s: "ns-resize", e: "ew-resize", w: "ew-resize", ne: "nesw-resize", sw: "nesw-resize", nw: "nwse-resize", se: "nwse-resize" };
@@ -174,7 +175,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     $("level-none").hidden = !!b;
     const tags = [...new Set([...ART_TAGS, ...boxes.map((x) => x.tag)])];
     tag.replaceChildren(...tags.map((t) => option(t)), option(NEW, "+ New tag…"));
-    script.replaceChildren(option("", "(none)"), ...scripts().map((s) => option(s, `${s}.ts`)), option(NEW, "+ New Script…"));
+    script.replaceChildren(option("", tr("(none)")), ...scripts().map((s) => option(s, `${s}.ts`)), option(NEW, tr("+ New Script…")));
     tag.value = b?.tag ?? "";
     script.value = b?.script ?? "";
     for (const [k, input] of nums) input.value = b ? String(b[k]) : "";
@@ -219,7 +220,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     if (key === paletteKey || !imgs) return;
     paletteKey = key;
     palette.replaceChildren(...tags.map((t) => {
-      const btn = Object.assign(document.createElement("button"), { title: `Add a ${t.tag}: press, or drag it into the view` });
+      const btn = Object.assign(document.createElement("button"), { title: tr("Add a {tag}: press, or drag it into the view", { tag: t.tag }) });
       const icon = Object.assign(document.createElement("canvas"), { width: 24, height: 24 });
       icon.ariaHidden = "true";
       drawIcon(icon, t.tag, t.color);
@@ -248,7 +249,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     const art = project.level.art?.[t];
     const has = !!art && !!ed.images[imageName(t)];
     artReset.hidden = !has;
-    artReset.textContent = ART_TAGS.includes(t) ? "Reset to default" : "Remove image";
+    artReset.textContent = ART_TAGS.includes(t) ? tr("Reset to default") : tr("Remove image");
     $("level-art-own").hidden = !has;
     $("level-art-extra").hidden = !has || artMore.ariaExpanded !== "true";
     $("level-art-top-remove").hidden = !ed.images[imageName(t, true)];
@@ -261,7 +262,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
   }
   /** The picked or dropped file as a stored PNG, or undefined after a toast saying why not. */
   async function readImage(file: File) {
-    if (!canStoreImages()) return void toast("Images can't be saved in this browser right now. Reload the page and try again.");
+    if (!canStoreImages()) return void toast(tr("Images can't be saved in this browser right now. Reload the page and try again."));
     try {
       return await importImage(file);
     } catch (e) {
@@ -354,7 +355,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
   script.onchange = () => {
     let name = script.value;
     if (name === NEW) {
-      name = prompt("Name of the new Script (its class name, like Coin):")?.trim() ?? "";
+      name = prompt(tr("Name of the new Script (its class name, like Coin):"))?.trim() ?? "";
       const error = name && addScript(name);
       if (error) toast(error);
       if (!name || error) return refresh();
@@ -404,7 +405,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
   $("level-camera").onclick = () => {
     project.level.camera = cameraStart(viewNow());
     save(ed.images);
-    toast("Camera start saved: Run starts the camera here");
+    toast(tr("Camera start saved: Run starts the camera here"));
   };
   viewport.addEventListener("wheel", (e) => {
     if (!open || (e.target as HTMLElement).id !== "game") return;
@@ -434,10 +435,10 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
   $("level-copy").onclick = async () => {
     try {
       await navigator.clipboard.writeText(levelCode(boxes));
-      toast("Level code copied");
+      toast(tr("Level code copied"));
     } catch {
       getSelection()?.selectAllChildren(codeBox.querySelector("code")!);
-      toast("Copying didn't work: the code is selected, press Ctrl/Cmd+C.");
+      toast(tr("Copying didn't work: the code is selected, press Ctrl/Cmd+C."));
     }
   };
 

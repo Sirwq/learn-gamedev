@@ -4,6 +4,7 @@ import { chapterTwoUnlocked } from "./check";
 import type { Lesson } from "./lesson";
 import tourPlayer from "./sandbox-tour/Player.ts?raw";
 import tourHUD from "./sandbox-tour/HUD.ts?raw";
+import { t } from "./i18n";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -28,9 +29,9 @@ export const scriptStub = (name: string) => `class ${name} extends MonoBehaviour
 
 /** "" when the name works as a new Script, else why not. */
 export function scriptNameError(name: string, existing: string[]) {
-  if (!/^[A-Z][A-Za-z0-9_]*$/.test(name)) return "A Script name starts with a capital letter and has only letters, digits and _, like Coin.";
-  if (existing.includes(name)) return `There is already a ${name}.ts.`;
-  if (name in api) return `${name} is part of the engine API. Pick another name.`;
+  if (!/^[A-Z][A-Za-z0-9_]*$/.test(name)) return t("A Script name starts with a capital letter and has only letters, digits and _, like Coin.");
+  if (existing.includes(name)) return t("There is already a {name}.ts.", { name });
+  if (name in api) return t("{name} is part of the engine API. Pick another name.", { name });
   return "";
 }
 

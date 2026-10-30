@@ -10,9 +10,10 @@ import { type Project, sandboxUnlocked, setDevUnlock } from "./sandbox";
 import { createProject, importProject, loadProjects } from "./project-storage";
 import { toast } from "./toast";
 import { backupFileName, backupReminder, download, exportEverything, type ImportPlan, lastBackup, planImport, snoozeReminder } from "./backup";
+import { localizeLesson, t } from "./i18n";
 
 export const sandboxEmptyMessage = (count: number) => count === 0
-  ? "New here? Try Example: Sandbox tour, or carry on with Chapter 2 in the Course."
+  ? t("New here? Try Example: Sandbox tour, or carry on with Chapter 2 in the Course.")
   : "";
 
 type Page = {
@@ -62,7 +63,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     card.onclick = () => (i === focused ? pick(i) : focusCard(i));
     return card;
   }
-  const courseCards = course.map((l, i) => coverCard(`LESSON ${i + 1}`, l.title.replace(/^\d+\.\s*/, ""), i));
+  const courseCards = course.map((l, i) => coverCard(t("Lesson {number}", { number: i + 1 }).toUpperCase(), localizeLesson(l).title.replace(/^\d+\.\s*/, ""), i));
   let projectCards: HTMLButtonElement[] = [];
   const cards = () => (mode === "course" ? courseCards.slice(0, chapters.unlocked ? course.length : CHAPTER_ONE_COUNT) : projectCards);
   const coverOf = (i: number) => cards()[i].querySelector("canvas")!;
@@ -80,7 +81,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   }
   course.forEach((l, i) => drawCover(courseCards[i].querySelector("canvas")!, l.level.boxes));
   function buildProjectCards() {
-    projectCards = [...projects.map((p, i) => coverCard("PROJECT", p.name, i)), coverCard("", "+ New", projects.length)];
+    projectCards = [...projects.map((p, i) => coverCard(t("PROJECT"), p.name, i)), coverCard("", t("+ New"), projects.length)];
     projects.forEach((p, i) => drawCover(projectCards[i].querySelector("canvas")!, p.level.boxes));
     drawCover(projectCards[projects.length].querySelector("canvas")!, []);
   }
@@ -93,8 +94,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   /** The same padlock, big, in a round badge in the middle of a locked cover. */
   const LOCK_BADGE = `<span class="lock"><svg aria-hidden="true" viewBox="0 0 24 24" width="34" height="34"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15.5" r="1.6" fill="#1b1d24"/></svg></span>`;
   const playLabel = (i: number) =>
-    mode === "sandbox" ? (i === projects.length ? "Create" : "Open")
-    : states[i] === "locked" ? "How to unlock" : states[i] === "passed" && i !== menuCurrent ? "Replay" : "Play";
+    mode === "sandbox" ? (i === projects.length ? t("Create") : t("Open"))
+    : states[i] === "locked" ? t("How to unlock") : states[i] === "passed" && i !== menuCurrent ? t("Replay") : t("Play");
   function layoutMenu() {
     const list = cards();
     list.forEach((card, i) => {
@@ -105,31 +106,31 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       dots.children[i].className = mode === "course" ? states[i] : "";
       if (mode === "sandbox") {
         card.className = i < projects.length ? "cover" : "cover new";
-        card.ariaLabel = i < projects.length ? `Project ${projects[i].name}` : "New Project";
-        card.querySelector(".tag")!.textContent = projects[i] && projects[i].id === project?.id ? "▶ open" : "";
+        card.ariaLabel = i < projects.length ? t("Project {name}", { name: projects[i].name }) : t("New Project");
+        card.querySelector(".tag")!.textContent = projects[i] && projects[i].id === project?.id ? t("▶ open") : "";
         return;
       }
       card.className = `cover ${states[i]}`;
-      card.ariaLabel = `${course[i].title}, ${{ passed: "passed", current: "up next", locked: "locked" }[states[i]]}`;
+      card.ariaLabel = t("{title}, {state}", { title: localizeLesson(course[i]).title, state: { passed: t("passed"), current: t("Up next"), locked: t("locked") }[states[i]] });
       const tag = card.querySelector(".tag")!;
       if (states[i] === "locked") tag.innerHTML = LOCK_BADGE; // our own markup
-      else tag.textContent = { passed: "✓ passed", current: "▶ next" }[states[i]];
+      else tag.textContent = { passed: t("✓ passed"), current: t("▶ next") }[states[i]];
     });
     drawBg();
     const meta = document.getElementById("card-meta")!;
     const line = (cls: string, html: string) => `<div class="${cls}">${html}</div>`;
-    const files = (names: string[]) => line("meta-files", `Code in ${names.map((n) => `<code translate="no">${n.replace(/[&<]/g, (c) => (c === "&" ? "&amp;" : "&lt;"))}.ts</code>`).join(", ")}`);
+    const files = (names: string[]) => line("meta-files", t("Code in {files}", { files: names.map((n) => `<code translate="no">${n.replace(/[&<]/g, (c) => (c === "&" ? "&amp;" : "&lt;"))}.ts</code>`).join(", ") }));
     let title;
     if (mode === "sandbox") {
       const p = projects[focused];
-      title = p ? p.name : "New Project";
-      meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", sandboxEmptyMessage(projects.length) || "Blank, My platformer, or Example: Sandbox tour");
+      title = p ? p.name : t("New Project");
+      meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", sandboxEmptyMessage(projects.length) || t("Blank, My platformer, or Example: Sandbox tour"));
     } else {
       const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))];
-      const state = { passed: [CHECK, "Passed"], current: [PLAY, "Up next"], locked: [LOCK, `Pass Lesson ${menuCurrent + 1} to unlock`] }[states[focused]];
+      const state = { passed: [CHECK, t("Passed")], current: [PLAY, t("Up next")], locked: [LOCK, t("Pass Lesson {number} to unlock", { number: menuCurrent + 1 })] }[states[focused]];
       // Code words in the concept (Update(), Time.deltaTime, if, &&) get the inline-code look; "Script:" is a plain word.
-      const concept = course[focused].concept.replace(/else if|&&|\b(?:if|for)\b|[A-Z]\w*(?:\.\w+)*(?:\(\))?(?!:)/g, (c) => `<code translate="no">${c.replaceAll("&", "&amp;")}</code>`);
-      title = course[focused].title;
+      const concept = localizeLesson(course[focused]).concept.replace(/else if|&&|\b(?:if|for)\b|[A-Z]\w*(?:\.\w+)*(?:\(\))?(?!:)/g, (c) => `<code translate="no">${c.replaceAll("&", "&amp;")}</code>`);
+      title = localizeLesson(course[focused]).title;
       meta.innerHTML = line("meta-concept", `<span class="pill ${states[focused]}">${state[0]}${state[1]}</span> ${concept}`) + files(scripts);
     }
     document.getElementById("card-title")!.textContent = title;
@@ -137,15 +138,17 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     nextBtn.disabled = focused === list.length - 1;
     if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
     document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
-    const chapterTwoStat = chapters.unlocked ? ` · Ch. 2 ${chapters.chapterTwo} / ${CHAPTER_TWO_COUNT}` : "";
-    const chapterTwoSpoken = chapters.unlocked ? `, Chapter 2: ${chapters.chapterTwo} of ${CHAPTER_TWO_COUNT} Lessons passed` : "";
+    const chapterTwoStat = chapters.unlocked ? ` · ${t("Ch. 2 {done} / {total}", { done: chapters.chapterTwo, total: CHAPTER_TWO_COUNT })}` : "";
+    const chapterTwoSpoken = chapters.unlocked ? `, ${t("Chapter 2: {done} of {total} Lessons passed", { done: chapters.chapterTwo, total: CHAPTER_TWO_COUNT })}` : "";
     document.getElementById("menu-stats")!.innerHTML =
       `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${chapters.chapterOne} / ${CHAPTER_ONE_COUNT}${chapterTwoStat}</span>` +
-      `<span class="sr-only">${earned.size} of ${achievements.length} Achievements, Chapter 1: ${chapters.chapterOne} of ${CHAPTER_ONE_COUNT} Lessons passed${chapterTwoSpoken}</span>`;
+      `<span class="sr-only">${t("{earned} of {achievements} Achievements, Chapter 1: {done} of {total} Lessons passed{chapterTwo}", { earned: earned.size, achievements: achievements.length, done: chapters.chapterOne, total: CHAPTER_ONE_COUNT, chapterTwo: chapterTwoSpoken })}</span>`;
   }
   const menuLive = document.getElementById("menu-live")!;
   const announce = () =>
-    (menuLive.textContent = `${cards()[focused].ariaLabel}, ${mode === "course" ? "Lesson " : ""}${focused + 1} of ${cards().length}`);
+    (menuLive.textContent = mode === "course"
+      ? t("{name}, Lesson {number} of {total}", { name: cards()[focused].ariaLabel || "", number: focused + 1, total: cards().length })
+      : t("{name}, {number} of {total}", { name: cards()[focused].ariaLabel || "", number: focused + 1, total: cards().length }));
   function focusCard(i: number) {
     focused = Math.max(0, Math.min(cards().length - 1, i));
     layoutMenu();
@@ -157,19 +160,19 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     if (m === "sandbox") buildProjectCards();
     focused = m === "course" ? lessonIndex : Math.max(0, projects.findIndex((p) => p.id === project?.id));
     rail.replaceChildren(...cards());
-    const noun = m === "course" ? "Lesson" : "Project";
-    dots.ariaLabel = `${noun}s`;
-    prevBtn.ariaLabel = `Previous ${noun}`;
-    nextBtn.ariaLabel = `Next ${noun}`;
+    const noun = m === "course" ? t("Lesson") : t("Project");
+    dots.ariaLabel = m === "course" ? t("Lessons") : t("Projects");
+    prevBtn.ariaLabel = t("Previous {name}", { name: noun });
+    nextBtn.ariaLabel = t("Next {name}", { name: noun });
     const dotButtons = cards().map((_, i) => {
       const dot = document.createElement("button");
-      dot.ariaLabel = m === "course" ? course[i].title : projects[i]?.name ?? "New Project";
+      dot.ariaLabel = m === "course" ? localizeLesson(course[i]).title : projects[i]?.name ?? t("New Project");
       dot.onclick = () => focusCard(i);
       return dot;
     });
     const chapterLabel = document.createElement("span");
     chapterLabel.className = "chapter-label";
-    chapterLabel.textContent = "Chapter 2";
+    chapterLabel.textContent = t("Chapter 2");
     chapterLabel.style.left = dotButtons.length > CHAPTER_ONE_COUNT
       ? `${100 * CHAPTER_ONE_COUNT / dotButtons.length}%` : "calc(100% - 72px)";
     dots.replaceChildren(...dotButtons, ...(m === "course" && chapters.unlocked ? [chapterLabel] : []));
@@ -177,8 +180,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       chip.classList.toggle("on", on);
       chip.ariaPressed = String(on);
     }
-    document.getElementById("menu-heading")!.textContent = m === "course" ? "Choose a Lesson" : "Choose a Project";
-    document.title = `${m === "course" ? "Lessons" : "Projects"} · learn-dev`;
+    document.getElementById("menu-heading")!.textContent = m === "course" ? t("Choose a Lesson") : t("Choose a Project");
+    document.title = `${m === "course" ? t("Lessons") : t("Projects")} · learn-dev`;
     layoutMenu();
     announce();
   }
@@ -225,12 +228,12 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       if (projects[i].id === project?.id) return closeMenu();
       return void (location.search = `?sandbox=${projects[i].id}`);
     }
-    if (states[i] === "locked") return void toast(`Pass Lesson ${menuCurrent + 1} to unlock`);
+    if (states[i] === "locked") return void toast(t("Pass Lesson {number} to unlock", { number: menuCurrent + 1 }));
     if (i === lessonIndex && !project) return closeMenu();
-    if (playLabel(i) === "Play" || !snapshot(course[i].title)) return go(i);
-    replayBox.querySelector("h3")!.textContent = `Replay ${course[i].title}?`;
+    if (states[i] === "current" || (states[i] === "passed" && i === menuCurrent) || !snapshot(course[i].title)) return go(i);
+    replayBox.querySelector("h3")!.textContent = t("Replay {title}?", { title: localizeLesson(course[i]).title });
     replayBox.querySelector("#replay-load small")!.textContent =
-      `Your editor goes back to the code you passed it with. Your newer code is saved and comes back when you return to Lesson ${menuCurrent + 1}.`;
+      t("Your editor goes back to the code you passed it with. Your newer code is saved and comes back when you return to Lesson {number}.", { number: menuCurrent + 1 });
     (replayBox.querySelector("#replay-keep") as HTMLButtonElement).onclick = () => go(i);
     (replayBox.querySelector("#replay-load") as HTMLButtonElement).onclick = () => {
       loadSnapshot(course[i].title);
@@ -275,17 +278,17 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     (savesBox.querySelector(confirming ? "#saves-yes" : "#saves-export") as HTMLElement).focus();
   };
   document.getElementById("menu-saves")!.onclick = () => {
-    document.getElementById("saves-last")!.textContent = `Last backup: ${lastBackup()}.`;
+    document.getElementById("saves-last")!.textContent = t("Last backup: {when}.", { when: lastBackup() });
     savesBox.querySelector("#saves-export small")!.textContent = sandboxUnlocked(course)
-      ? "Your Lessons, code, Achievements and every Project, in one file."
-      : "Your Lessons, code and Achievements, in one file.";
+      ? t("Your Lessons, code, Achievements and every Project, in one file.")
+      : t("Your Lessons, code and Achievements, in one file.");
     document.getElementById("saves-safari")!.hidden = !/^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
     navigator.storage?.persisted?.().then((yes) => (document.getElementById("saves-persist")!.hidden = yes), () => {});
     showSaves(false);
   };
   document.getElementById("saves-export")!.onclick = async () => {
     await backUp();
-    document.getElementById("saves-last")!.textContent = `Last backup: ${lastBackup()}.`;
+    document.getElementById("saves-last")!.textContent = t("Last backup: {when}.", { when: lastBackup() });
   };
   document.getElementById("saves-close")!.onclick = () => savesBox.close();
   let plan: ImportPlan | undefined;
@@ -314,7 +317,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     if (!plan!.single) return location.reload(); // progress and Projects changed under the whole page
     if (sandboxUnlocked(course)) return void (location.search = `?sandbox=${(done as Project).id}`);
     savesBox.close();
-    toast("Saved. This is a Sandbox Project; you'll find it in Sandbox after Lesson 15.");
+    toast(t("Saved. This is a Sandbox Project; you'll find it in Sandbox after Lesson 15."));
   };
   document.getElementById("saves-no")!.onclick = () => savesBox.close();
   const savesFile = document.getElementById("saves-file") as HTMLInputElement;
@@ -366,8 +369,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     ArrowRight: () => focusCard(focused + 1),
     Escape: closeMenu,
     KeyA: () => trophies.click(),
-    KeyQ: () => (chipSandbox.hidden ? toast("TypeScript is the only Course for now. C# comes later.") : setMode("course")),
-    KeyE: () => (chipSandbox.hidden ? toast("Sandbox opens when you finish the Course") : setMode("sandbox")),
+    KeyQ: () => (chipSandbox.hidden ? toast(t("TypeScript is the only Course for now. C# comes later.")) : setMode("course")),
+    KeyE: () => (chipSandbox.hidden ? toast(t("Sandbox opens when you finish the Course")) : setMode("sandbox")),
   };
   document.addEventListener("keydown", (e) => {
     if (menu.hidden || !map.hidden || replayBox.open || newBox.open || savesBox.open || map.contains(e.target as Node)) return;
@@ -379,14 +382,14 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   });
   const menuBack = document.getElementById("menu-back")!;
   menuBack.onclick = closeMenu;
-  menuBack.ariaLabel = menuBack.title = project ? "Back to Project" : `Back to Lesson ${lessonIndex + 1}`;
+  menuBack.ariaLabel = menuBack.title = project ? t("Back to Project") : t("Back to Lesson {number}", { number: lessonIndex + 1 });
   menuBack.lastChild!.textContent = ` ${menuBack.ariaLabel}`;
   const phoneNote = document.getElementById("menu-phone")!;
   phoneNote.querySelector("button")!.onclick = () => (phoneNote.remove(), menu.focus());
   const menuOpen = document.getElementById("menu-open")!;
   if (project) {
-    menuOpen.ariaLabel = menuOpen.title = "Back to Projects";
-    menuOpen.lastChild!.textContent = " Back to Projects";
+    menuOpen.ariaLabel = menuOpen.title = t("Back to Projects");
+    menuOpen.lastChild!.textContent = ` ${t("Back to Projects")}`;
   }
   document.getElementById("menu-achievements")!.onclick = () => trophies.click();
   document.getElementById("menu-play")!.onclick = () => pick(focused);
