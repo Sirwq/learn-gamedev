@@ -26,3 +26,7 @@ Ticket 030 deliberately used copy-and-open because DeepSeek prefill was unverifi
 - In a signed-in browser, clicking **Ask DeepSeek** from a Lesson and from Sandbox opens DeepSeek with the exact full Tutor prompt visible in the composer, unsent, and ready for the student's question.
 - Tests cover prompt handoff encoding, no autosend, long-prompt fallback, and popup/copy failure behavior. Existing Tutor prompt tests still pass.
 - `npm run typecheck` and `npm test` pass. Verify the real DeepSeek handoff in a browser; if the site cannot reliably prefill, leave this ticket open with a `## Blocked` note and the observed behavior rather than shipping the old copy flow as complete.
+
+## Blocked
+
+2026-10-30: The linked DeepSeek report confirms that its landing page passes text with `q`, but its example also uses `autosend=1`; it does not establish that a `q` link leaves the full Tutor prompt unsent in the chat composer. I attempted a real Chromium check of a `q` URL. Chromium could not launch in this environment because `libnspr4.so` is missing, and no signed-in DeepSeek browser session is available. The required signed-in Lesson and Sandbox observations therefore remain unverified. Keep the current copy-and-open flow until those observations establish reliable prefill; then implement and test the fallback cases in this ticket.
