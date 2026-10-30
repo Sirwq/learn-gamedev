@@ -14,6 +14,8 @@ import { lesson as stomp } from "./12-stomp/lesson";
 import { lesson as shoot } from "./13-shoot/lesson";
 import { lesson as health } from "./14-health/lesson";
 import { lesson as moving } from "./15-moving/lesson";
+import { lesson as sounds } from "./16-sounds/lesson";
+import { lesson as coinCounter } from "./17-coin-counter/lesson";
 
 /** The TypeScript Course, in order. */
-export const course: Lesson[] = [move, speed, steer, gravity, jump, land, platforms, walls, camera, coins, enemy, stomp, shoot, health, moving];
+export const course: Lesson[] = [move, speed, steer, gravity, jump, land, platforms, walls, camera, coins, enemy, stomp, shoot, health, moving, sounds, coinCounter];

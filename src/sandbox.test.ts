@@ -11,11 +11,11 @@ import { loadScript, memoryStore } from "./test-helpers";
 
 
 describe("Sandbox unlock", () => {
-  it("stays secret until the last Lesson is passed", () => {
+  it("stays secret until Lesson 15 is passed", () => {
     const s = memoryStore();
-    for (const l of course.slice(0, -1)) markPassed(l.title, s);
+    for (const l of course.slice(0, 14)) markPassed(l.title, s);
     expect(sandboxUnlocked(course, s)).toBe(false);
-    markPassed(course[course.length - 1].title, s);
+    markPassed(course[14].title, s);
     expect(sandboxUnlocked(course, s)).toBe(true);
   });
 
@@ -149,8 +149,8 @@ describe("Projects", () => {
     expect((await loadProjects(s))[0].scripts.Game).toBe("class Game {}");
   });
 
-  it("the playground uses every tag and is wider than the screen", () => {
-    const tags = new Set(course.flatMap((l) => l.level.boxes.map((b) => b.tag)));
+  it("the playground uses every visible Course tag and is wider than the screen", () => {
+    const tags = new Set(course.flatMap((l) => l.level.boxes.map((b) => b.tag)).filter((tag) => tag !== "HUD"));
     expect(new Set(playground.boxes.map((b) => b.tag))).toEqual(tags);
     expect(Math.max(...playground.boxes.map((b) => b.x + b.w))).toBeGreaterThan(960);
   });

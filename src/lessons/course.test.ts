@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { keyEvent, KeyCode, keysDown, releaseAllKeys, startGame, worldView } from "../engine";
+import { keyEvent, KeyCode, keysDown, labels, releaseAllKeys, startGame, takeSounds, worldView } from "../engine";
 import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
+import lesson15Player from "./14-health/reference/Player.ts?raw";
+
+it("includes Sounds and Coin counter, with Lesson 15 Player as Sounds' hidden stub", () => {
+  expect(course.slice(15).map((lesson) => lesson.title)).toEqual(["16. Sounds", "17. Coin counter"]);
+  expect(course[15].scripts.Player.stub).toBe(lesson15Player);
+});
 
 
 // Keys a player holds on each frame to pass a Lesson with its Reference code.
@@ -35,6 +41,8 @@ const play: Record<string, (frame: number) => string[]> = {
   // A running jump onto the platform, stand still while it crosses the water, then jump off to the flag.
   "15. Moving platforms": (f) =>
     f === 3 || f === 345 ? [KeyCode.RightArrow, KeyCode.Space] : f <= 40 || f > 345 ? [KeyCode.RightArrow] : [],
+  "16. Sounds": (f) => (f === 70 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
+  "17. Coin counter": (f) => (f === 70 ? [KeyCode.RightArrow, KeyCode.Space] : [KeyCode.RightArrow]),
 };
 
 // Achievements each Lesson's playthrough should earn, every one checked as if unlocked.
@@ -75,13 +83,15 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     const checkAchievements = achievementChecker(lesson.level.boxes, earned, achievements.map((a) => ({ ...a, after: null })));
     releaseAllKeys();
     let held: string[] = [];
-    for (let frame = 1; frame <= 600; frame++, game.step()) {
+    for (let frame = 1; frame <= 600; frame++) {
       const keys = keysOn(frame);
       for (const k of held) if (!keys.includes(k)) keyEvent(k, false);
       for (const k of keys) keyEvent(k, true);
       held = keys;
-      const result = check(worldView(game.objects));
-      checkAchievements(worldView(game.objects), { keysDown: keysDown() });
+      game.step();
+      const world = worldView(game.objects);
+      const result = check(world, { keysDown: keysDown(), sounds: takeSounds(), labels });
+      checkAchievements(world, { keysDown: keysDown() });
       if (result.lost) break;
       if (result.passed) return frame;
     }
