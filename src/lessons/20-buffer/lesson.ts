@@ -12,21 +12,25 @@ function bufferedLanding() {
   let previousSupported = false;
   let pressedAt: number | undefined;
   let landedAt: number | undefined;
+  let previousEnemies: number | undefined;
   return (world: Parameters<Lesson["goals"][number]["test"]>[0], time: number) => {
-    if (time <= Time.deltaTime) { previousY = undefined; previousStep = 0; previousSupported = false; pressedAt = undefined; landedAt = undefined; }
+    if (time <= Time.deltaTime) { previousY = undefined; previousStep = 0; previousSupported = false; pressedAt = undefined; landedAt = undefined; previousEnemies = undefined; }
     const player = find(world, "Player");
+    const enemies = world.filter((box) => box.tag === "Enemy").length;
+    const stomped = previousEnemies !== undefined && enemies < previousEnemies;
     const step = previousY === undefined ? 0 : player.y - previousY;
     const supported = world.some((box) => ["Ground", "Platform", "Wall"].includes(box.tag)
       && player.x < box.x + box.w && player.x + player.w > box.x
       && Math.abs(player.y - box.y - box.h) < 2);
     if (world.keysDown.has("Space") && step < 0 && !supported) pressedAt = time;
-    if (supported && !previousSupported && pressedAt !== undefined && time - pressedAt <= 0.1 + 0.0001) landedAt = time;
+    if (supported && !previousSupported && !stomped && pressedAt !== undefined && time - pressedAt <= 0.1 + 0.0001) landedAt = time;
     const kick = previousY !== undefined && step - previousStep > 3 && step > 0;
-    const good = landedAt !== undefined && kick && time - landedAt <= Time.deltaTime + 0.0001;
+    const good = !stomped && landedAt !== undefined && kick && time - landedAt <= Time.deltaTime + 0.0001;
     if (landedAt !== undefined && time - landedAt > Time.deltaTime + 0.0001) landedAt = undefined;
     previousY = player.y;
     previousStep = step;
     previousSupported = supported;
+    previousEnemies = enemies;
     return good;
   };
 }

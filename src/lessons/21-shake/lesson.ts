@@ -13,19 +13,17 @@ function hurtAndShake() {
   let sounded = false;
   let lastSign = 0;
   let flips = 0;
-  let positive = false;
-  let negative = false;
   return (world: Parameters<Lesson["goals"][number]["test"]>[0], time: number) => {
     if (time <= Time.deltaTime) {
       previousX = undefined; hurtAt = undefined; soundPending = false; sounded = false;
-      lastSign = 0; flips = 0; positive = false; negative = false;
+      lastSign = 0; flips = 0;
     }
     const player = find(world, "Player");
     const respawn = previousX !== undefined && player.x === 100 && previousX - player.x > 100;
     previousX = player.x;
     if (respawn) {
       hurtAt = time; soundPending = true; sounded = false;
-      lastSign = 0; flips = 0; positive = false; negative = false;
+      lastSign = 0; flips = 0;
     }
     if (soundPending && world.sounds.includes("Hurt")) sounded = true;
     soundPending = respawn;
@@ -35,11 +33,8 @@ function hurtAndShake() {
       const sign = Math.sign(offset);
       if (lastSign && sign !== lastSign) flips++;
       lastSign = sign;
-      positive ||= sign > 0;
-      negative ||= sign < 0;
     }
-    return sounded && flips >= 3 && positive && negative && time - hurtAt <= 1 + 0.0001
-      && time - hurtAt >= 0.3 && Math.abs(offset) < 2;
+    return sounded && flips >= 3 && time - hurtAt <= 1 + 0.0001 && Math.abs(offset) < 2;
   };
 }
 

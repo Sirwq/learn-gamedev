@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { keyEvent, KeyCode, keysDown, labels, releaseAllKeys, startGame, takeSounds, worldView } from "../engine";
+import { Camera, keyEvent, KeyCode, keysDown, labels, releaseAllKeys, startGame, takeSounds, Vector2, worldView } from "../engine";
 import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
@@ -27,6 +27,36 @@ it("accepts Jump on the first rising frame or the next, including a slow rise", 
   expect(jumpMet([{ y: 40 }, { y: 41, sound: true }])).toEqual([false, true]);
   expect(jumpMet([{ y: 40 }, { y: 41 }, { y: 42, sound: true }])).toEqual([false, false, true]);
   expect(jumpMet([{ y: 40 }, { y: 41 }, { y: 42 }, { y: 43, sound: true }])).toEqual([false, false, false, false]);
+});
+
+it("counts a buffered landing, but not a stomp bounce", () => {
+  const lesson = course[19];
+  const run = (stomp: boolean) => {
+    const check = checker(lesson);
+    return [70, 55, 40, 50].map((y, i) => {
+      const world = lesson.level.boxes.map((box) => box.tag === "Player" ? { ...box, y } : box);
+      if (stomp && i < 2) world.push({ tag: "Enemy", x: 100, y: 40, w: 32, h: 32, color: "red" });
+      return check(world, { keysDown: new Set(i === 1 ? [KeyCode.Space] : []) }).met[0];
+    });
+  };
+  expect(run(false)).toEqual([false, false, false, true]);
+  expect(run(true)).toEqual([false, false, false, false]);
+});
+
+it("accepts a quick shake after Hurt, but not a sound before the respawn", () => {
+  const lesson = course[20];
+  const run = (hurtFrame: number) => {
+    const check = checker(lesson);
+    return [350, 100, 100, 100, 100, 100].map((x, i) => {
+      Camera.main.transform.position = new Vector2(x + [0, 6, -6, 6, -6, 0][i], 270);
+      const world = lesson.level.boxes.map((box) => box.tag === "Player" ? { ...box, x } : box);
+      return check(world, { sounds: i === hurtFrame ? ["Hurt"] : [] }).met[0];
+    });
+  };
+  expect(run(1)).toEqual([false, false, false, false, false, true]);
+  expect(run(2)).toEqual([false, false, false, false, false, true]);
+  expect(run(0)).toEqual([false, false, false, false, false, false]);
+  expect(run(3)).toEqual([false, false, false, false, false, false]);
 });
 
 
