@@ -3,18 +3,21 @@ import type { CheckResult } from "./check";
 import type { ConsoleLine } from "./console";
 import type { Clip, Label } from "./engine";
 import type { Project } from "./sandbox";
+import type { ObjectSnapshot } from "./object-inspector";
 
 export type ToWorker =
   /** Starts the Run: a Lesson by index, or a Sandbox Project's Level and own images; `scripts` is transpiled JS by Script name. */
   | ({ type: "start"; canvas: OffscreenCanvas; earned: string[]; scripts: Record<string, string> } & ({ lesson: number } | { level: Project["level"]; images: Record<string, Blob> }))
   | { type: "key"; code: string; down: boolean }
   | { type: "pause" }
-  | { type: "resume" };
+  | { type: "resume" }
+  | { type: "inspect"; open: boolean };
 
 export type FromWorker =
   /** Once per frame, for the page's hang watchdog. */
   | { type: "tick" }
   | { type: "paused"; paused: boolean }
+  | { type: "objects"; objects: ObjectSnapshot[] }
   | { type: "logs"; lines: ConsoleLine[] }
   | { type: "achievements"; ids: string[] }
   /** The clips played this frame, each once; only in Sandbox and Chapter 2. */

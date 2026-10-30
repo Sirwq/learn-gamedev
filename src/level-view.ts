@@ -519,7 +519,9 @@ export function levelView({ project, images, scripts, save, addScript }: { proje
     setOpen(on: boolean) {
       if (on === open) return;
       open = on;
-      $("lesson").hidden = on;
+      $("left-views").hidden = on;
+      $("lesson").hidden = on || $("left").dataset.view === "objects";
+      $("objects").hidden = on || $("left").dataset.view !== "objects";
       $("inspector").hidden = !on;
       $("level-area").hidden = !on;
       if (on) $("level-minimap").before($("stage"));

@@ -6,12 +6,15 @@ import { checker } from "./check";
 import { achievementChecker } from "./achievements";
 import { course } from "./lessons/course";
 import type { FromWorker, ToWorker } from "./runner-protocol";
+import { objectSnapshots } from "./object-inspector";
 
 const scriptOf: Record<string, string> = {}; // blob URL -> Script name
 let paused = false;
 let pausedFrame: (() => void) | undefined; // the frame a pause stopped, run again on resume
 const images = loadImages(); // one load per worker, i.e. per Run
 const send = (message: FromWorker) => postMessage(message);
+let inspectOpen = false;
+let sendObjects: (() => void) | undefined;
 
 function flushLogs() {
   if (logs.length) send({ type: "logs", lines: logs.splice(0) });
@@ -26,6 +29,11 @@ function report(err: unknown) {
 
 self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   if (data.type === "key") return keyEvent(data.code, data.down);
+  if (data.type === "inspect") {
+    inspectOpen = data.open;
+    if (inspectOpen) sendObjects?.();
+    return;
+  }
   if (data.type === "pause") {
     paused = true;
     releaseAllKeys();
@@ -64,10 +72,13 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
   }
 
   const check = checker(lesson);
+  const snapshot = objectSnapshots();
+  sendObjects = () => send({ type: "objects", objects: snapshot(game.objects) });
   const achieve = achievementChecker(level, new Set(data.earned));
   let last = "";
   let lastLabels = "[]";
   let frames = 0; // drawn so far: the animation clock, which stops while paused
+  let inspectFrames = 0;
   const frame = () => {
     if (paused) return void (pausedFrame = frame);
     send({ type: "tick" });
@@ -75,6 +86,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     let sounds;
     try {
       game.step();
+      if (inspectOpen && inspectFrames++ % 6 === 0) sendObjects?.();
       const world = worldView(game.objects);
       sounds = takeSounds();
       result = check(world, v2 ? { keysDown: keysDown(), sounds, labels } : undefined);

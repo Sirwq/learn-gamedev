@@ -139,6 +139,21 @@
       #progress:hover span { color: var(--ink-strong); }
       /* Hints scroll inside the lesson while the game stays visible below it. */
       #left { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; overflow: hidden; }
+      #left-views { display: flex; gap: 4px; }
+      #left-views[hidden], #objects[hidden], #lesson[hidden] { display: none; }
+      #left-views button[aria-pressed="true"] { background: var(--surface-button); border-color: var(--focus); }
+      #objects { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; }
+      #objects h2 { font-size: 18px; margin: 12px 0 8px; }
+      #objects h3 { font-size: 15px; margin: 14px 0 4px; }
+      #object-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+      #object-list button { width: 100%; text-align: left; font-variant-numeric: tabular-nums; }
+      #object-list button[aria-current="true"] { border-color: var(--focus); background: var(--surface-button); }
+      #object-details dl { margin: 0; }
+      #object-details dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--border-subtle); padding: 3px 0; }
+      #object-details dt { color: var(--ink-muted); }
+      #object-details dd { margin: 0; font-variant-numeric: tabular-nums; }
+      .object-swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border-control); vertical-align: middle; margin-right: 6px; }
+      #object-details code { background: var(--surface-raised); padding: 1px 3px; }
       #lesson { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 16px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
       /* A fade pinned to the bottom edge while there is more to scroll; at the end it is just blank space. */
       #lesson::after { content: ""; position: sticky; bottom: 0; display: block; height: 20px; background: linear-gradient(transparent, var(--surface-editor)); pointer-events: none; }
@@ -418,6 +433,7 @@
     </header>
     <main>
       <div id="left">
+        <nav id="left-views" aria-label="Lesson views"><button id="show-explanation" type="button" aria-pressed="true">Explanation</button><button id="show-objects" type="button" aria-pressed="false">Objects</button></nav>
         <section id="lesson" tabindex="0" aria-labelledby="lesson-title">
           <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span>
             <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="export" title="Save this Project as a file: to keep, or to send to a friend.">Export</button> <button id="delete">Delete</button></span></h1>
@@ -432,6 +448,12 @@
               <li>Ask the person on your left, then the one on your right.</li>
             </ul>
           </aside>
+        </section>
+        <section id="objects" hidden aria-labelledby="objects-title">
+          <h2 id="objects-title">Objects</h2>
+          <p>Select an object to inspect its current properties. This view is read-only.</p>
+          <ul id="object-list" aria-label="Objects in the game"></ul>
+          <div id="object-details" aria-label="Selected object details"></div>
         </section>
         <section id="inspector" hidden aria-labelledby="inspector-title">
           <h2 id="inspector-title">Level</h2>

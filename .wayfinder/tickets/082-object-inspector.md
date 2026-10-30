@@ -1,7 +1,7 @@
 ---
 title: Read-only Object Inspector for Lessons and Sandbox
 label: build
-status: open
+status: closed
 blocked_by: [080-lessons-20-21]
 assignee:
 ---
@@ -28,3 +28,10 @@ Give students a separate **Objects** view on the Lesson and Sandbox page. After 
 - A running Player's position changes in the Inspector; an instantiated object appears; a destroyed object disappears; Stop restores starting values. Duplicate tags remain individually selectable.
 - The Objects view works with keyboard and screen reader labels, keeps focus stable during live updates, and has a useful empty state.
 - Tests cover snapshot identity and lifecycle, and the view's stopped/running data flow. `npm run typecheck` and `npm test` pass; verify the actual page layout and selection in a browser.
+
+## Resolution
+
+- Added an in-page, read-only Objects view beside Explanation on Lessons and Sandbox Projects. It lists individually identified objects and shows tag, Transform position, box size, Script, colour, image type and short code hints.
+- Added worker snapshots only while Objects is open, at most every six frames. Runtime object IDs survive movement; created and destroyed objects update the list. Stop restores the saved Level and its starting values. The focused list button is reused during updates.
+- Kept the Sandbox 🗺 Level editor separate. Added snapshot lifecycle and selection tests.
+- Verified with `npm run typecheck` and `npm test` (320 passed, 70 skipped). In Chromium, checked Lesson and Sandbox layout, keyboard selection, live Player movement, Coin creation and destruction, and Stop restoration.

@@ -21,6 +21,7 @@ import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages } from "./sprites";
 import { courseMenu } from "./menu";
 import { levelView } from "./level-view";
+import { objectInspector, startingObjects } from "./object-inspector";
 import { toast } from "./toast";
 import { download } from "./backup";
 import { addScript, deleteProject, duplicateProject, exportFileName, exportProject, loadProjects, migrateProjects, type Project, sandboxUnlocked, saveProject } from "./sandbox";
@@ -54,6 +55,7 @@ document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
 const explanation = document.getElementById("explanation")!;
 if (!project) explanation.innerHTML = marked.parse(lesson.explanation, { async: false }); // our own trusted Markdown
+else explanation.textContent = "This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.";
 const pages = docPages(engineApi, true);
 // API names in the Explanation link to their Docs member.
 for (const code of Array.from(explanation.querySelectorAll(":not(pre) > code"))) {
@@ -342,9 +344,26 @@ map.onkeydown = (e) => e.key === "Escape" && closeMap();
 const images = loadImages();
 // Before the first Run the game shows the Level as it starts; Run swaps in a fresh canvas for the worker.
 const startLevel = project ? project.level : course[lessonIndex].level;
+const objectView = objectInspector(document.getElementById("object-list")!, document.getElementById("object-details")!, () => startLevel.art ?? {});
+const refreshStoppedObjects = (reset = true) => objectView.setObjects(startingObjects(startLevel.boxes), reset);
+refreshStoppedObjects();
+let objectViewOpen = false;
+const objectsPanel = document.getElementById("objects")!;
+function showLeftView(objects: boolean) {
+  objectViewOpen = objects;
+  document.getElementById("left")!.dataset.view = objects ? "objects" : "explanation";
+  document.getElementById("lesson")!.hidden = objects;
+  objectsPanel.hidden = !objects;
+  document.getElementById("show-explanation")!.setAttribute("aria-pressed", String(!objects));
+  document.getElementById("show-objects")!.setAttribute("aria-pressed", String(objects));
+  if (objects && !worker) refreshStoppedObjects(false);
+  post({ type: "inspect", open: objects });
+}
+document.getElementById("show-explanation")!.onclick = () => showLeftView(false);
+document.getElementById("show-objects")!.onclick = () => showLeftView(true);
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
-if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => saveProject(project), addScript: newScript });
+if (project) level = levelView({ project, images, scripts: () => Object.keys(models), save: () => { refreshStoppedObjects(); saveProject(project); }, addScript: newScript });
 // The Course menu and its Sandbox tab.
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
@@ -535,14 +554,23 @@ function ended() {
 
 function stop() {
   worker?.terminate();
+  worker = undefined;
   stopSounds();
   showLabels([]);
+  const old = document.getElementById("game") as HTMLCanvasElement;
+  const canvas = old.cloneNode() as HTMLCanvasElement;
+  old.replaceWith(canvas);
   ended();
+  if (document.getElementById("level-area")!.hidden)
+    images.then((imgs) => drawWorld(canvas.getContext("2d")!, imgs, new Camera(startLevel.camera),
+      startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, b.script, new Vector2(b.x, b.y)))));
+  refreshStoppedObjects();
 }
 
 function run() {
   if (hasTypeErrors()) return;
   stop();
+  objectView.setObjects([], true);
   level?.setRunning(true);
   for (const model of Object.values(models)) monaco.editor.setModelMarkers(model, "runtime", []);
   status.textContent = "";
@@ -584,6 +612,7 @@ function run() {
   paused = false;
   canvas.focus();
   post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex }), earned: [...earned], scripts: Object.fromEntries(Object.entries(models).map(([n, m]) => [n, transpile(m.getValue())])) }, [offscreen]);
+  post({ type: "inspect", open: objectViewOpen });
 
   let lastTick = performance.now();
   worker.onmessage = (e: MessageEvent<FromWorker>) => {
@@ -593,6 +622,7 @@ function run() {
     if (e.data.type === "achievements") earn(e.data.ids);
     if (e.data.type === "sounds" && !muted) playClips(e.data.names);
     if (e.data.type === "labels") showLabels(e.data.labels);
+    if (e.data.type === "objects") objectView.setObjects(e.data.objects);
     if (e.data.type === "check") {
       showGoals(e.data.met);
       if (e.data.lost || e.data.passed) ended(); // the worker stopped its loop on purpose
