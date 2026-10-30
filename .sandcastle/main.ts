@@ -12,15 +12,20 @@ if (!existsSync(".sandcastle/codex-auth/auth.json")) {
   throw new Error("Sign in to ChatGPT for AFK first: npm run afk:login");
 }
 
+const afkCodex = () => codex("gpt-6-sol", {
+  sessionStorage: { sandboxSessionsDir: "/home/agent/.afk-codex/sessions" },
+});
+
 const shared = {
   // Sandbox provider — runs the agent inside an isolated container.
-  sandbox: docker({ mounts: [{ hostPath: ".sandcastle/codex-auth", sandboxPath: "/home/agent/.afk-codex" }] }),
-
-  // The old .env can still contain API credentials; keep them out of the worker.
-  env: { CODEX_HOME: "/home/agent/.afk-codex", CODEX_API_KEY: "", OPENAI_API_KEY: "", CLAUDE_CODE_OAUTH_TOKEN: "" },
+  sandbox: docker({
+    mounts: [{ hostPath: ".sandcastle/codex-auth", sandboxPath: "/home/agent/.afk-codex" }],
+    // Sandcastle's run() passes sandbox env into Docker; its top-level env is ignored here.
+    env: { CODEX_HOME: "/home/agent/.afk-codex", CODEX_API_KEY: "", OPENAI_API_KEY: "", CLAUDE_CODE_OAUTH_TOKEN: "" },
+  }),
 
   // The worker and reviewer use the same Codex model.
-  agent: codex("gpt-6-sol"),
+  agent: afkCodex(),
 
   // One agent invocation per run, so each finished ticket is merged before a usage
   // limit can fail a run and lose it.
@@ -38,9 +43,10 @@ const shared = {
 } satisfies Partial<RunOptions>;
 
 // Runs once, and after a usage limit sleeps until it resets (+5 min) and relaunches.
-// A Docker error retries every minute, 10 times per script run. Any other error still stops the script.
+// Transient Docker and Codex connection errors retry; other errors stop the script.
 let dockerRetries = 0;
 async function runPastLimits(options: RunOptions): Promise<RunResult> {
+  let connectionRetries = 0;
   while (true) {
     let wait: number | null;
     try {
@@ -49,12 +55,14 @@ async function runPastLimits(options: RunOptions): Promise<RunResult> {
       wait = result.completionSignal ? null : limitWaitMs(result.stdout.slice(-500));
       if (wait === null) return result;
     } catch (err) {
+      const message = String(err);
       // Sandcastle reports any failed `docker image inspect` (daemon briefly down) as a missing image.
-      const dockerBlip = String(err).includes("Provider 'docker'") && dockerRetries++ < 10;
-      wait = limitWaitMs(String(err)) ?? (dockerBlip ? 60_000 : null);
+      const dockerBlip = message.includes("Provider 'docker'") && dockerRetries++ < 10;
+      const connectionBlip = message.includes("failed to connect to Responses WebSocket") && connectionRetries++ < 5;
+      wait = limitWaitMs(message) ?? (dockerBlip ? 60_000 : connectionBlip ? 30_000 : null);
       if (wait === null) throw err;
     }
-    console.log(`Usage limit or Docker error. Relaunching ${options.name} at ${new Date(Date.now() + wait).toLocaleString()}.`);
+    console.log(`Usage limit, Docker error, or Codex connection error. Relaunching ${options.name} at ${new Date(Date.now() + wait).toLocaleString()}.`);
     await new Promise((r) => setTimeout(r, wait));
   }
 }
@@ -71,7 +79,7 @@ while (ticketsLeft() > 0) {
     await runPastLimits({
       ...shared,
       name: "reviewer",
-      agent: codex("gpt-6-sol"),
+      agent: afkCodex(),
       promptFile: "./.sandcastle/review-prompt.md",
       promptArgs: { RANGE: `${before}..HEAD` },
     });
