@@ -1,7 +1,7 @@
 ---
 title: Add Russian as a complete learning language
 label: build
-status: open
+status: closed
 blocked_by: [086-translation-layer]
 assignee:
 ---
