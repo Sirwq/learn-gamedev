@@ -16,6 +16,7 @@ import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
 import { anchor, docLink, docPageAvailable, docPages } from "./docs";
 import { tutorPrompt } from "./lessons/ai-note";
+import { askDeepSeek } from "./lessons/deepseek";
 import { achievements, loadEarned, saveEarned, stateOf } from "./achievements";
 import { Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, loadImages, ownSprites } from "./sprites";
@@ -775,9 +776,14 @@ overlay.onclick = (e) => {
 };
 stopBtn.onclick = () => stop();
 
-// Ask DeepSeek: copy the Tutor prompt, open a plain chat (no ?q= prefill, spec 010).
+// Ask DeepSeek: copy the Tutor prompt, then open it unsent in DeepSeek's composer (spec 088).
 const promptBox = document.getElementById("prompt-box") as HTMLDialogElement;
 const promptText = promptBox.querySelector("textarea")!;
+const showPromptFallback = (prompt: string) => {
+  promptText.value = prompt;
+  if (!promptBox.open) promptBox.showModal();
+  promptText.select();
+};
 document.getElementById("prompt-select")!.onclick = () => promptText.select();
 document.getElementById("prompt-close")!.onclick = () => promptBox.close();
 document.getElementById("ask")!.onclick = async () => {
@@ -791,17 +797,16 @@ document.getElementById("ask")!.onclick = async () => {
     script: { name: openScript, code: models[openScript].getValue() },
     console: consoleLines.map(lineText),
   });
-  try {
-    await navigator.clipboard.writeText(prompt);
-  } catch {
-    promptText.value = prompt;
-    promptBox.showModal();
-    promptText.select();
-    return;
-  }
-  window.open("https://chat.deepseek.com", "_blank"); // after copying: a focused new tab would make the copy fail
-  toast(t("Prompt copied. In DeepSeek: Ctrl/Cmd+V, type your question at the end, Enter."));
-  if (!localStorage.getItem("asked-deepseek")) {
+  const outcome = await askDeepSeek({
+    prompt,
+    copy: (text) => navigator.clipboard.writeText(text),
+    open: (url) => window.open(url, "_blank"), // after copying: a focused new tab would make the copy fail
+    showFallback: showPromptFallback,
+  });
+  if (outcome === "prefilled") toast(t("DeepSeek should have the prompt in its box, unsent. Add your question after `My question:`. If the box is empty, paste it (Ctrl/Cmd+V)."));
+  else if (outcome === "manual") toast(t("This prompt can't fit in a DeepSeek link, so it's copied. Paste it into DeepSeek (Ctrl/Cmd+V), then add your question."));
+  // A blocked popup or failed copy shows the full prompt in the dialog; no success claim.
+  if ((outcome === "prefilled" || outcome === "manual") && !localStorage.getItem("asked-deepseek")) {
     localStorage.setItem("asked-deepseek", "1");
     toast(t("You need a free DeepSeek account."));
   }
