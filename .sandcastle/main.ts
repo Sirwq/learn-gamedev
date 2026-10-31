@@ -12,6 +12,11 @@ if (!existsSync(".sandcastle/codex-auth/auth.json")) {
   throw new Error("Sign in to ChatGPT for AFK first: npm run afk:login");
 }
 
+// Sandcastle can finish a worker commit but fail its final merge when main is dirty.
+if (execSync("git status --porcelain").toString().trim()) {
+  throw new Error("Commit or stash local changes before running AFK. Sandcastle cannot merge completed worker commits into a dirty main worktree.");
+}
+
 const afkCodex = () => {
   const agent = codex("gpt-6-sol", {
     sessionStorage: { sandboxSessionsDir: "/home/agent/.afk-codex/sessions" },
