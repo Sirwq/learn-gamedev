@@ -28,6 +28,20 @@ describe("Lesson page accessibility", () => {
   it("lets the progress name come from code, holding the visible count", () => expect(tag("progress")).not.toContain("aria-label"));
 });
 
+describe("Lesson header layout", () => {
+  const header = html.slice(html.indexOf("<body>"), html.indexOf("<main>"));
+  it("keeps navigation, then actions, then status in reading order", () => {
+    expect(header.indexOf('class="header-nav"')).toBeLessThan(header.indexOf('class="header-actions"'));
+    expect(header.indexOf('id="run-slot"')).toBeLessThan(header.indexOf('id="ask"')); // Run before Ask, as keyboard users expect
+    expect(header.indexOf('id="status"')).toBeGreaterThan(header.indexOf('id="ask"'));
+  });
+  it("wraps whole groups instead of squeezing a control off screen", () => {
+    expect(html).toMatch(/\.header-nav, \.header-actions \{[^}]*flex-wrap: wrap/);
+    expect(html).toMatch(/body > header button, #run-slot, \.language-picker \{ flex: none; \}/);
+    expect(html).toMatch(/body > header button \{ white-space: nowrap; \}/);
+  });
+});
+
 describe("Course menu accessibility", () => {
   it("has a heading for screen readers", () => expect(html).toContain('<h1 id="menu-heading" class="sr-only">Choose a Lesson</h1>'));
   it("announces the focused card in a polite live region", () => expect(tag("menu-live")).toContain('aria-live="polite"'));
