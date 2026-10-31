@@ -235,8 +235,11 @@
       #diff { flex: 1; min-height: 0; border: 1px solid var(--border-subtle); }
       #toasts { position: fixed; top: 8px; right: 8px; z-index: 20; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
       #toasts > div { padding: 8px 14px; border-radius: 6px; background: var(--success-surface); color: var(--ink-strong); animation: toast 4s forwards; }
-      #toasts > .achievement { display: flex; gap: 10px; align-items: center; min-width: 260px; border-radius: 0; background: var(--surface-panel); border: 3px solid var(--stone); box-shadow: 0 6px 20px #0008; }
+      #toasts > .achievement { position: fixed; bottom: 8px; right: 8px; display: flex; gap: 10px; align-items: center; width: min(320px, calc(100vw - 16px)); max-height: 40vh; overflow: auto; border-radius: 0; background: var(--surface-panel); border: 3px solid var(--stone); box-shadow: 0 6px 20px #0008; animation-duration: 9s; }
+      #toasts > .achievement[hidden] { display: none; }
+      .achievement > span { min-width: 0; overflow-wrap: anywhere; }
       .achievement small { display: block; color: var(--gold-ink); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+      .achievement b, .achievement-message { display: block; }
       /* Achievement map: full window, blocky dark background, square bevelled tiles. */
       #achievements { position: fixed; inset: 0; z-index: 15; display: flex; flex-direction: column; background: var(--surface-menu); }
       #achievements[hidden] { display: none; }

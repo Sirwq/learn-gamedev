@@ -4,7 +4,7 @@ import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
 import type { FromWorker, ToWorker } from "./runner-protocol";
 import { codeErrorLines, modKey, runShortcut, runStartLine, transpile, v2Features, type CodeError } from "./run-utils";
-import { loadMuted, playClips, saveMuted, stopSounds, unlockAudio } from "./sound";
+import { loadMuted, playAchievementCue, playClips, saveMuted, stopSounds, unlockAudio } from "./sound";
 import { drawLabels, loadFont, textList } from "./gui";
 import type { Label } from "./engine";
 import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
@@ -23,7 +23,7 @@ import { courseMenu } from "./menu";
 import { levelView } from "./level-view";
 import { objectInspector } from "./object-inspector";
 import { startingObjects } from "./object-snapshots";
-import { toast } from "./toast";
+import { achievementToast, toast } from "./toast";
 import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { deleteProject, duplicateProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
@@ -321,15 +321,13 @@ function showTrophies() {
 showTrophies();
 function earn(ids: string[]) {
   for (const id of ids) {
+    if (earned.has(id)) continue;
     const a = achievements.find((a) => a.id === id)!;
     earned.add(id);
     saveEarned(id);
-    const notice = toast("");
-    notice.className = "achievement";
-    notice.innerHTML = `<i class="tile">${a.icon}</i><span><small></small><b></b></span>`;
-    notice.querySelector("i")!.textContent = a.icon;
-    notice.querySelector("small")!.textContent = t("Achievement unlocked");
-    notice.querySelector("b")!.textContent = localizeAchievement(a).title;
+    const shown = localizeAchievement(a);
+    achievementToast(a.icon, t("Achievement unlocked"), shown.title, shown.message);
+    if (!muted) playAchievementCue();
   }
   showTrophies();
   if (!map.hidden) drawMap();
@@ -670,7 +668,7 @@ async function run() {
     showOverlay("", false);
   };
 
-  if (v2) unlockAudio(); // run() only ever follows a click or Ctrl+Enter, which may start audio
+  unlockAudio(); // run() follows a click or Ctrl+Enter, including in Chapter 1
   const offscreen = canvas.transferControlToOffscreen();
   worker = new RunnerWorker();
   stopBtn.hidden = false;
