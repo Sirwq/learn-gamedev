@@ -24,9 +24,9 @@
         --border-dialog: #434a5f;
         --ink: #dce1e7;
         --ink-strong: #ffffff;
-        --ink-muted: #959ab1;
+        --ink-muted: #c9cfda;
         --ink-menu-meta: #dce1e7;
-        --ink-menu-files: #959ab1;
+        --ink-menu-files: #c9cfda;
         --accent: #5ad28c;
         --accent-strong: #2eb082;
         --accent-hover: #86f6bb;
@@ -45,7 +45,7 @@
         --passed-ink: #fee481;
         --passed-line: #6f5a1e;
         --locked-surface: #272c39;
-        --locked-ink: #959ab1;
+        --locked-ink: #c9cfda;
         --locked-line: #434a5f;
         --hint-surface: #10283a;
         --hint-line: #1f5a78;
@@ -113,6 +113,9 @@
       header b { font-size: 16px; }
       header button { min-height: 28px; touch-action: manipulation; transition: background-color .15s, border-color .15s; }
       header button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      .language-picker { min-height: 28px; max-width: 100px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 6px; background: var(--surface-button); color: var(--ink); font: inherit; cursor: pointer; }
+      .language-picker:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      @media (max-width: 900px) { body > header { flex-wrap: wrap; } }
       /* Run and Stop share one cell, so swapping them never moves the header. */
       #run-slot { display: grid; }
       #run-slot > button { grid-area: 1 / 1; }
@@ -167,7 +170,7 @@
       #lesson code { background: var(--surface-raised); padding: 2px 4px; border-radius: 3px; font-size: .9em; }
       #lesson pre { white-space: pre-wrap; padding: 10px 12px; background: var(--surface-raised); border-radius: 6px; line-height: 1.5; }
       #lesson pre code { padding: 0; }
-      #hints > div, #still-stuck { margin: 8px 0; padding: 8px 12px; border: 1px solid var(--hint-line); border-radius: 6px; background: var(--hint-surface); }
+      #hints > div, #still-stuck { margin: 8px 0; padding: 8px 12px; border: 1px solid var(--hint-line); border-radius: 6px; background: var(--hint-surface); color: var(--ink-strong); }
       #hints > div > :first-child { margin-top: 0; }
       #hints > div > :last-child { margin-bottom: 0; }
       #still-stuck { padding: 8px 10px; }
@@ -269,6 +272,7 @@
       #menu .bar.bottom { bottom: max(14px, env(safe-area-inset-bottom)); }
       #menu .bar button { display: flex; gap: 6px; align-items: center; background: #0006; border-color: #fff3; border-radius: 999px; }
       #menu .bar button[hidden] { display: none; }
+      #menu .language-picker { position: relative; z-index: 1; background: var(--surface-menu); }
       #menu .chip { font-weight: 600; }
       #menu .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
       #menu .soon { color: var(--ink-muted); }
@@ -286,12 +290,12 @@
       #menu-dots button::before { content: ""; height: 4px; border-radius: 2px; background: #ffffff38; transition: height .15s, background-color .15s; }
       #menu-dots button.passed::before { background: #ffffffb3; }
       #menu-dots button:hover::before { background: #fffd; }
-      #menu-dots button[aria-current]::before { height: 6px; background: var(--accent); box-shadow: 0 0 10px #5ad28c66; }
+      #menu-dots button[aria-current]::before { height: 6px; background: var(--accent); }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
       /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
       #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
       #menu-prev { left: calc(50% - 22.5cqh - 28px); background: var(--locked-surface); color: var(--locked-ink); box-shadow: inset 0 0 0 1px var(--locked-line), 0 4px 14px #0009; }
-      #menu-next { left: calc(50% + 22.5cqh + 28px); background: var(--accent); color: var(--accent-on); box-shadow: 0 0 18px #5ad28c66, 0 4px 14px #0009; }
+      #menu-next { left: calc(50% + 22.5cqh + 28px); background: var(--accent); color: var(--accent-on); box-shadow: 0 4px 14px #0009; }
       #menu-prev:hover { background: var(--surface-button-hover); color: var(--ink-strong); box-shadow: inset 0 0 0 1px var(--border-control), 0 4px 14px #0009; }
       #menu-next:hover { background: var(--accent-hover); }
       #menu .nav:hover { transform: translate(-50%, -50%) scale(1.08); }
@@ -321,7 +325,7 @@
       /* --d is the card's distance from the focused one, --s its sign: small cards are .6 wide, 22px apart. */
       .cover:not([aria-current]) { scale: .6; }
       .cover canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-      .cover[aria-current] { outline: 3px solid var(--accent); outline-offset: 3px; box-shadow: 0 0 40px #5ad28c66, 0 10px 30px #0009; }
+      .cover[aria-current] { outline: 3px solid var(--accent); outline-offset: 3px; box-shadow: 0 10px 30px #0009; }
       .cover.locked canvas { filter: grayscale(.85) brightness(.5) contrast(.9); }
       .cover .tag { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: #000a; font: 700 11px system-ui; }
       .cover.passed .tag { color: var(--passed-ink); }

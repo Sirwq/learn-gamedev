@@ -26,19 +26,47 @@ import { startingObjects } from "./object-snapshots";
 import { achievementToast, toast } from "./toast";
 import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
-import { deleteProject, duplicateProject, exportProject, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
+import { deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { exportFileName } from "./project-file";
 import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
 
 translateStatic();
 if (Object.keys(catalogs).length > 1) {
-  const picker = document.createElement("select");
-  picker.ariaLabel = t("Language");
-  const names = new Intl.DisplayNames([activeCatalog.locale], { type: "language" });
-  for (const code of Object.keys(catalogs)) picker.add(new Option(names.of(code) ?? code, code));
-  picker.value = activeCatalog.locale;
-  picker.onchange = () => { localStorage.setItem("locale", picker.value); location.reload(); };
-  document.getElementById("theme")!.before(picker);
+  const makePicker = (id: string) => {
+    const picker = document.createElement("select");
+    picker.id = id;
+    picker.className = "language-picker";
+    picker.ariaLabel = t("Language");
+    picker.add(new Option("English", "en"));
+    picker.add(new Option("Русский", "ru"));
+    picker.value = activeCatalog.locale;
+    picker.onchange = async () => {
+      picker.disabled = true;
+      try { await flushProjectWrites(); }
+      catch {
+        picker.disabled = false;
+        picker.value = activeCatalog.locale;
+        toast(t("Storage is full: your last Project change was not saved. Delete a Project you no longer need and try again."));
+        return;
+      }
+      const menu = document.getElementById("menu")!;
+      const dots = Array.from(menu.querySelectorAll("#menu-dots button"));
+      sessionStorage.setItem("locale:view", JSON.stringify({
+        menu: !menu.hidden,
+        mode: document.getElementById("chip-sandbox")?.getAttribute("aria-pressed") === "true" ? "sandbox" : "course",
+        card: dots.findIndex((dot) => dot.hasAttribute("aria-current")),
+        tab: document.querySelector("#tabs [aria-selected='true']")?.getAttribute("data-key"),
+        docsPage: document.querySelector("#docs nav [aria-current='page']")?.getAttribute("data-page"),
+        objects: document.getElementById("show-objects")?.getAttribute("aria-pressed") === "true",
+        focus: id,
+      }));
+      localStorage.setItem("locale", picker.value);
+      location.reload();
+    };
+    return picker;
+  };
+  document.getElementById("theme")!.before(makePicker("language-header"));
+  document.getElementById("menu-stats")!.before(makePicker("language-menu"));
 }
 
 self.MonacoEnvironment = {
@@ -778,3 +806,22 @@ document.getElementById("ask")!.onclick = async () => {
     toast(t("You need a free DeepSeek account."));
   }
 };
+
+// A language change reloads the existing URL so every screen uses one catalog.
+// Restore the visible panel and keyboard target after the new page is ready.
+const localeView = sessionStorage.getItem("locale:view");
+if (localeView) {
+  sessionStorage.removeItem("locale:view");
+  try {
+    const view = JSON.parse(localeView) as { menu?: boolean; mode?: "course" | "sandbox"; card?: number; tab?: string; docsPage?: string; objects?: boolean; focus?: string };
+    if (view.tab) document.querySelector<HTMLElement>(`#tabs [data-key="${CSS.escape(view.tab)}"]`)?.click();
+    if (view.docsPage) openDocs(view.docsPage);
+    if (view.objects) showLeftView(true);
+    if (view.menu) {
+      openMenu(view.mode);
+      const dots = document.querySelectorAll<HTMLElement>("#menu-dots button");
+      if (view.card !== undefined && view.card >= 0) dots[view.card]?.click();
+    }
+    document.getElementById(view.focus ?? "")?.focus();
+  } catch { /* A stale view record must not block the app. */ }
+}

@@ -84,8 +84,8 @@ export function docPages(source: string, sandboxUnlocked = false): Page[] {
     title: "TypeScript vs Unity C#",
     ids: [],
     markdown: [
-      "## TypeScript vs Unity C#",
-      "Everything here works like Unity C#, except:",
+      `## ${t("TypeScript vs Unity C#")}`,
+      t("Everything here works like Unity C#, except:"),
       differences.map((d) => `- [${d.id}](#${anchor(d.id)}): ${localizeDocs(`${d.id}.unity`, d.unity!)}`).join("\n"),
     ].join("\n\n"),
   });

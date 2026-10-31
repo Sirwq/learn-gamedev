@@ -4,7 +4,7 @@ import { chapterTwoUnlocked } from "./check";
 import type { Lesson } from "./lesson";
 import tourPlayer from "./sandbox-tour/Player.ts?raw";
 import tourHUD from "./sandbox-tour/HUD.ts?raw";
-import { t } from "./i18n";
+import { activeLocale, t } from "./i18n";
 
 export type Project = { id: string; name: string; scripts: Record<string, string>; level: Lesson["level"] };
 
@@ -81,3 +81,16 @@ export const tour: Omit<Project, "id"> = {
     { tag: "HUD", x: 0, y: 0, w: 0, h: 0, color: "transparent", script: "HUD" },
   ] },
 };
+
+/** Only the tour's teaching comments change; the starter code and tags stay identical. */
+export const localizedTour = () => activeLocale === "ru" ? {
+  ...structuredClone(tour),
+  name: "Пример: экскурсия по песочнице",
+  scripts: {
+    Player: tourPlayer
+      .replace("// Select Friend in the 🗺 Level tab to set its own sprite in the empty image slot.",
+        "// Выберите Friend во вкладке 🗺 «Уровень» и добавьте свой спрайт в пустое место изображения.")
+      .replace("// Jump plays when the key starts the jump.", "// Звук Jump играет при начале прыжка."),
+    HUD: tourHUD.replace("// This Level starts with three coins.", "// На этом уровне сначала три монеты."),
+  },
+} : structuredClone(tour);

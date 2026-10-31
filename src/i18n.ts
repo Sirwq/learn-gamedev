@@ -1,6 +1,7 @@
 import type { Lesson } from "./lesson";
 import type { Achievement } from "./achievements";
 import { staticMessages } from "./static-messages";
+import { russian } from "./ru";
 
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
@@ -92,6 +93,7 @@ export const english = {
   "an image bigger than {size}×{size}": "an image bigger than {size}×{size}",
   "Lesson": "Lesson", "Project": "Project",
   "TypeScript vs Unity C#": "TypeScript vs Unity C#",
+  "Everything here works like Unity C#, except:": "Everything here works like Unity C#, except:",
   "Extra: no Lesson teaches this. Build it in your own Player code, in any Lesson or a Sandbox Project.": "Extra: no Lesson teaches this. Build it in your own Player code, in any Lesson or a Sandbox Project.",
   "Earn the one before it first": "Earn the one before it first", "✓ earned": "✓ earned",
   "There is no sound named {name}": "There is no sound named {name}",
@@ -137,7 +139,7 @@ export function createTranslator(catalog: Catalog) {
 
 export const englishCatalog: Catalog = { locale: "en", messages: english };
 /** Add a shipped locale here when its real catalog and learning content are ready. */
-export const catalogs: Record<string, Catalog> = { en: englishCatalog };
+export const catalogs: Record<string, Catalog> = { en: englishCatalog, ru: russian };
 
 export function resolveLocale(saved: string | null, browser: string, supported = Object.keys(catalogs)): string {
   for (const candidate of [saved, browser]) {

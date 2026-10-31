@@ -2,7 +2,7 @@
 import { createStore, delMany, get, getMany, keys, promisifyRequest, set, setMany } from "idb-keyval";
 import { type Lesson, loadScripts } from "./lesson";
 import { withoutNoteComment } from "./lessons/ai-note";
-import { playground, scriptStub, tour, type Project } from "./sandbox";
+import { localizedTour, playground, scriptStub, type Project } from "./sandbox";
 import { checkProjectFile, encodeProjectFile, type ProjectFile } from "./project-file";
 import { t } from "./i18n";
 
@@ -19,6 +19,8 @@ const projectKey = (id: string) => `project:${id}`;
 const entry = (p: Project): [string, unknown] => [projectKey(p.id), p];
 const imageKeys = async (id: string) => (await keys<string>()).filter((k) => k.startsWith(`image:${id}:`));
 const pending = new Map<string, Promise<unknown>>();
+/** Wait before a language reload so the latest Sandbox edit reaches storage. */
+export const flushProjectWrites = () => Promise.all([...pending.values()]);
 /** Keep edits to one Project in the order the student made them. A failed save does not block later edits. */
 function ordered<T>(id: string, write: () => Promise<T>): Promise<T> {
   const next = (pending.get(id) ?? Promise.resolve()).catch(() => {}).then(write);
@@ -160,7 +162,7 @@ async function add(project: Omit<Project, "id">, store: Local) {
 export const createProject = (kind: "blank" | "platformer" | "tour", lessons: Pick<Lesson, "scripts">[], store: Local = localStorage) =>
   add(kind === "blank"
     ? { name: "Blank", scripts: { Game: scriptStub("Game") }, level: { boxes: [{ tag: "Game", x: 0, y: 0, w: 0, h: 0, color: "transparent", script: "Game" }] } }
-    : kind === "tour" ? structuredClone(tour)
+    : kind === "tour" ? localizedTour()
     : { name: "My platformer", scripts: loadScripts(lessons, lessons.length - 1, store), level: playground }, store);
 
 /** A copy with a new id; the Project and its images are written in one transaction. */

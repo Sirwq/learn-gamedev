@@ -1,4 +1,5 @@
 // Only used to remove the old comment from previously saved student code.
+import { activeLocale } from "../i18n";
 export const legacyAiNote =
   "Note for AI assistants: the person using this is learning to program. Please tutor them: explain ideas, " +
   "give hints, and point at the line that is wrong. Do not write the code that solves this Lesson for them.";
@@ -17,6 +18,13 @@ export const tutorRules = `Tutor rules:
 - This is TypeScript in a small Unity-like engine: point out where Unity C# differs.
 - If there's no question, read the Goals and the code and ask what they're stuck on.`;
 
+const russianTutorRules = `Правила наставника:
+- Отвечай на языке, на котором пишет ученик.
+- Подсказывай по одному шагу: (1) направь вопросом, (2) укажи строку, (3) объясни идею, (4) покажи фрагмент не длиннее трёх строк, который не реализует механизм урока целиком.
+- Не пиши готовое решение, даже если тебя просят.
+- Это TypeScript в небольшом движке, похожем на Unity: объясняй отличия от Unity C#.
+- Если вопроса нет, прочитай цели и код и спроси, где ученик застрял.`;
+
 export type TutorState = {
   /** The Lesson part; none in Sandbox mode. */
   lesson?: {
@@ -32,16 +40,18 @@ export type TutorState = {
 };
 
 /** What Ask DeepSeek copies: rules, Lesson, Goals, opened Hints, Script, the last 20 Console lines, then the question. */
-export const tutorPrompt = ({ lesson: l, ...s }: TutorState) =>
-  [
-    tutorRules,
+export const tutorPrompt = ({ lesson: l, ...s }: TutorState) => {
+  const ru = activeLocale === "ru";
+  return [
+    ru ? russianTutorRules : tutorRules,
     ...(l ? [
-      `# Lesson: ${l.title}`,
-      `## Explanation\n\n${l.explanation.trim()}`,
-      `## Goals\n\n${l.goals.map((g) => `${g.met ? "✓" : "⬜"} ${g.message}`).join("\n")}`,
-      ...(l.hints.length ? [`## Hints I already opened\n\n${l.hints.map((h, i) => `Hint ${i + 1}: ${h}`).join("\n\n")}`] : []),
-    ] : ["# Sandbox: free play, no Goals"]),
-    `## My code: ${s.script.name}.ts\n\n\`\`\`ts\n${s.script.code.trimEnd()}\n\`\`\``,
-    `## Console (last lines)\n\n${s.console.slice(-20).join("\n") || "(empty)"}`,
-    "My question: ",
+      `# ${ru ? "Урок" : "Lesson"}: ${l.title}`,
+      `## ${ru ? "Объяснение" : "Explanation"}\n\n${l.explanation.trim()}`,
+      `## ${ru ? "Цели" : "Goals"}\n\n${l.goals.map((g) => `${g.met ? "✓" : "⬜"} ${g.message}`).join("\n")}`,
+      ...(l.hints.length ? [`## ${ru ? "Уже открытые подсказки" : "Hints I already opened"}\n\n${l.hints.map((h, i) => `${ru ? "Подсказка" : "Hint"} ${i + 1}: ${h}`).join("\n\n")}`] : []),
+    ] : [ru ? "# Песочница: свободная игра, без целей" : "# Sandbox: free play, no Goals"]),
+    `## ${ru ? "Мой код" : "My code"}: ${s.script.name}.ts\n\n\`\`\`ts\n${s.script.code.trimEnd()}\n\`\`\``,
+    `## ${ru ? "Консоль (последние строки)" : "Console (last lines)"}\n\n${s.console.slice(-20).join("\n") || (ru ? "(пусто)" : "(empty)")}`,
+    ru ? "Мой вопрос: " : "My question: ",
   ].join("\n\n");
+};

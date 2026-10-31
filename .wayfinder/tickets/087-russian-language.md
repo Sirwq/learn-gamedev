@@ -24,3 +24,9 @@ Let a student use the Course and Sandbox in Russian. Add a real Russian catalog 
 - A returning student can switch English → Russian → English without losing Lesson progress, code, hints, Achievements, Projects, or backups.
 - Tests cover locale selection and persistence, Russian plural forms, content coverage and fallback, stable save keys, and unchanged Lesson checks. `npm run typecheck` and `npm test` pass.
 - Browser-check a first Lesson, a Chapter 2 Lesson, Docs, the Course menu, and Sandbox in both languages, including keyboard and screen-reader labels.
+
+## Progress
+
+Russian is registered with the existing translation layer. The interface catalog, 21 Lesson displays and learning texts, Goals and Lose messages, Docs prose, achievements, tutor prompt, and new Sandbox tour comments have Russian copy. Language pickers are available in the header and Course menu; a switch saves the choice and restores the open panel and focused picker after reload. Canonical English Lesson titles and saved Project IDs remain unchanged.
+
+`npm run typecheck` and `npm run build` pass. Automated tests and browser checks are left to the user's manual review, as requested. Keep this ticket open until that review is complete.
