@@ -12,4 +12,6 @@ Put your moving line inside an `if` like this one. Then add a second `if` for `K
 
 Click the game before you press the arrow keys, so it gets the keys and not the editor.
 
+**Try it:** press **Run**, click the game, and steer into both flags.
+
 **Differs from Unity C#**: the same as C#: `if (Input.GetKey(KeyCode.RightArrow)) { ... }`. Only the `this.` before `transform` and `speed` is new.

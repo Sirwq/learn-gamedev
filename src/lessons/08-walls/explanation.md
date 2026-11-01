@@ -17,4 +17,6 @@ if (Input.GetKey(KeyCode.RightArrow)) {
 
 You also need to stand on top of walls. Your platform loop can check them too: `.concat(walls)` joins the walls onto the end of the platforms array.
 
+**Try it:** press **Run**, stop at each wall's side, and climb to the flag.
+
 **Differs from Unity C#**: `else if` is the same in C#. Unity stops boxes at walls for you when both have a `Collider2D` and one has a `Rigidbody2D`.

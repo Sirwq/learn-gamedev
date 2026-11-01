@@ -17,4 +17,6 @@ if (Input.GetKeyDown(KeyCode.Space) && this.onGround) {
 
 Inside, set `this.velocityY` to `this.jumpSpeed` and `this.onGround` to `false`. `GetKeyDown` is true only on the frame the key goes down, so holding Space jumps once.
 
+**Try it:** press **Run** and use Space to jump over the enemy to the flag.
+
 **Differs from Unity C#**: C# writes `bool onGround = false;`. TypeScript calls the type `boolean`, and works it out from `false` for you. `&&` is the same.
