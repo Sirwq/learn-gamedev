@@ -28,6 +28,7 @@ export const russianStatic: Partial<Record<Message, string>> = {
   "Keep my current code": "Оставить мой текущий код", "Keep the width, set the height from the image's shape": "Сохранить ширину и подогнать высоту под изображение",
   "Lava…": "Лава…", "Lesson views": "Разделы урока", "Level as Code": "Код уровня",
   "Load my code from when I passed it": "Загрузить код, с которым я прошёл урок", "Load reference code": "Загрузить образец кода",
+  "Listen to Lofi Radio (lofi.radio, new tab)": "Слушать Lofi Radio (lofi.radio, новая вкладка)",
   "Look the API up in the": "Найдите API в", "Match image shape": "Подогнать под изображение",
   "Minimap of the whole Level: click or drag to move the view": "Миникарта уровня: нажмите или перетащите, чтобы переместить вид",
   "More": "Ещё", "Mute sound": "Выключить звук", "My platformer": "Мой платформер", "Name": "Имя", "New tag": "Новый тег",

@@ -60,6 +60,7 @@ export const staticMessages = {
   "Level": "Level",
   "Level as Code": "Level as Code",
   "Load my code from when I passed it": "Load my code from when I passed it",
+  "Listen to Lofi Radio (lofi.radio, new tab)": "Listen to Lofi Radio (lofi.radio, new tab)",
   "Load reference code": "Load reference code",
   "Look the API up in the": "Look the API up in the",
   "Match image shape": "Match image shape",
