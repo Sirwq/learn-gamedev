@@ -350,6 +350,11 @@ passBox.append(...Object.keys(lesson.scripts).map((name) => {
   b.onclick = () => openCompare(name);
   return b;
 }));
+const retry = document.createElement("button");
+retry.id = "retry";
+retry.textContent = t("Retry Level");
+retry.onclick = run;
+passBox.append(retry);
 const nextIndex = replaying ? current : lessonIndex + 1;
 if (nextIndex < course.length) {
   const next = document.createElement("button");
@@ -640,8 +645,10 @@ function stop(restore = true) {
 }
 
 let checkingCode = false;
+let unlockMenuTimer: number | undefined;
 async function run() {
   if (checkingCode || running) return;
+  if (unlockMenuTimer !== undefined) clearTimeout(unlockMenuTimer);
   checkingCode = true;
   const versions = Object.fromEntries(Object.entries(models).map(([name, model]) => [name, model.getVersionId()]));
   const errors: CodeError[] = [];
@@ -755,7 +762,7 @@ async function run() {
         if (!wasUnlocked && sandboxUnlocked(course)) {
           refreshDocs();
           toast(t("🔓 Sandbox and Chapter 2 unlocked"));
-          setTimeout(() => {
+          unlockMenuTimer = setTimeout(() => {
             openMenu("course");
             setMode("sandbox");
           }, 1500);

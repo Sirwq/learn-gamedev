@@ -49,6 +49,7 @@ export const english = {
   "Add a new Script file": "Add a new Script file", "Name of the new Script (its class name, like Coin):": "Name of the new Script (its class name, like Coin):",
   "This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.": "This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.",
   "Compare {name}.ts": "Compare {name}.ts", "Next Lesson ▶": "Next Lesson ▶",
+  "Retry Level": "Retry Level",
   "Achievements {earned} / {total}": "Achievements {earned} / {total}", "Achievement unlocked": "Achievement unlocked",
   "Done: ": "Done: ", "To do: ": "To do: ", "Fix the red squiggles before running.": "Fix the red squiggles before running.",
   "Fix the code errors below, then Run again.": "Fix the code errors below, then Run again.",
