@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Sirwq/learn-gamedev#readme",
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "idb-keyval": "^6.3.0",
     "marked": "^18.1.2",
     "monaco-editor": "^0.57.0",

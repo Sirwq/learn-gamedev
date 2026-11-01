@@ -1,4 +1,5 @@
 import * as monaco from "monaco-editor";
+import { inject } from "@vercel/analytics";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 import TsWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import RunnerWorker from "./runner.worker?worker";
@@ -32,6 +33,7 @@ import { exportFileName } from "./project-file";
 import { formatCode } from "./format-code";
 import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
 
+inject();
 translateStatic();
 if (Object.keys(catalogs).length > 1) {
   const makePicker = (id: string) => {
