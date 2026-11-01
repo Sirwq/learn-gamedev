@@ -165,9 +165,16 @@
       }
       /* Hints scroll inside the lesson while the game stays visible below it. */
       #left { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; overflow: hidden; }
-      #left-views { display: flex; gap: 4px; }
+      #left-views { display: inline-flex; align-self: flex-start; max-width: 100%; gap: 2px; padding: 3px; border: 1px solid var(--border-control); border-radius: 8px; background: var(--surface-panel); }
       #left-views[hidden], #objects[hidden], #lesson[hidden] { display: none; }
-      #left-views button[aria-pressed="true"] { background: var(--surface-button); border-color: var(--focus); }
+      #left-views button { min-width: 0; min-height: 34px; padding: 5px 12px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--ink-muted); font-size: 13px; line-height: 1.2; white-space: nowrap; }
+      #left-views button[aria-pressed="true"] { background: var(--surface-editor); border-color: var(--border-control); color: var(--ink-strong); font-weight: 700; box-shadow: 0 1px 3px #0003; }
+      #left-views button:hover { background: var(--surface-button-hover); color: var(--ink-strong); }
+      #left-views button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+      @media (max-width: 520px) {
+        #left-views { align-self: stretch; flex-direction: column; }
+        #left-views button { text-align: left; white-space: normal; }
+      }
       #objects { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; }
       #objects h2 { font-size: 18px; margin: 12px 0 8px; }
       #objects h3 { font-size: 15px; margin: 14px 0 4px; }

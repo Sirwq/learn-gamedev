@@ -1,7 +1,7 @@
 ---
 title: Distinguish the Explanation and Objects view controls
 label: build
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -19,3 +19,9 @@ Style **Explanation** and **Objects** as a clear pair of view controls so studen
 
 - The active view is obvious at a glance and to a screen reader, and switching views keeps focus sensible.
 - Browser-check both states in light and dark themes at desktop and narrow widths. `npm run typecheck` and `npm test` pass.
+
+## Resolution
+
+Refined Explanation and Objects into a segmented pair using the Lesson's existing colors and tokens. The selected control has a raised border, shadow, and heavier type as well as a distinct surface; hover and keyboard focus are visible. At phone widths the controls stack so longer Russian labels remain legible. Existing labels, `aria-pressed`, panel switching, and read-only Objects behavior are unchanged.
+
+Verified both views in light and dark themes at desktop, intermediate, and phone widths in Chromium, including mouse switching, keyboard focus, and label fit. `npm run typecheck` and `npm test` pass. The Impeccable detector was run; its whole-file warnings did not point to the changed controls.
