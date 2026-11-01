@@ -4,3 +4,5 @@ dist
 .DS_Store
 .impeccable/
 .playwright-mcp/
+.vercel
+learn-dev-v0.1.0.zip

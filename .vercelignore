@@ -1,0 +1,10 @@
+.sandcastle/
+.claude/
+.playwright-mcp/
+.impeccable/
+.git/
+.vercel/
+node_modules/
+dist/
+*.zip
+.env*
