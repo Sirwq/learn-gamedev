@@ -1,6 +1,6 @@
 ## Hint 1
 
-Watch for the Player's feet leaving a box top without a jump. Keep a short timer for that edge.
+Watch for the Player's feet leaving a box top without a jump. Keep a short timer for that edge; the Goal needs a jump just after leaving, not from the top.
 
 ## Hint 2
 

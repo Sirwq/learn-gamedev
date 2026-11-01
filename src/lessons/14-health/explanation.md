@@ -8,7 +8,7 @@ In `Update()`, find every `"Spikes"`. When you overlap one, take 1 from `health`
 
 If `health` is now 0, `Destroy(this.gameObject)` and `return`. Otherwise reset: move back to `this.start` and stop falling.
 
-Do this after all your other moves, so the spikes never see you standing in them.
+Check spikes after moving. On a hit, reset your position in that same `Update()` so the Level sees you back at the start, not still inside the spikes.
 
 **Try it:** press **Run**, touch the spikes once, then get past them to the flag.
 

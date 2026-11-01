@@ -5,6 +5,12 @@ import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
 import lesson15Player from "./14-health/reference/Player.ts?raw";
+import { russianLessons } from "../ru-lessons";
+
+it("explains the coin counter's two-count goal in both languages", () => {
+  expect(course[16].explanation).toContain("two different counts");
+  expect(russianLessons["17. Coin counter"].explanation).toContain("два разных значения");
+});
 
 it("includes Sounds and Coin counter, with Lesson 15 Player as Sounds' hidden stub", () => {
   expect(course.slice(15, 17).map((lesson) => lesson.title)).toEqual(["16. Sounds", "17. Coin counter"]);
