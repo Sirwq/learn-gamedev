@@ -7,6 +7,8 @@ import { russian } from "./ru";
 export const english = {
   ...staticMessages,
   "Run": "Run", "Stop": "Stop", "Docs": "Docs", "Level": "Level", "Sandbox": "Sandbox",
+  "Finish the code or fix syntax errors before formatting. Your code was left intact.": "Finish the code or fix syntax errors before formatting. Your code was left intact.",
+  "Formatting is unavailable right now. Try again.": "Formatting is unavailable right now. Try again.",
   "Hint {number} of {total}": "Hint {number} of {total}",
   "Hint {number}": "Hint {number}",
   "{count} line": "{count} line", "{count} lines": "{count} lines",

@@ -9,6 +9,8 @@ export const russian: Catalog = {
   messages: {
     ...russianStatic,
     "Run": "Запустить", "Stop": "Остановить", "Docs": "Справочник", "Level": "Уровень", "Sandbox": "Песочница",
+    "Finish the code or fix syntax errors before formatting. Your code was left intact.": "Допишите код или исправьте синтаксические ошибки перед форматированием. Код не изменён.",
+    "Formatting is unavailable right now. Try again.": "Сейчас не удалось отформатировать код. Попробуйте ещё раз.",
     "Language": "Язык", "Lesson": "Урок", "Lessons": "Уроки", "Project": "Проект", "Projects": "Проекты",
     "Hint {number} of {total}": "Подсказка {number} из {total}", "Hint {number}": "Подсказка {number}",
     "{count} line": "{count} строка", "{count} lines": "{count} строк",

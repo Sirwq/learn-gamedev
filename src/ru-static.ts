@@ -19,6 +19,7 @@ export const russianStatic: Partial<Record<Message, string>> = {
   "Draw": "Рисунок", "Drawn on the first row when Draw is Tile, like grass on dirt": "Рисуется в первом ряду при режиме Tile, как трава на земле",
   "Duplicate": "Дублировать", "Editor font size": "Размер шрифта редактора", "Esc, then Tab: leave the editor": "Esc, затем Tab: выйти из редактора",
   "Example: Sandbox tour": "Пример: экскурсия по песочнице", "Explanation": "Объяснение", "Export": "Экспорт", "Export everything": "Экспортировать всё",
+  "Format Code": "Форматировать код",
   "Fit Level": "Показать весь уровень", "From a file…": "Из файла…", "Goals": "Цели", "Got it": "Понятно",
   "Hold Ctrl/⌘ while changing width or height to keep the same shape.": "Удерживайте Ctrl/⌘ при изменении ширины или высоты, чтобы сохранить пропорции.",
   "If DeepSeek didn't get the prompt, select all, copy this prompt, and paste it into": "Если DeepSeek не получил запрос, выделите всё, скопируйте этот запрос и вставьте в",

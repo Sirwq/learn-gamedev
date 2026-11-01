@@ -38,6 +38,7 @@ export const staticMessages = {
   "Esc, then Tab: leave the editor": "Esc, then Tab: leave the editor",
   "Example: Sandbox tour": "Example: Sandbox tour",
   "Explanation": "Explanation",
+  "Format Code": "Format Code",
   "Export": "Export",
   "Export everything": "Export everything",
   "Fit Level": "Fit Level",

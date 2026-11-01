@@ -29,6 +29,7 @@ import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { exportFileName } from "./project-file";
+import { formatCode } from "./format-code";
 import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
 
 translateStatic();
@@ -262,6 +263,7 @@ function show(name: string) {
   level?.setOpen(false);
   editor.setModel(models[name]);
   editorEl.hidden = false;
+  formatButton.hidden = false;
   docsEl.hidden = true;
   selectTab(`${name}.ts`);
 }
@@ -289,6 +291,7 @@ function openDocs(target = docsPage) {
   }
   level?.setOpen(false);
   editorEl.hidden = true;
+  formatButton.hidden = true;
   docsEl.hidden = false;
   selectTab("📖 Docs");
   if (target !== page.title) document.getElementById(anchor(target))?.scrollIntoView();
@@ -300,9 +303,26 @@ function refreshDocs() {
 }
 function openLevel() {
   editorEl.hidden = docsEl.hidden = true;
+  formatButton.hidden = true;
   selectTab(LEVEL);
   level!.setOpen(true);
 }
+const formatButton = document.getElementById("format-code") as HTMLButtonElement;
+formatButton.onclick = async () => {
+  formatButton.disabled = true;
+  try {
+    const result = await formatCode(editor, async (uri) => {
+      const getWorker = await monaco.typescript.getTypeScriptWorker();
+      return (await getWorker(uri)).getSyntacticDiagnostics(uri.toString());
+    });
+    if (result === "invalid") toast(t("Finish the code or fix syntax errors before formatting. Your code was left intact."));
+    else if (result === "unavailable") toast(t("Formatting is unavailable right now. Try again."));
+  } catch {
+    toast(t("Formatting is unavailable right now. Try again."));
+  } finally {
+    formatButton.disabled = false;
+  }
+};
 document.addEventListener("click", (e) => {
   const link = (e.target as Element).closest?.("a[href^='#doc-']");
   if (!link) return;
