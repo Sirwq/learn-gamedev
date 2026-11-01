@@ -233,6 +233,13 @@
       #format-code:hover:not(:disabled) { background: var(--surface-button-hover); }
       #format-code:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
       #format-code[hidden] { display: none; }
+      #editor-palette { flex: none; align-self: center; max-width: 116px; min-height: 28px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 5px; background: var(--surface-button); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+      #editor-palette:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+      @media (max-width: 900px) {
+        #tabbar { flex-wrap: wrap; }
+        #tabs { flex-basis: 100%; overflow-x: auto; }
+        #zoom { margin-left: auto; }
+      }
       #zoom button { min-width: 24px; min-height: 24px; padding: 0 6px; border: 0; background: none; color: var(--ink-muted); font-size: 13px; }
       #zoom button:hover:not(:disabled) { background: var(--surface-button-hover); color: var(--ink-strong); }
       #zoom-reset { min-width: 44px; font-variant-numeric: tabular-nums; }
@@ -570,6 +577,7 @@
           <div id="tabs" role="tablist"></div>
           <span id="editor-hint">Esc, then Tab: leave the editor</span>
           <button id="format-code">Format Code</button>
+          <select id="editor-palette" aria-label="Editor palette"><option value="page">Page default</option><option value="midnight">Midnight</option><option value="paper">Paper</option></select>
           <span id="zoom" role="group" aria-label="Editor font size"><button id="zoom-out">−</button><button id="zoom-reset"></button><button id="zoom-in">+</button></span>
         </div>
         <div id="editor"></div>

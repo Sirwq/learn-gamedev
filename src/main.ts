@@ -175,9 +175,36 @@ function addModel(name: string, code: string) {
   });
 }
 for (const [name, code] of Object.entries(project?.scripts ?? loadScripts(course, lessonIndex))) addModel(name, code);
-// The editor and Compare use the page's palette, read from the CSS tokens in index.html.
+// The default editor palette follows the page; the other two stay independent of it.
 const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 const root = document.documentElement;
+const paletteSelect = document.getElementById("editor-palette") as HTMLSelectElement;
+const savedPalette = localStorage.getItem("editor:palette");
+paletteSelect.value = [...paletteSelect.options].some((option) => option.value === savedPalette) ? savedPalette! : "page";
+monaco.editor.defineTheme("midnight", {
+  base: "vs-dark", inherit: true, rules: [],
+  colors: {
+    "editor.background": "#101827", "editor.foreground": "#e5edf7",
+    "editorLineNumber.foreground": "#8796aa", "editorLineNumber.activeForeground": "#e5edf7",
+    "editor.lineHighlightBackground": "#1c2a3d", "editor.selectionBackground": "#315679",
+    "editor.inactiveSelectionBackground": "#24425e", "editorCursor.foreground": "#77e0c4",
+    "editorError.foreground": "#ff8b86", "editorWarning.foreground": "#f2c879",
+    "diffEditor.insertedTextBackground": "#28734a66", "diffEditor.removedTextBackground": "#b34d5766",
+    "focusBorder": "#77e0c4",
+  },
+});
+monaco.editor.defineTheme("paper", {
+  base: "vs", inherit: true, rules: [],
+  colors: {
+    "editor.background": "#fff8ec", "editor.foreground": "#282736",
+    "editorLineNumber.foreground": "#716a67", "editorLineNumber.activeForeground": "#282736",
+    "editor.lineHighlightBackground": "#f2e8d6", "editor.selectionBackground": "#b9d6f0",
+    "editor.inactiveSelectionBackground": "#dce8ee", "editorCursor.foreground": "#174d7a",
+    "editorError.foreground": "#b42318", "editorWarning.foreground": "#8a5900",
+    "diffEditor.insertedTextBackground": "#66b37955", "diffEditor.removedTextBackground": "#d2757555",
+    "focusBorder": "#0a6f99",
+  },
+});
 function applyTheme() {
   const light = root.dataset.theme === "light";
   monaco.editor.defineTheme("page", {
@@ -191,11 +218,15 @@ function applyTheme() {
       "focusBorder": token("focus"),
     },
   });
-  monaco.editor.setTheme("page");
+  monaco.editor.setTheme(paletteSelect.value);
   themeButton.textContent = light ? "☾" : "☀";
   themeButton.title = themeButton.ariaLabel = light ? t("Switch to dark theme") : t("Switch to light theme");
 }
 const themeButton = document.getElementById("theme")!;
+paletteSelect.onchange = () => {
+  localStorage.setItem("editor:palette", paletteSelect.value);
+  applyTheme();
+};
 themeButton.onclick = () => {
   root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
   try { localStorage.setItem("theme", root.dataset.theme); } catch {}
@@ -203,7 +234,7 @@ themeButton.onclick = () => {
 };
 applyTheme();
 const editor = monaco.editor.create(document.getElementById("editor")!, {
-  theme: "page",
+  theme: paletteSelect.value,
   automaticLayout: true,
   minimap: { enabled: false },
   ariaLabel: t("Code editor. Press Escape, then Tab to leave it."),
@@ -472,7 +503,7 @@ if (project) {
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
 const compare = document.getElementById("compare")!;
 const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
-  theme: "page", readOnly: true, wordWrap: "on", automaticLayout: true,
+  theme: paletteSelect.value, readOnly: true, wordWrap: "on", automaticLayout: true,
   minimap: { enabled: false }, renderOverviewRuler: false,
 });
 let comparing = "";
