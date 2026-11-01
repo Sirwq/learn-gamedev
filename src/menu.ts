@@ -362,7 +362,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       if (chipSandbox.hidden) setMode("course");
     };
     devLabel();
-    document.getElementById("menu-stats")!.before(devToggle);
+    document.getElementById("menu-saves")!.before(devToggle);
   }
   const menuKeys: Record<string, () => void> = {
     ArrowLeft: () => focusCard(focused - 1),

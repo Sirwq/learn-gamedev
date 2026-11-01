@@ -68,7 +68,7 @@ if (Object.keys(catalogs).length > 1) {
     return picker;
   };
   document.getElementById("theme")!.before(makePicker("language-header"));
-  document.getElementById("menu-stats")!.before(makePicker("language-menu"));
+  document.getElementById("menu-saves")!.before(makePicker("language-menu"));
 }
 
 self.MonacoEnvironment = {

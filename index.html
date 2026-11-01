@@ -316,10 +316,15 @@
       /* Narrow screens wrap the bars (the stats go under the chips); the notch gets its own padding. */
       #menu .bar { position: absolute; left: max(18px, env(safe-area-inset-left)); right: max(18px, env(safe-area-inset-right)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
       #menu .bar:not(.bottom) { top: max(14px, env(safe-area-inset-top)); }
+      #menu .bar.top { justify-content: space-between; align-items: flex-start; }
+      #menu .menu-courses, #menu .menu-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+      #menu .menu-tools { justify-content: flex-end; margin-left: auto; }
+      @media (max-width: 900px) { #menu .menu-tools { flex-basis: 100%; justify-content: flex-start; margin-left: 0; } }
       #menu .bar.bottom { bottom: max(14px, env(safe-area-inset-bottom)); }
       #menu .bar button { display: flex; gap: 6px; align-items: center; background: #0006; border-color: #fff3; border-radius: 999px; }
       #menu .bar button[hidden] { display: none; }
-      #menu .language-picker { position: relative; z-index: 1; background: var(--surface-menu); }
+      #menu .language-picker { position: relative; z-index: 1; min-height: 32px; max-width: none; padding: 4px 28px 4px 14px; border-color: #fff3; border-radius: 999px; background: #0006; color: var(--ink-strong); font-weight: 600; }
+      #menu .language-picker:hover { background: var(--surface-button-hover); }
       #menu .chip { font-weight: 600; }
       #menu .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
       #menu .soon { color: var(--ink-muted); }
@@ -621,14 +626,18 @@
       <h1 id="menu-heading" class="sr-only">Choose a Lesson</h1>
       <p id="menu-live" class="sr-only" aria-live="polite"></p>
       <div id="menu-phone" role="note"><p>learn-dev works best on a computer: writing code needs a keyboard and a wider screen.</p><button>Got it</button></div>
-      <div class="bar">
+      <div class="bar top">
+        <div class="menu-courses">
         <kbd aria-hidden="true">Q</kbd>
         <button id="chip-course" class="chip on" aria-pressed="true" aria-keyshortcuts="Q">TypeScript</button>
         <button id="chip-sandbox" class="chip" aria-pressed="false" aria-keyshortcuts="E" hidden>Sandbox</button>
         <kbd aria-hidden="true">E</kbd>
         <span class="soon">C# — coming later</span>
+        </div>
+        <div class="menu-tools">
         <span id="menu-stats"></span>
         <button id="menu-saves" aria-haspopup="dialog"><span aria-hidden="true">💾</span> Saves</button>
+        </div>
         <p id="menu-reminder" hidden><span></span> · <button id="reminder-backup">Back up now</button> · <button id="reminder-later">Not now</button></p>
       </div>
       <div id="rail"></div>
