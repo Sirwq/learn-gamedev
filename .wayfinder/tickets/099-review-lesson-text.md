@@ -36,3 +36,7 @@ Reviewed the English explanations and hints for Lessons 1–21 against their Goa
 - Lesson 20: the action did not make the falling press and immediate landing jump explicit; added both and the flag result.
 
 No code examples, identifiers, checks, or Reference code changed. `npm run typecheck` and `npm test` pass. In Chromium, Lesson 1 passed with the shown movement code; Russian Lesson 17 displayed the aligned two-count guidance. The browser view also confirmed the Lesson 1 flag sprite is red, so its original color wording remains correct.
+
+## Review
+
+- Lesson 10's opening still told students to walk through every coin, contradicting the new high-coin guidance. Changed it to say to touch each coin and aligned the English and Russian action steps with the level's coin order.
