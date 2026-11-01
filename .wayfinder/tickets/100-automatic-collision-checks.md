@@ -23,3 +23,7 @@ Objects currently have boxes and Lessons can call overlap helpers, but the stude
 ## Done when
 
 - A build-ready follow-up ticket specifies the component, student-facing API, event timing, editor controls, compatibility with existing Lessons, and a small test Level with expected collisions.
+
+## Blocked
+
+This is a `wayfinder:grilling` decision ticket. The Grilling workflow requires the student's product decisions before resolving its dependent API, timing, and compatibility details. The current engine has no built-in collision or physics; Course Lessons write their own overlap checks, and Sandbox Level boxes have no collider field. Asked for decisions on (1) overlap notifications alone versus physical blocking too, and (2) opt-in components versus automatic defaults. Once those are answered, continue the design tree, write the build-ready follow-up ticket, and close this decision ticket.
