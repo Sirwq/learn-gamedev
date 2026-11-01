@@ -224,7 +224,7 @@ function applyTheme() {
 }
 const themeButton = document.getElementById("theme")!;
 paletteSelect.onchange = () => {
-  localStorage.setItem("editor:palette", paletteSelect.value);
+  try { localStorage.setItem("editor:palette", paletteSelect.value); } catch {}
   applyTheme();
 };
 themeButton.onclick = () => {
@@ -234,7 +234,6 @@ themeButton.onclick = () => {
 };
 applyTheme();
 const editor = monaco.editor.create(document.getElementById("editor")!, {
-  theme: paletteSelect.value,
   automaticLayout: true,
   minimap: { enabled: false },
   ariaLabel: t("Code editor. Press Escape, then Tab to leave it."),
@@ -382,7 +381,6 @@ passBox.append(...Object.keys(lesson.scripts).map((name) => {
   return b;
 }));
 const retry = document.createElement("button");
-retry.id = "retry";
 retry.textContent = t("Retry Level");
 retry.onclick = run;
 passBox.append(retry);
@@ -503,7 +501,7 @@ if (project) {
 monaco.typescript.javascriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true, noSyntaxValidation: true });
 const compare = document.getElementById("compare")!;
 const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
-  theme: paletteSelect.value, readOnly: true, wordWrap: "on", automaticLayout: true,
+  readOnly: true, wordWrap: "on", automaticLayout: true,
   minimap: { enabled: false }, renderOverviewRuler: false,
 });
 let comparing = "";
