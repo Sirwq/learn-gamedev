@@ -104,16 +104,20 @@
         --map-path: #959ab1;
       }
       * { box-sizing: border-box; }
-      body { margin: 0; height: 100vh; display: flex; flex-direction: column; gap: 8px; padding: 8px; overflow: hidden; font: 14px system-ui, sans-serif; background: var(--surface-editor); color: var(--ink); }
-      button { font: inherit; color: var(--ink); background: var(--surface-button); border: 1px solid var(--border-control); border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+      body { margin: 0; height: 100vh; display: flex; flex-direction: column; gap: 12px; padding: 12px; overflow: hidden; font: 14px/1.45 system-ui, sans-serif; background: var(--surface-menu); color: var(--ink); }
+      button { min-height: 32px; font: inherit; color: var(--ink); background: var(--surface-button); border: 1px solid var(--border-control); border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+      button:hover:not(:disabled) { background: var(--surface-button-hover); }
+      :is(button, a, select, input, textarea, summary):focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+      summary { cursor: pointer; }
+      dialog { max-height: calc(100vh - 48px); overflow: auto; overscroll-behavior: contain; padding: 16px; line-height: 1.55; }
+      dialog::backdrop { background: var(--scrim); }
       button:disabled { opacity: .5; cursor: default; }
       button[hidden] { display: none; }
-      dialog { padding: 16px; }
       header { display: flex; gap: 12px; align-items: center; }
       header b { font-size: 16px; }
-      header button { min-height: 28px; touch-action: manipulation; transition: background-color .15s, border-color .15s; }
+      header button { min-height: 32px; touch-action: manipulation; transition: background-color .15s, border-color .15s; }
       header button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-      #lofi-radio { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 12px; border: 1px solid var(--border-control); border-radius: 6px; background: var(--surface-button); color: var(--ink); text-decoration: none; white-space: nowrap; }
+      #lofi-radio { display: inline-flex; align-items: center; min-height: 32px; padding: 4px 12px; border: 1px solid var(--border-control); border-radius: 6px; background: var(--surface-button); color: var(--ink); text-decoration: none; white-space: nowrap; }
       #lofi-radio:hover { background: var(--surface-button-hover); }
       #lofi-radio:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       /* The Lesson header is two groups: where you are, then what you can do.
@@ -125,7 +129,7 @@
       .header-actions { flex: 0 1 auto; justify-content: flex-end; margin-left: auto; }
       body > header button, #run-slot, .language-picker { flex: none; }
       body > header button { white-space: nowrap; }
-      .language-picker { min-height: 28px; max-width: 100px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 6px; background: var(--surface-button); color: var(--ink); font: inherit; cursor: pointer; }
+      .language-picker { min-height: 32px; max-width: 100px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 6px; background: var(--surface-button); color: var(--ink); font: inherit; cursor: pointer; }
       .language-picker:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       /* Status gets its own row, so a long error wraps under the controls instead of moving them. */
       #status { flex: 1 1 100%; min-width: 0; color: var(--warn); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -144,10 +148,9 @@
       #run:active:not(:disabled) { background: var(--run-border); }
       #run kbd { margin-left: 4px; padding: 0 5px; border-radius: 4px; background: #0003; font: 600 11px system-ui, sans-serif; }
       #stop:hover { background: var(--surface-button-hover); border-color: var(--border-control); }
-      #ask { display: inline-flex; gap: 6px; align-items: center; background: var(--ask); border-color: var(--ask); color: var(--accent-on); }
-      #ask:hover { background: var(--ask-hover); border-color: var(--link); }
-      #ask:active { background: var(--ask); }
-      #ask svg { width: 16px; height: 16px; flex: none; }
+      #ask { display: inline-flex; gap: 6px; align-items: center; background: var(--surface-panel); border-color: var(--border-control); color: var(--ink); }
+      #ask:hover { background: var(--surface-button-hover); border-color: var(--link); }
+      #ask svg { width: 16px; height: 16px; flex: none; color: var(--link); }
       #menu-open { white-space: nowrap; }
       /* Narrow screens keep only the arrow; the title tooltip and aria-label still say where it goes. */
       @media (max-width: 720px) { #menu-open span + span { display: none; } }
@@ -156,7 +159,7 @@
       #progress { display: flex; gap: 3px; align-items: center; background: none; border-color: transparent; padding: 4px; }
       #progress:hover { background: var(--surface-button); }
       /* Passed pips are filled, the rest only outlined, so it reads without color too. */
-      #progress i { width: 12px; height: 10px; border-radius: 3px; border: 1.5px solid var(--border-control); }
+      #progress i { width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--border-control); }
       #progress i.done { background: var(--success); border-color: var(--success); }
       #progress span { margin-left: 6px; color: var(--ink-muted); font-size: 12px; }
       #progress:hover span { color: var(--ink-strong); }
@@ -178,8 +181,8 @@
         #left-views { align-self: stretch; flex-direction: column; }
         #left-views button { text-align: left; white-space: normal; }
       }
-      #objects { flex: 1; min-height: 0; overflow: auto; padding: 0 16px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; }
-      #objects h2 { font-size: 18px; margin: 12px 0 8px; }
+      #objects { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 20px 16px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-editor); }
+      #objects h2 { font-size: 22px; margin: 16px 0 8px; color: var(--ink-strong); }
       #objects h3 { font-size: 15px; margin: 14px 0 4px; }
       #object-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
       #object-list button { width: 100%; text-align: left; font-variant-numeric: tabular-nums; }
@@ -190,12 +193,12 @@
       #object-details dd { margin: 0; font-variant-numeric: tabular-nums; }
       .object-swatch { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--border-control); vertical-align: middle; margin-right: 6px; }
       #object-details code { background: var(--surface-raised); padding: 1px 3px; }
-      #lesson { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 16px; border: 1px solid var(--border-subtle); border-radius: 6px; font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
+      #lesson { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 20px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-editor); font-size: 16px; line-height: 1.6; overflow-wrap: anywhere; }
       /* A fade pinned to the bottom edge while there is more to scroll; at the end it is just blank space. */
       #lesson::after { content: ""; position: sticky; bottom: 0; display: block; height: 20px; background: linear-gradient(transparent, var(--surface-editor)); pointer-events: none; }
       #lesson:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
       #lesson :is(h1, #hints > div, #still-stuck) { scroll-margin-top: 8px; }
-      #lesson h1 { font-size: 18px; line-height: 1.3; margin: 12px 0 0; }
+      #lesson h1 { font-size: 22px; line-height: 1.3; margin: 16px 0 0; letter-spacing: -.02em; text-wrap: pretty; color: var(--ink-strong); }
       #lesson :is(p, pre, blockquote, ul) { margin: 12px 0; }
       #lesson ul { padding-left: 24px; }
       #lesson li + li { margin-top: 6px; }
@@ -208,7 +211,7 @@
       #hints > div > :last-child { margin-bottom: 0; }
       #still-stuck { padding: 8px 10px; }
       #still-stuck[hidden] { display: none; }
-      main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-height: 0; }
+      main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; min-height: 0; }
       @media (max-width: 640px) {
         main { display: flex; flex-direction: column; overflow: auto; }
         #left { flex: none; height: calc(56.25vw + 261px); }
@@ -218,24 +221,25 @@
       #viewport { position: relative; width: 100%; height: 100%; }
       #game { width: 100%; height: 100%; display: block; background: #000; outline: 2px solid var(--game-outline); outline-offset: -2px; }
       #gui { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; }
-      #goals { position: absolute; top: 8px; left: 8px; margin: 0; padding: 8px 12px; list-style: none; background: #000a; border-radius: 6px; pointer-events: none; }
-      #overlay { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; padding: 16px; background: #000a; font-size: 18px; }
+      #goals { color: #fff; position: absolute; top: 8px; left: 8px; margin: 0; padding: 8px 12px; list-style: none; background: #000a; border-radius: 6px; pointer-events: none; }
+      #overlay { color: #fff; position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center; padding: 16px; background: #000a; font-size: 18px; }
       #overlay[hidden] { display: none; }
       #mute { position: absolute; top: 8px; right: 8px; z-index: 1; min-width: 32px; min-height: 32px; padding: 0; background: #000a; border-color: #fff3; font-size: 16px; touch-action: manipulation; }
       #mute:hover { background: #000c; }
       #mute:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
       #game:focus { outline: 2px solid var(--game-focus); }
       /* The editor gets all the height; the Console is a thin bar until it opens. */
-      #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden; }
+      #code { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden; background: var(--surface-editor); container-type: inline-size; }
       #code:has(#console-toggle[aria-expanded="true"]) { grid-template-rows: auto 2fr 1fr; }
       #tabbar { display: flex; align-items: flex-end; background: var(--surface-panel); }
-      #tabs { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 4px 6px 0; }
+      #tabs { flex: 1; min-width: 0; display: flex; gap: 2px; padding: 4px 6px 0; overflow-x: auto; }
       #zoom { flex: none; display: flex; align-items: center; gap: 2px; padding: 2px 6px; }
       #format-code { flex: none; align-self: center; margin: 2px 4px; padding: 4px 8px; border: 1px solid var(--border-control); border-radius: 5px; background: var(--surface-raised); color: var(--ink); font: inherit; font-size: 12px; white-space: nowrap; }
       #format-code:hover:not(:disabled) { background: var(--surface-button-hover); }
       #format-code:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
       #format-code[hidden] { display: none; }
-      #editor-palette { flex: none; align-self: center; max-width: 116px; min-height: 28px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 5px; background: var(--surface-button); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+      #editor-palette { flex: none; align-self: center; min-height: 28px; padding: 3px 6px; border: 1px solid var(--border-control); border-radius: 5px; background: var(--surface-button); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+      #code:has(#editor[hidden]) :is(#editor-palette, #zoom) { display: none; }
       #editor-palette:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
       @media (max-width: 900px) {
         #tabbar { flex-wrap: wrap; }
@@ -246,12 +250,18 @@
       #zoom button:hover:not(:disabled) { background: var(--surface-button-hover); color: var(--ink-strong); }
       #zoom-reset { min-width: 44px; font-variant-numeric: tabular-nums; }
       #zoom button:focus-visible, #console-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
-      #tabs button { padding: 4px 10px; border: 0; border-radius: 6px 6px 0 0; background: var(--surface-raised); color: var(--ink-muted); font-size: 12px; }
+      #tabs button { flex: none; padding: 6px 12px; border: 0; border-radius: 6px 6px 0 0; background: var(--surface-raised); color: var(--ink-muted); font-size: 13px; white-space: nowrap; }
       #tabs button:hover { color: var(--ink-strong); }
       #tabs button[aria-selected="true"] { background: var(--surface-editor); color: var(--ink-strong); }
       #tabs button:focus-visible, #docs nav button:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
       #editor-hint { display: none; align-self: center; padding: 0 6px; color: var(--ink-muted); font-size: 11px; white-space: nowrap; }
       #code:has(#editor:focus-within) #editor-hint { display: block; }
+      @container (max-width: 760px) {
+        #tabbar { flex-wrap: wrap; }
+        #tabs { flex-basis: 100%; }
+        #format-code { margin-left: auto; }
+        #code:has(#editor:focus-within) #editor-hint { flex-basis: 100%; padding: 4px 12px; }
+      }
       #editor, #docs { grid-row: 2; grid-column: 1; min-height: 0; }
       #docs { display: flex; overflow: hidden; }
       #docs[hidden] { display: none; }
@@ -269,7 +279,7 @@
       #docs pre { overflow: auto; }
       a { color: var(--link); }
       #console-panel { display: flex; flex-direction: column; min-height: 0; border-top: 1px solid var(--border-subtle); }
-      #console-toggle { flex: none; display: flex; gap: 8px; align-items: center; min-height: 24px; padding: 2px 8px; border: 0; border-radius: 0; background: var(--surface-panel); color: var(--ink-muted); font-size: 12px; text-align: left; }
+      #console-toggle { flex: none; display: flex; gap: 8px; align-items: center; min-height: 28px; padding: 4px 12px; border: 0; border-radius: 0; background: var(--surface-panel); color: var(--ink-muted); font-size: 12px; text-align: left; }
       #console-toggle:hover { background: var(--surface-button-hover); color: var(--ink-strong); }
       #console-toggle::before { content: "▸"; }
       #console-toggle[aria-expanded="true"]::before { content: "▾"; }
@@ -312,9 +322,9 @@
       @keyframes toast { from { transform: translateX(120%); } 8%, 90% { transform: none; opacity: 1; } to { opacity: 0; } }
       #replaying { margin-left: 8px; color: var(--warn); font-size: 12px; font-weight: normal; }
       /* Course menu: the focused Lesson's cover big in the middle, its own art blurred behind everything. */
-      #menu { position: fixed; inset: 0; z-index: 12; overflow: hidden; container-type: size; background: var(--surface-menu); outline: none; }
+      #menu { position: fixed; inset: 0; z-index: 12; overflow: hidden; container-type: size; background: var(--surface-menu); color: var(--ink); outline: none; }
       #menu[hidden] { display: none; }
-      #menu-bg { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); filter: blur(24px) brightness(.45) saturate(1.3); }
+      #menu-bg { position: absolute; inset: -60px; width: calc(100% + 120px); height: calc(100% + 120px); filter: blur(24px) brightness(.45) saturate(.8); opacity: .3; }
       /* Narrow screens wrap the bars (the stats go under the chips); the notch gets its own padding. */
       #menu .bar { position: absolute; left: max(18px, env(safe-area-inset-left)); right: max(18px, env(safe-area-inset-right)); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
       #menu .bar:not(.bottom) { top: max(14px, env(safe-area-inset-top)); }
@@ -325,10 +335,14 @@
       #menu .bar.bottom { bottom: max(14px, env(safe-area-inset-bottom)); }
       #menu .bar button { display: flex; gap: 6px; align-items: center; background: #0006; border-color: #fff3; border-radius: 999px; }
       #menu .bar button[hidden] { display: none; }
+      #menu .bar button:hover:not(:disabled) { background: var(--surface-button-hover); border-color: var(--border-control); }
+      #menu #menu-play { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
+      #menu #menu-play:hover { background: var(--accent-hover); }
       #menu .language-picker { position: relative; z-index: 1; min-height: 32px; max-width: none; padding: 4px 28px 4px 14px; border-color: #fff3; border-radius: 999px; background: #0006; color: var(--ink-strong); font-weight: 600; }
       #menu .language-picker:hover { background: var(--surface-button-hover); }
       #menu .chip { font-weight: 600; }
       #menu .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-on); }
+      #menu .bar button.chip.on:hover { background: var(--accent-hover); border-color: var(--accent); }
       #menu .soon { color: var(--ink-muted); }
       #menu kbd { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; background: #0008; border: 1px solid #fff4; font: 600 11px ui-monospace, monospace; color: var(--ink-muted); }
       #menu .bar button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
@@ -345,17 +359,21 @@
       #menu-dots button.passed::before { background: #ffffffb3; }
       #menu-dots button:hover::before { background: #fffd; }
       #menu-dots button[aria-current]::before { height: 6px; background: var(--accent); }
-      #course-intro { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); width: min(680px, 90%); text-align: center; z-index: 4; }
-      #course-intro > strong, #course-intro > span { display: block; margin-bottom: 5px; }
-      #course-intro > span { font-size: 13px; }
+      #course-intro { position: absolute; top: clamp(64px, 8cqh, 76px); left: 50%; transform: translateX(-50%); width: min(680px, 90%); text-align: center; z-index: 4; }
+      #course-intro > strong, #course-intro > span { display: block; margin-bottom: 8px; }
+      #course-intro > strong { color: var(--ink-strong); font-size: 24px; line-height: 1.25; letter-spacing: -.02em; text-wrap: balance; }
+      #course-intro > span { font-size: 14px; color: var(--ink-muted); }
       #course-intro button { padding: 5px 12px; }
-      #course-intro details { font-size: 13px; margin-top: 5px; }
+      #course-intro details { font-size: 13px; margin-top: 8px; }
       #course-intro summary { cursor: pointer; }
       .course-details { background: var(--surface-panel); border: 1px solid var(--border-dialog); border-radius: 12px; padding: 16px; text-align: left; max-height: 50vh; overflow: auto; }
       .course-details figure { float: left; width: 120px; margin: 0 16px 8px 0; }
       .course-details canvas { width: 120px; height: 160px; image-rendering: pixelated; }
       .course-details::after { content: ""; display: block; clear: both; }
       #menu:has(#course-intro:not([hidden])) #rail { top: 27%; height: 45%; }
+      #menu:has(#course-intro:not([hidden])) .nav { top: 49.5%; }
+      #menu:has(#course-intro:not([hidden])) #menu-prev { left: calc(50% - 16.875cqh - 28px); }
+      #menu:has(#course-intro:not([hidden])) #menu-next { left: calc(50% + 16.875cqh + 28px); }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
       /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
       #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
@@ -408,10 +426,11 @@
         #menu .nav, #menu .nav svg { transition: none; }
         #toasts > div { animation-name: toast-fade; }
       }
-      #project-actions { margin-left: 8px; font-size: 12px; font-weight: normal; }
+      #project-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; font-size: 12px; font-weight: normal; letter-spacing: normal; }
       #project-actions[hidden] { display: none; }
+      #delete { margin-left: auto; color: var(--error); }
       #card-info { position: absolute; left: 0; right: 0; top: 75%; text-align: center; text-shadow: 0 2px 8px #000; }
-      #card-info h2 { margin: 0; font-size: 24px; }
+      #card-info h2 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -.02em; text-wrap: balance; color: var(--ink-strong); }
       #card-meta { margin-top: 6px; color: var(--ink-menu-meta); font-size: 15px; }
       #card-meta code { padding: 1px 5px; border-radius: 4px; background: #181b24cc; color: var(--accent-ink); font: 13.5px ui-monospace, SFMono-Regular, Menlo, monospace; text-shadow: none; }
       #card-meta .meta-files { margin-top: 6px; color: var(--ink-menu-files); font-size: 13px; }
@@ -437,9 +456,9 @@
       #replay small, #new-project small { display: block; color: var(--ink-muted); }
       .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
       /* Level editor: the inspector takes the Lesson panel's place; the stage sits in the code column under the tabs. */
-      #inspector { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 16px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; }
+      #inspector { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 0 20px 16px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-editor); }
       #inspector[hidden] { display: none; }
-      #inspector h2 { font-size: 18px; margin: 12px 0 8px; }
+      #inspector h2 { font-size: 22px; margin: 16px 0 12px; color: var(--ink-strong); }
       #inspector h3 { font-size: 14px; margin: 16px 0 6px; color: var(--ink-muted); }
       #inspector p { margin: 8px 0; color: var(--ink-muted); text-wrap: pretty; }
       #inspector p[hidden] { display: none; }
@@ -451,6 +470,9 @@
       #level-fields { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; border: 0; }
       #level-fields:disabled { display: none; }
       #level-fields label { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 8px; }
+      #level-fields label.check { display: flex; gap: 8px; }
+      #inspector input[type="checkbox"] { min-height: 0; width: 16px; height: 16px; margin: 0; accent-color: var(--accent-strong); flex: none; }
+      #inspector #level-collider-help { margin-top: 0; font-size: 13px; }
       #level-fields .xywh { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
       #level-fields .xywh label { grid-template-columns: auto 1fr; }
       #inspector :is(select, input) { min-width: 0; font: inherit; color: var(--ink); background: var(--surface-editor); border: 1px solid var(--border-control); border-radius: 6px; padding: 2px 6px; }
@@ -513,8 +535,8 @@
       <div id="left">
         <nav id="left-views" aria-label="Lesson views"><button id="show-explanation" type="button" aria-pressed="true">Explanation</button><button id="show-objects" type="button" aria-pressed="false">Objects</button></nav>
         <section id="lesson" tabindex="0" aria-labelledby="lesson-title">
-          <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span>
-            <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="export" title="Save this Project as a file: to keep, or to send to a friend.">Export project</button> <button id="export-game">Export game</button> <button id="save-state" aria-live="polite">Saved on this device</button> <button id="delete">Delete</button></span></h1>
+          <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span></h1>
+          <div id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="export" title="Save this Project as a file: to keep, or to send to a friend.">Export project</button> <button id="export-game">Export game</button> <button id="save-state" aria-live="polite">Saved on this device</button> <button id="delete">Delete</button></div>
           <details id="code-origin" hidden>
             <summary>Where did this code come from?</summary>
             <p>Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.</p>
@@ -579,7 +601,7 @@
               <input id="level-art-file" type="file" accept="image/png,image/jpeg" hidden>
             </div>
             <label>Script <select id="level-script"></select></label>
-            <label><input id="level-collider" type="checkbox" aria-describedby="level-collider-help"> Contact notifications</label>
+            <label class="check"><input id="level-collider" type="checkbox" aria-describedby="level-collider-help"> Contact notifications</label>
             <p id="level-collider-help">Enable on both objects. Reports overlap; does not stop movement.</p>
             <div class="xywh">
               <label>x <input id="level-x" type="number" step="1"></label>
