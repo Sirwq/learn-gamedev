@@ -14,4 +14,9 @@ When it overlaps an `"Enemy"`, `Destroy` the enemy and the bullet. Also `Destroy
 
 **Try it:** press **Run**, fire with S, and remove the enemy.
 
-**Differs from Unity C#**: Unity's `Instantiate` copies a prefab you built in the editor. Here the Prefab is a plain object you write in code.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity's `Instantiate` copies a prefab you built in the editor. Here the Prefab is a plain object you write in code.
+
+</details>

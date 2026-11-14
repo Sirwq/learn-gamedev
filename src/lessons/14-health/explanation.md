@@ -12,4 +12,9 @@ Check spikes after moving. On a hit, reset your position in that same `Update()`
 
 **Try it:** press **Run**, touch the spikes once, then get past them to the flag.
 
-**Differs from Unity C#**: C# writes `void Start()` and stores the start as a `Vector3`. Unity would often reload the whole scene with `SceneManager.LoadScene` instead of resetting one object.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+C# writes `void Start()` and stores the start as a `Vector3`. Unity would often reload the whole scene with `SceneManager.LoadScene` instead of resetting one object.
+
+</details>

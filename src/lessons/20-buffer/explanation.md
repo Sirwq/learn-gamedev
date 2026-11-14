@@ -8,4 +8,9 @@ Keep the short-hop release and support checks from earlier Lessons.
 
 **Try it:** press **Run**, jump toward a low step, then tap Space while falling just before landing on it. The remembered press should launch a new jump as you land. Reach the flag too.
 
-**Differs from Unity C#**: Unity uses the same timing idea, but its input and collision APIs are different. Here `Input.GetKeyDown` records the press and the box checks tell you when you land.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity uses the same timing idea, but its input and collision APIs are different. Here `Input.GetKeyDown` records the press and the box checks tell you when you land.
+
+</details>

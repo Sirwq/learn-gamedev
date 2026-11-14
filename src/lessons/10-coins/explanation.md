@@ -8,4 +8,9 @@ One coin floats above a platform. Jump up to collect it; walking along the groun
 
 **Try it:** press **Run**, collect coins along the way, jump for the high coin, then collect any that remain.
 
-**Differs from Unity C#**: C# writes `Destroy(coin);` too, and `coins++;` works in both languages. Unity games usually show the count on screen; here it goes to the Console.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+C# writes `Destroy(coin);` too, and `coins++;` works in both languages. Unity games usually show the count on screen; here it goes to the Console.
+
+</details>

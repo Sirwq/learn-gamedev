@@ -6,4 +6,9 @@ Put that check before gravity changes `velocityY`. Releasing while falling shoul
 
 **Try it:** press **Run**, release Space early over the low wall, then hold it for the tall platform.
 
-**Differs from Unity C#**: Unity uses `Input.GetKeyUp(KeyCode.Space)` too, but its physics often use a `Rigidbody` velocity. Here `velocityY` is your own field, so you change it directly.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity uses `Input.GetKeyUp(KeyCode.Space)` too, but its physics often use a `Rigidbody` velocity. Here `velocityY` is your own field, so you change it directly.
+
+</details>

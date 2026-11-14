@@ -8,4 +8,9 @@ Once the timer ends, centre the camera exactly on the Player again.
 
 **Try it:** press **Run**, touch the spikes once, and watch the camera shake before reaching the flag.
 
-**Differs from Unity C#**: Unity often shakes a camera through an animation or camera component. This small engine uses `Camera.main.transform.position` and `Vector2` directly; the sound clip name must match `Hurt` exactly.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity often shakes a camera through an animation or camera component. This small engine uses `Camera.main.transform.position` and `Vector2` directly; the sound clip name must match `Hurt` exactly.
+
+</details>

@@ -12,4 +12,9 @@ Also update `onGround` from support each frame: it must turn false after walking
 
 **Try it:** press **Run**, walk off the safe ledge, then press Space about two to four frames after leaving it, while the `0.1` second timer is still positive. Reach the flag too.
 
-**Differs from Unity C#**: Unity projects often use collision callbacks for grounded state. This small engine checks the boxes and tracks the grace timer in `Update()`.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity projects often use collision callbacks for grounded state. This small engine checks the boxes and tracks the grace timer in `Update()`.
+
+</details>

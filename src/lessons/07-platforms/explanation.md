@@ -14,4 +14,9 @@ for (let i = 0; i < platforms.length; i++) {
 
 **Try it:** press **Run** and climb the platforms to the flag.
 
-**Differs from Unity C#**: C# gives you a `GameObject[]` and writes `for (int i = 0; i < platforms.Length; i++)`. TypeScript writes `let` instead of `int`, and `length` with a small `l`.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+C# gives you a `GameObject[]` and writes `for (int i = 0; i < platforms.Length; i++)`. TypeScript writes `let` instead of `int`, and `length` with a small `l`.
+
+</details>

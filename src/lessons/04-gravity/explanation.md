@@ -20,4 +20,9 @@ The top of the ground is at `y = 40`. Use a comparison: `if (this.transform.posi
 
 **Try it:** run again, stop on the ground, and touch the flag.
 
-**Differs from Unity C#**: Unity has a `Rigidbody2D` that adds gravity for you. Here you write it yourself, so you can see how it works. Comparisons (`<`, `>`, `<=`, `>=`) are the same as in C#.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity has a `Rigidbody2D` that adds gravity for you. Here you write it yourself, so you can see how it works. Comparisons (`<`, `>`, `<=`, `>=`) are the same as in C#.
+
+</details>

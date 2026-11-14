@@ -10,4 +10,9 @@ Your `Overlaps` function lives in `Player.ts`, and each Script runs on its own, 
 
 **Try it:** press **Run** and watch the enemy touch both walls and turn around.
 
-**Differs from Unity C#**: in Unity you attach a Script to an object in the editor. Here the Level attaches `Enemy.ts` to every enemy for you.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+in Unity you attach a Script to an object in the editor. Here the Level attaches `Enemy.ts` to every enemy for you.
+
+</details>

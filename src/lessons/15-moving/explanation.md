@@ -8,4 +8,9 @@ Standing on top means the player's `y` is exactly the platform's top (`y` plus i
 
 **Try it:** press **Run** and stand still on the moving platform as it carries you across.
 
-**Differs from Unity C#**: in Unity you would often make the player a child of the platform with `transform.SetParent(platform.transform)`, and children move with their parent. Here nothing is a child of anything, so you add the motion yourself.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+in Unity you would often make the player a child of the platform with `transform.SetParent(platform.transform)`, and children move with their parent. Here nothing is a child of anything, so you add the motion yourself.
+
+</details>

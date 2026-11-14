@@ -8,4 +8,9 @@ Anything else is a hurt touch, and the Level already makes you lose for it.
 
 **Try it:** press **Run** and land on the enemy from above.
 
-**Differs from Unity C#**: Unity would tell you about the touch in `OnCollisionEnter2D(Collision2D collision)`, and you would compare `collision.contacts` there. Here you check the overlap yourself in `Update()`.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity would tell you about the touch in `OnCollisionEnter2D(Collision2D collision)`, and you would compare `collision.contacts` there. Here you check the overlap yourself in `Update()`.
+
+</details>

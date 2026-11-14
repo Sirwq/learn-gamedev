@@ -6,4 +6,9 @@ In the coin branch, just after you increase `this.coins`, add `this.audio.PlayOn
 
 **Try it:** press **Run**, jump onto the platform for the fifth coin, and listen for both sounds.
 
-**Differs from Unity C#**: Unity usually needs an AudioSource component and an AudioClip asset. Here every Script has `this.audio`, and `PlayOneShot` takes one of the built-in clip names as text.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity usually needs an AudioSource component and an AudioClip asset. Here every Script has `this.audio`, and `PlayOneShot` takes one of the built-in clip names as text.
+
+</details>

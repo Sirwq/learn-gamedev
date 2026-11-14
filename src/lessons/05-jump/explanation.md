@@ -19,4 +19,9 @@ Inside, set `this.velocityY` to `this.jumpSpeed` and `this.onGround` to `false`.
 
 **Try it:** press **Run** and use Space to jump over the enemy to the flag.
 
-**Differs from Unity C#**: C# writes `bool onGround = false;`. TypeScript calls the type `boolean`, and works it out from `false` for you. `&&` is the same.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+C# writes `bool onGround = false;`. TypeScript calls the type `boolean`, and works it out from `false` for you. `&&` is the same.
+
+</details>

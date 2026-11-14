@@ -10,4 +10,9 @@ Camera.main.transform.position = new Vector2(___, 270);
 
 **Try it:** press **Run** and move right; keep the Player in view all the way to the flag.
 
-**Differs from Unity C#**: C# writes `Camera.main.transform.position = new Vector3(x, 0, -10);`, because a Unity camera is 3D and needs a `z`. Here positions are always `Vector2`.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+C# writes `Camera.main.transform.position = new Vector3(x, 0, -10);`, because a Unity camera is 3D and needs a `z`. Here positions are always `Vector2`.
+
+</details>

@@ -6,4 +6,9 @@ Draw the result with `GUI.Label(new Rect(16, 16, 220, 40), "Coins: " + coins);`.
 
 **Try it:** press **Run**, check the initial count, collect a coin, and watch it change. Then collect the rest to pass.
 
-**Differs from Unity C#**: Unity can read another component's fields with `GetComponent`. This small engine has no `GetComponent`, so this HUD derives the collected count from the five coins that started in the level. Unity's `OnGUI` also uses screen coordinates with y going down.
+<details>
+<summary>Optional: Unity C# comparison</summary>
+
+Unity can read another component's fields with `GetComponent`. This small engine has no `GetComponent`, so this HUD derives the collected count from the five coins that started in the level. Unity's `OnGUI` also uses screen coordinates with y going down.
+
+</details>
