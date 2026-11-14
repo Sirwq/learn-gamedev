@@ -1,3 +1,4 @@
+import { bulletHit } from "../mechanic-checks";
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
@@ -20,7 +21,7 @@ export const lesson: Lesson = {
     ],
   },
   // Its middle (y 170) is above the top of a jump (y 160), so a stomp can't work.
-  goals: [{ message: "Shoot the enemy", test: (world) => !world.some((o) => o.tag === "Enemy") }],
+  goals: [{ message: "Move a bullet into the enemy", test: bulletHit(() => lesson.level.boxes) }],
   lose: [
     offScreen,
     {

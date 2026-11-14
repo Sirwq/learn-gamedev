@@ -1,3 +1,4 @@
+import { carriedByPlatform } from "../mechanic-checks";
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
@@ -23,7 +24,7 @@ export const lesson: Lesson = {
     ],
   },
   // The water is 1000 px wide and a jump goes about 320 px; walking along with the platform is no anti-cheat, the Level just makes riding it easy.
-  goals: [{ message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
+  goals: [{ message: "Let the platform carry you while standing still", test: carriedByPlatform() }, { message: "Reach the flag", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [
     offScreen,
     { message: "You fell in the water. Press Run to try again.", test: (world) => overlaps(find(world, "Player"), find(world, "Water")) },

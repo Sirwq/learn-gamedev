@@ -1,4 +1,4 @@
-Coins! Touch every coin to pick it up. When none are left, you pass.
+Touch every coin to pick it up and log the growing count after each collection. Removing coins without contact does not complete the goal.
 
 Find every `"Coin"` the way you found the platforms.
 

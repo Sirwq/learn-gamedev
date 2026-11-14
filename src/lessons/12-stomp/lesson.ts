@@ -1,3 +1,4 @@
+import { stompContact } from "../mechanic-checks";
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
@@ -20,7 +21,7 @@ export const lesson: Lesson = {
     ],
   },
   // The enemy is gone the same frame it is stomped, so any touch it survives is from the side or below.
-  goals: [{ message: "Stomp the enemy", test: (world) => !world.some((o) => o.tag === "Enemy") }],
+  goals: [{ message: "Stomp the enemy", test: stompContact() }],
   lose: [
     offScreen,
     {

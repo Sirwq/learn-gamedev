@@ -1,4 +1,5 @@
 import { Time, type Clip, type Label, type World } from "./engine";
+import type { ConsoleLine } from "./console";
 import type { Lesson } from "./lesson";
 
 export const CHAPTER_ONE_COUNT = 15;
@@ -18,8 +19,8 @@ export function chapterProgress(lessons: Pick<Lesson, "title">[], store: Pick<St
 export type CheckResult = { met: boolean[]; passed: boolean; lost?: string };
 
 /** A read-only frame for Lesson Goals. These fields are not part of the student API. */
-export type CheckWorld = World & { readonly keysDown: ReadonlySet<string>; readonly sounds: readonly Clip[]; readonly labels: readonly Readonly<Label>[] };
-export type CheckFrame = { keysDown?: ReadonlySet<string>; sounds?: readonly Clip[]; labels?: readonly Label[] };
+export type CheckWorld = World & { readonly logs: readonly Readonly<ConsoleLine>[]; readonly keysDown: ReadonlySet<string>; readonly sounds: readonly Clip[]; readonly labels: readonly Readonly<Label>[] };
+export type CheckFrame = { logs?: readonly ConsoleLine[]; keysDown?: ReadonlySet<string>; sounds?: readonly Clip[]; labels?: readonly Label[] };
 
 /** One per Run: call every frame. A Goal stays ✓ for the rest of the Run; a Lose event resets them all. No Goals (Sandbox) never passes. */
 export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
@@ -27,6 +28,7 @@ export function checker({ goals, lose }: Pick<Lesson, "goals" | "lose">) {
   let frames = 0;
   return (world: World, frame: CheckFrame = {}): CheckResult => {
     const view: CheckWorld = Object.assign([...world], {
+      logs: (frame.logs ?? []).map(line => ({ ...line })),
       keysDown: new Set(frame.keysDown ?? []),
       sounds: [...(frame.sounds ?? [])],
       labels: (frame.labels ?? []).map((label) => ({ ...label })),

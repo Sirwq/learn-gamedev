@@ -1,3 +1,4 @@
+import { steadyTravel } from "../mechanic-checks";
 import type { Lesson } from "../../lesson";
 import { find, offScreen, overlaps, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
@@ -16,7 +17,7 @@ export const lesson: Lesson = {
       { tag: "Ground", x: 0, y: 0, w: 960, h: 40, color: "#5a3" },
     ],
   },
-  goals: [{ message: "Reach the flag within 3 seconds", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
+  goals: [{ message: "Move steadily toward the flag", test: steadyTravel(40, 800) }, { message: "Reach the flag within 3 seconds", test: (world) => overlaps(find(world, "Player"), find(world, "Flag")) }],
   lose: [offScreen, { message: "Too slow: 3 seconds are up. Press Run to try again.", test: (_, time) => time > 3 }],
   scripts: { Player: { stub, reference } },
   hints: splitHints(hints),

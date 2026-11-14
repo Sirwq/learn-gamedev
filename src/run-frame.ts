@@ -32,7 +32,7 @@ export function createRun({ level, goals, lose, classes, earned, v2 }: {
         game.step();
         const world = worldView(game.objects);
         const sounds = takeSounds();
-        const result = check(world, v2 ? { keysDown: keysDown(), sounds, labels } : undefined);
+        const result = check(world, { logs, ...(v2 ? { keysDown: keysDown(), sounds, labels } : {}) });
         const ids = achieve(world, { logged: logs.length > 0, keysDown: keysDown() });
         return { check: result, earned: ids, sounds, labels, lines: drainRunLogs() };
       } catch (error) {

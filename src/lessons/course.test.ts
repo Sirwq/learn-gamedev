@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { course } from "./course";
-import { Camera, keyEvent, KeyCode, keysDown, labels, releaseAllKeys, startGame, takeSounds, Vector2, worldView } from "../engine";
+import { Camera, logs, keyEvent, KeyCode, keysDown, labels, releaseAllKeys, startGame, takeSounds, Vector2, worldView } from "../engine";
 import { loadScript } from "../test-helpers";
 import { checker } from "../check";
 import { achievementChecker, achievements } from "../achievements";
@@ -150,7 +150,7 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
       held = keys;
       game.step();
       const world = worldView(game.objects);
-      const result = check(world, { keysDown: keysDown(), sounds: takeSounds(), labels });
+      const result = check(world, { logs: logs.splice(0), keysDown: keysDown(), sounds: takeSounds(), labels });
       checkAchievements(world, { keysDown: keysDown() });
       if (result.lost) { onLose?.(result.lost); break; }
       if (result.passed) return frame;

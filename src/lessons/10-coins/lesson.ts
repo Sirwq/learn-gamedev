@@ -1,3 +1,4 @@
+import { collectOnContact } from "../mechanic-checks";
 import type { Lesson } from "../../lesson";
 import { offScreen, splitHints } from "../../lesson";
 import explanation from "./explanation.md?raw";
@@ -24,7 +25,7 @@ export const lesson: Lesson = {
     ],
   },
   // Walking through a coin is not enough: it has to be Destroyed. The coin above the platform is out of reach from the ground.
-  goals: [{ message: "Collect all coins", test: (world) => !world.some((o) => o.tag === "Coin") }],
+  goals: [{ message: "Collect coins on contact and log the growing count", test: collectOnContact(() => lesson.level.boxes) }],
   lose: [offScreen],
   scripts: { Player: { stub, reference } },
   hints: splitHints(hints),
