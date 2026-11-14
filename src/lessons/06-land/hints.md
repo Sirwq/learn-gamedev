@@ -1,20 +1,23 @@
 ## Hint 1
 
-Landing is the same as touching the ground, only the "floor" is the top of the box: its `y` plus its height.
+Draw each interval from its start to start + size. Both starts must be before the other interval ends. Repeat on y: horizontal overlap alone is not enough.
 
 ## Hint 2
 
-The `return` line needs four checks joined with `&&`: two for `x` and `w`, two for `y` and `h`. The `y` ones look just like the `x` ones.
+The missing comparisons are `pa.y < pb.y + b.h` and `pb.y < pa.y + a.h`. Join all four with `&&`. Put the function above the class; return its boolean result.
 
 ## Hint 3
 
-Fill in the blank at the end of `Update()`:
+The lookup returns a list. Read its first item with `[0]`, then check `box && this.velocityY < 0 && Overlaps(this.gameObject, box)`. Put this after movement and the ground check.
+
+## Hint 4
+
+Fill in the landing height inside that if:
 
 ```ts
-const box = GameObject.FindGameObjectsWithTag("Box")[0];
-if (box && this.velocityY < 0 && Overlaps(this.gameObject, box)) {
-  this.transform.position = new Vector2(this.transform.position.x, ___);
-  this.velocityY = 0;
-  this.onGround = true;
-}
+this.transform.position = new Vector2(this.transform.position.x, ___);
+this.velocityY = 0;
+this.onGround = true;
 ```
+
+The crate top is its y position plus its height.
