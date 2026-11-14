@@ -6,6 +6,12 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Start final project": "Start final project",
+  "Could not create the project. Your course code is unchanged. Try again.": "Could not create the project. Your course code is unchanged. Try again.",
+  "Final project: two routes, one new mechanic": "Final project: two routes, one new mechanic",
+  "Rename your project, then open Level. Build a safe route and a harder shortcut to the same finish. Change or invent at least one mechanic; explain its rule in your own words.": "Rename your project, then open Level. Build a safe route and a harder shortcut to the same finish. Change or invent at least one mechanic; explain its rule in your own words.",
+  "Ready to share: both routes work from a fresh Run, failure allows recovery, controls are clear, and the Console has no errors. Save an editable project export as your backup.": "Ready to share: both routes work from a fresh Run, failure allows recovery, controls are clear, and the Console has no errors. Save an editable project export as your backup.",
+  "Explain: why take the risky route? Which code creates your mechanic? What failed in testing, and what did you change? Ask someone to try the game without your help.": "Explain: why take the risky route? Which code creates your mechanic? What failed in testing, and what did you change? Ask someone to try the game without your help.",
   "Where did this code come from?": "Where did this code come from?",
   "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.": "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.",
   "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.": "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.",

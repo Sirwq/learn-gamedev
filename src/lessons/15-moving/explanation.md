@@ -8,6 +8,12 @@ Standing on top means the player's `y` is exactly the platform's top (`y` plus i
 
 **Try it:** press **Run** and stand still on the moving platform as it carries you across.
 
+### Independent checkpoint: transfer the mechanic
+
+After passing, choose **Start final project** to make a separate Sandbox copy of your current scripts. Rename it, then open **Level**. Build a safe route and a harder shortcut to the same finish, and adapt the moving platform to one route. Predict how changing its speed affects the ride; test the slowest and fastest setting you intend to allow.
+
+Add or change at least one mechanic yourself. Do not copy a full reference solution. Test both routes from a fresh Run, including failure and recovery, and explain why the shortcut is worth its risk. The final-project brief stays in Sandbox. Chapter 2 adds six optional lessons on sound, screen text and game feel.
+
 <details>
 <summary>Optional: Unity C# comparison</summary>
 

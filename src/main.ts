@@ -28,7 +28,7 @@ import { startingObjects } from "./object-snapshots";
 import { achievementToast, toast } from "./toast";
 import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
-import { deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
+import { createProject, deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
 import { exportFileName } from "./project-file";
 import { formatCode } from "./format-code";
 import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
@@ -103,6 +103,7 @@ lessonTitle.textContent = project ? project.name : displayLesson.title;
 document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
 document.getElementById("code-origin")!.hidden = !!project || lessonIndex === 0;
+document.getElementById("final-project")!.hidden = !project;
 const explanation = document.getElementById("explanation")!;
 if (!project) explanation.innerHTML = marked.parse(displayLesson.explanation, { async: false }); // our own trusted Markdown
 else explanation.textContent = t("This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.");
@@ -387,6 +388,21 @@ const retry = document.createElement("button");
 retry.textContent = t("Retry Level");
 retry.onclick = run;
 passBox.append(retry);
+if (!project && lessonIndex === CHAPTER_ONE_COUNT - 1) {
+  const finalProject = document.createElement("button");
+  finalProject.textContent = t("Start final project");
+  finalProject.onclick = async () => {
+    finalProject.disabled = true;
+    try {
+      const created = await createProject("platformer", course.slice(0, CHAPTER_ONE_COUNT));
+      location.search = `?sandbox=${created.id}`;
+    } catch {
+      toast(t("Could not create the project. Your course code is unchanged. Try again."));
+      finalProject.disabled = false;
+    }
+  };
+  passBox.append(finalProject);
+}
 const nextIndex = replaying ? current : lessonIndex + 1;
 if (nextIndex < course.length) {
   const next = document.createElement("button");

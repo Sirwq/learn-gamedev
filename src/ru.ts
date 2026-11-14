@@ -8,6 +8,12 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "Start final project": "Начать итоговый проект",
+  "Could not create the project. Your course code is unchanged. Try again.": "Не удалось создать проект. Код курса не изменён. Попробуйте ещё раз.",
+  "Final project: two routes, one new mechanic": "Итоговый проект: два маршрута и новая механика",
+  "Rename your project, then open Level. Build a safe route and a harder shortcut to the same finish. Change or invent at least one mechanic; explain its rule in your own words.": "Переименуйте проект и откройте «Уровень». Постройте безопасный маршрут и сложный короткий путь к одному финишу. Измените или придумайте хотя бы одну механику и объясните её правило своими словами.",
+  "Ready to share: both routes work from a fresh Run, failure allows recovery, controls are clear, and the Console has no errors. Save an editable project export as your backup.": "Можно делиться, когда оба маршрута работают с нового запуска, после ошибки можно восстановиться, управление понятно и в Консоли нет ошибок. Сохраните экспорт редактируемого проекта как резервную копию.",
+  "Explain: why take the risky route? Which code creates your mechanic? What failed in testing, and what did you change? Ask someone to try the game without your help.": "Объясните: зачем идти по рискованному пути? Какой код создаёт вашу механику? Что не работало при проверке и что вы изменили? Попросите кого-нибудь сыграть без вашей помощи.",
   "Where did this code come from?": "Откуда взялся этот код?",
   "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.": "Ваши сохранённые скрипты переходят в следующий урок. Начальную заготовку получают только новые файлы; переход между уроками не заменяет вашу работу эталоном.",
   "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.": "Сравнение выделяет отличия от эталона последнего пройденного урока для этого скрипта. Там же можно посмотреть своё решение предыдущего пройденного урока. Выберите одну изменённую строку и объясните, как она меняет игру.",

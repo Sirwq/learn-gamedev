@@ -221,6 +221,16 @@ describe("Projects", () => {
     expect(loadScripts(course, course.length - 1, s).Player).toBe("newer course player");
   });
 
+  it("starts a final project with Chapter 1 scripts without introducing later HUD code", async () => {
+    const store = await migrated();
+    saveScript("Player", "my final course player", store);
+    const project = await createProject("platformer", course.slice(0, 15), store);
+    expect(Object.keys(project.scripts).sort()).toEqual(["Bullet", "Enemy", "MovingPlatform", "Player"]);
+    expect(project.scripts.Player).toBe("my final course player");
+    expect((await loadProject(project.id, store))?.project.scripts).toEqual(project.scripts);
+    expect(loadScripts(course, 14, store).Player).toBe("my final course player");
+  });
+
   it("saved Projects lose the old AI note comment on line 1", async () => {
     const s = await migrated();
     const p = await createProject("blank", course, s);

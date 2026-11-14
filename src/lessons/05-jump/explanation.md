@@ -19,6 +19,12 @@ Inside, set `this.velocityY` to `this.jumpSpeed` and `this.onGround` to `false`.
 
 **Try it:** press **Run** and use Space to jump over the enemy to the flag.
 
+### Independent checkpoint: predict and debug
+
+Before changing code, predict what doubling gravity while keeping jumpSpeed unchanged will do to the jump. Test your prediction, then restore the values. Next, imagine the player can jump forever in the air: which state should be cleared when a jump starts? Find and explain that line without loading the reference.
+
+Success: one Space press starts one jump, you cannot start another in mid-air, and landing restores jumping. Explain which change shortened the jump and why. After Lesson 15, Sandbox and six more lessons unlock so you can try these choices in your own level.
+
 <details>
 <summary>Optional: Unity C# comparison</summary>
 
