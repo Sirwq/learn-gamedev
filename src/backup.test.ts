@@ -181,3 +181,23 @@ describe("the backup reminder", () => {
     expect(backupReminder(course, s, now + 7 * DAY)).not.toBeNull();
   });
 });
+
+it("round-trips contact projects in backups and rejects unsupported embedded versions before modifying anything", async () => {
+  await clear();
+  const from = await migrated();
+  const project = await createProject("blank", course, from);
+  project.level.boxes[0].collider = true;
+  await saveProject(project, from);
+  const file = JSON.parse(await exportEverything(course, from));
+  expect(file.projects[0].version).toBe(2);
+  await clear();
+  const into = await migrated();
+  await (await planImport(JSON.stringify(file), course, into)).apply();
+  expect((await loadProjects(into))[0].level.boxes[0].collider).toBe(true);
+  file.progress[`passed:${l1.title}`] = "1";
+  file.projects[0].version = 3;
+  const before = await loadProjects(into);
+  await expect(planImport(JSON.stringify(file), course, into)).rejects.toThrow();
+  expect(into.getItem(`passed:${l1.title}`)).toBeNull();
+  expect(await loadProjects(into)).toEqual(before);
+});

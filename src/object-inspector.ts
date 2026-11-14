@@ -48,6 +48,7 @@ export function objectInspector(list: HTMLElement, details: HTMLElement, art: ()
     details.replaceChildren(heading(object.tag), dl(line(t("Tag"), object.tag)),
       heading(t("Transform")), dl(line(t("Position x"), number(object.x)), line(t("Position y"), number(object.y))),
       heading(t("Box / hitbox")), dl(line(t("Width"), number(object.w)), line(t("Height"), number(object.h))),
+      dl(line(t("Contact notifications"), object.collider ? t("Enabled") : t("Disabled"))),
       heading(t("Script")), dl(line(t("Attached"), object.script ? `${object.script}.ts` : t("No Script"))),
       heading(t("Appearance")), dl(colour, line(t("Image"), Object.hasOwn(art(), object.tag) ? t("Project image") : builtInImages.has(object.tag) ? t("Built-in image") : t("No image"))),
       heading(t("In code")), hint);

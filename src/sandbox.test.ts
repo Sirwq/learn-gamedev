@@ -264,7 +264,7 @@ describe("Export / Import one Project", () => {
     await set(`image:${p.id}:Player`, png(32, 32));
     await set(`image:${p.id}:Ground:top`, png(256, 20));
     const file = await exportProject(p);
-    expect(JSON.parse(file)).toMatchObject({ format: "learn-dev-project", version: 1, images: { Player: expect.stringMatching(/^data:image\/png;base64,/) } });
+    expect(JSON.parse(file)).toMatchObject({ format: "learn-dev-project", version: 2, images: { Player: expect.stringMatching(/^data:image\/png;base64,/) } });
     const copy = await importProject(file, s);
     expect(copy.id).not.toBe(p.id);
     expect(copy).toEqual({ ...p, id: copy.id });
@@ -284,7 +284,7 @@ describe("Export / Import one Project", () => {
     const files = {
       "broken JSON": "{nope",
       "wrong format": JSON.stringify({ ...good, format: "something-else" }),
-      "newer version": JSON.stringify({ ...good, version: 2 }),
+      "newer version": JSON.stringify({ ...good, version: 3 }),
       "oversized image": JSON.stringify(big),
       "not a PNG": JSON.stringify({ ...good, images: { Player: "data:text/html;base64,PGI+" } }),
       "bad box": JSON.stringify({ ...good, project: { ...good.project, level: { boxes: [{ tag: "Player" }] } } }),
@@ -358,4 +358,29 @@ describe("addScript", () => {
     expect(addScript(p, "coin")).toMatch(/capital/);
     expect(Object.keys(p.scripts)).toEqual(["Game", "Coin"]);
   });
+});
+
+it("preserves opt-in contacts through save, reload, duplicate and versioned export; rejects invalid imports safely", async () => {
+  await clear();
+  const s = await migrated();
+  const p = await createProject("blank", course, s);
+  p.level.boxes[0].collider = true;
+  await saveProject(p, s);
+  expect((await loadProject(p.id, s))!.project.level.boxes[0].collider).toBe(true);
+  expect((await duplicateProject(p, s)).level.boxes[0].collider).toBe(true);
+  const file = JSON.parse(await exportProject(p));
+  expect(file.version).toBe(2);
+  expect((await importProject(JSON.stringify(file), s)).level.boxes[0].collider).toBe(true);
+  const before = await loadProjects(s);
+  for (const collider of ["true", 1, null, {}]) {
+    const invalid = structuredClone(file);
+    invalid.project.level.boxes[0].collider = collider;
+    await expect(importProject(JSON.stringify(invalid), s)).rejects.toThrow();
+  }
+  for (const version of [0, -1, 1.5, 3]) await expect(importProject(JSON.stringify({ ...file, version }), s)).rejects.toThrow();
+  expect(await loadProjects(s)).toEqual(before);
+  delete file.project.level.boxes[0].collider;
+  file.version = 1;
+  const legacy = await importProject(JSON.stringify(file), s);
+  expect(legacy.level.boxes[0].collider).toBeUndefined();
 });

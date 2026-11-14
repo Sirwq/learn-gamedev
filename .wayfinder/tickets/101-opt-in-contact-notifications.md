@@ -1,7 +1,7 @@
 ---
 title: Add opt-in contact notifications to Sandbox objects
 label: build
-status: open
+status: closed
 blocked_by: [100-automatic-collision-checks]
 assignee:
 ---
@@ -59,3 +59,12 @@ Player A: `(0, 0, 20, 20)`, Coin B: `(30, 0, 20, 20)`, Decoration C overlapping 
 - `npm run typecheck`, `npm test`, and production build pass. Independent review passes before commit/push.
 
 This is a build specification only. No runtime implementation is included in decision ticket 100.
+
+
+## Resolution
+
+Implemented opt-in Collider2D notifications, Enter/Stay/Exit lifecycle, the stopped-editor checkbox, read-only Objects status, EN/RU API documentation, and project format v2 with legacy imports. Existing lessons stay opted out. Worker and standalone exports share the engine implementation.
+
+Validation: typecheck and production build passed; full suite 385 passed, 70 skipped. Desktop checks covered keyboard toggle, undo/redo, persistence after reload, collecting a Coin via the callback, EN/RU text and Docs, Lesson 1 passing, and standalone playback in an isolated frame. Direct downloaded-file opening was not checked because the browser tool blocks file URLs.
+
+Sol-loop: one round with gpt-6.1-sol, APPROVE without findings; reviewer independently ran 79 focused tests. Usage not exposed. Reviewed behavior diff: 276 additions, 15 deletions, unchanged after review. Unrelated concurrent index.html styling was excluded from the reviewed and committed scope.

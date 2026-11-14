@@ -6,6 +6,11 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Contact notifications": "Contact notifications",
+  "Enable on both objects. Reports overlap; does not stop movement.": "Enable on both objects. Reports overlap; does not stop movement.",
+  "Enabled": "Enabled",
+  "Disabled": "Disabled",
+
   "Mute": "Mute",
   "Export project": "Export project",
   "Export game": "Export game",

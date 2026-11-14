@@ -53,6 +53,16 @@ declare class Transform {
  */
 declare class MonoBehaviour {
   /**
+   * Once when two enabled boxes begin overlapping, after Update and before OnGUI. Both must opt in.
+   * @example OnTriggerEnter2D(other: Collider2D) { if (other.gameObject.tag === "Coin") Destroy(other.gameObject); }
+   */
+  OnTriggerEnter2D?(other: Collider2D): void;
+  /** Once per following step while overlapping. Callback movement is observed next step; spawned objects wait until Start. */
+  OnTriggerStay2D?(other: Collider2D): void;
+  /** Once after separation or destruction, on the surviving script. The other object may already be destroyed. */
+  OnTriggerExit2D?(other: Collider2D): void;
+
+  /**
    * The game object this Script is attached to.
    * @example Destroy(this.gameObject);
    * @unity C# leaves out `this.`; TypeScript needs it.
@@ -104,10 +114,25 @@ declare class AudioSource {
 }
 
 /**
+ * A box contact sensor. Enable Contact notifications on both Sandbox objects. No physical blocking or Rigidbody2D is needed.
+ * Contacts use positive-area overlap after Update. Edges alone do not count; fast objects can pass through between steps.
+ * @example OnTriggerEnter2D(other: Collider2D) { if (other.gameObject.tag === "Coin") Destroy(other.gameObject); }
+ * @unity This tutor implements box notifications only, not Unity's full physics system.
+ */
+declare class Collider2D {
+  /** The other object, including its tag. */
+  readonly gameObject: GameObject;
+  /** The object's Transform. */
+  readonly transform: Transform;
+}
+
+/**
  * A box in the game, from the Level or made with `Instantiate`.
  * @example GameObject.FindGameObjectsWithTag("Enemy")[0]
  */
 declare class GameObject {
+  /** Contact sensor, or null when disabled. Chosen in the Level editor or Instantiate prefab. */
+  readonly collider: Collider2D | null;
   /**
    * The tag it was made with. The tag picks how it looks: in Sandbox, the 🗺 Level tab can give a tag your own image (PNG or JPEG, drawn facing right). Draw one in a free pixel-art editor such as Piskel (https://www.piskelapp.com) or Aseprite (https://www.aseprite.org).
    * @example if (other.tag === "Enemy") { }
@@ -143,7 +168,7 @@ declare class GameObject {
  * @example { tag: "Bullet", w: 8, h: 4, color: "white", script: "Bullet" }
  * @unity C# uses a prefab made in the editor instead.
  */
-type Prefab = { tag: string; w: number; h: number; color: string; script?: string };
+type Prefab = { tag: string; w: number; h: number; color: string; script?: string; collider?: boolean };
 
 /**
  * Makes a new object at `position`. Its Start runs before its first Update, on the next frame.

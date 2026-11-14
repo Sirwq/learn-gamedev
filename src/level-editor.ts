@@ -154,8 +154,8 @@ export const matchShape = (b: Box, imageW: number, imageH: number): Box => ({ ..
 
 /** The `boxes` list as it would be written in a Lesson's `lesson.ts` (spec 004), one box per line. */
 export function levelCode(boxes: Box[]) {
-  const line = ({ tag, x, y, w, h, color, script }: Box) =>
-    `  { tag: ${JSON.stringify(tag)}, x: ${x}, y: ${y}, w: ${w}, h: ${h}, color: ${JSON.stringify(color)}${script ? `, script: ${JSON.stringify(script)}` : ""} },`;
+  const line = ({ tag, x, y, w, h, color, script, collider }: Box) =>
+    `  { tag: ${JSON.stringify(tag)}, x: ${x}, y: ${y}, w: ${w}, h: ${h}, color: ${JSON.stringify(color)}${script ? `, script: ${JSON.stringify(script)}` : ""}${collider !== undefined ? `, collider: ${collider}` : ""} },`;
   return `boxes: [\n${boxes.map(line).join("\n")}\n],`;
 }
 

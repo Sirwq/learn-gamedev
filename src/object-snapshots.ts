@@ -15,7 +15,7 @@ export function objectSnapshots() {
     let id = ids.get(object);
     if (!id) ids.set(object, (id = `run:${++next}`));
     const { x, y } = object.transform.position;
-    return { id, tag: object.tag, x, y, w: object.w, h: object.h, color: object.color, script: object.script };
+    return { id, tag: object.tag, x, y, w: object.w, h: object.h, color: object.color, script: object.script, ...(object.collider ? { collider: true } : {}) };
   });
 }
 

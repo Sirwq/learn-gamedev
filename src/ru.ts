@@ -8,6 +8,11 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "Contact notifications": "Уведомления о контакте",
+  "Enable on both objects. Reports overlap; does not stop movement.": "Включите у обоих объектов. Сообщает о пересечении, но не останавливает движение.",
+  "Enabled": "Включены",
+  "Disabled": "Выключены",
+
   "Mute": "Без звука",
   "Export project": "Экспорт проекта",
   "Export game": "Экспорт игры",

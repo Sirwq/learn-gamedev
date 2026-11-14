@@ -21,6 +21,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
   const viewport = $("viewport");
   const fields = $<HTMLFieldSetElement>("level-fields");
   const tag = $<HTMLSelectElement>("level-tag");
+  const collider = $<HTMLInputElement>("level-collider");
   const script = $<HTMLSelectElement>("level-script");
   const nums = (["x", "y", "w", "h"] as const).map((k) => [k, $<HTMLInputElement>(`level-${k}`)] as const);
   const snapBtn = $<HTMLButtonElement>("level-snap");
@@ -178,6 +179,7 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     script.replaceChildren(option("", tr("(none)")), ...scripts().map((s) => option(s, `${s}.ts`)), option(NEW, tr("+ New Script…")));
     tag.value = b?.tag ?? "";
     script.value = b?.script ?? "";
+    collider.checked = b?.collider === true;
     for (const [k, input] of nums) input.value = b ? String(b[k]) : "";
     fillArt(b);
     fillPalette();
@@ -351,6 +353,9 @@ export function levelView({ project, images, ownImages, scripts, save, addScript
     $<HTMLInputElement>("level-tag-name").value = "";
     tagBox.returnValue = "";
     tagBox.showModal();
+  };
+  collider.onchange = () => {
+    if (boxes[ed.selected] && ed.edit(() => { boxes[ed.selected].collider = collider.checked; })) changed();
   };
   script.onchange = () => {
     let name = script.value;

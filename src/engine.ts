@@ -1,8 +1,9 @@
 // Runtime behind the student API. Student-facing types and docs live in engine-api.d.ts.
+import { contactNotifications } from "./contacts";
 import { addLine, type ConsoleLine } from "./console";
 
 /** A box in a Level: x, y is the bottom-left corner, y up. */
-export type Box = { tag: string; x: number; y: number; w: number; h: number; color: string; script?: string };
+export type Box = { tag: string; x: number; y: number; w: number; h: number; color: string; script?: string; collider?: boolean };
 
 export class Vector2 {
   constructor(readonly x: number, readonly y: number) {}
@@ -49,6 +50,9 @@ export class MonoBehaviour {
   Start?(): void;
   Update?(): void;
   OnGUI?(): void;
+  OnTriggerEnter2D?(other: Collider2D): void;
+  OnTriggerStay2D?(other: Collider2D): void;
+  OnTriggerExit2D?(other: Collider2D): void;
 }
 
 export class Rect {
@@ -196,15 +200,22 @@ export function findScript(mod: { __script?: unknown }, name: string): new () =>
 /** What Instantiate copies: a Level box without the position. */
 export type Prefab = Omit<Box, "x" | "y">;
 
+export class Collider2D {
+  constructor(readonly gameObject: GameObject) {}
+  get transform() { return this.gameObject.transform; }
+}
+
 export class GameObject {
+  readonly collider: Collider2D | null;
   readonly transform: Transform;
   destroyed = false;
   /** 1 or -1: the way it last moved horizontally, so its sprite can face that way. */
   facing = 1;
   /** How far it moved during the last frame's Updates, so the engine can pick its animation frame. */
   moved = { x: 0, y: 0 };
-  constructor(readonly tag: string, readonly w: number, readonly h: number, readonly color: string, readonly script: string | undefined, position: Vector2) {
+  constructor(readonly tag: string, readonly w: number, readonly h: number, readonly color: string, readonly script: string | undefined, position: Vector2, collider = false) {
     this.transform = new Transform(position);
+    this.collider = collider ? new Collider2D(this) : null;
   }
   static FindGameObjectsWithTag(tag: string) {
     return game!.objects.filter((o) => o.tag === tag);
@@ -214,8 +225,8 @@ export class GameObject {
 type Scripts = Record<string, new () => MonoBehaviour>;
 let game: { objects: GameObject[]; behaviours: MonoBehaviour[]; fresh: MonoBehaviour[]; scripts: Scripts } | undefined;
 
-export function Instantiate({ tag, w, h, color, script }: Prefab, position: Vector2) {
-  const o = new GameObject(tag, w, h, color, script, position);
+export function Instantiate({ tag, w, h, color, script, collider }: Prefab, position: Vector2) {
+  const o = new GameObject(tag, w, h, color, script, position, collider);
   game!.objects.push(o);
   if (script) {
     const Script = game!.scripts[script];
@@ -236,7 +247,7 @@ export function Destroy(obj: GameObject) {
 const keep = <T>(list: T[], f: (t: T) => boolean) => void list.splice(0, list.length, ...list.filter(f));
 
 /** What a Script sees as globals. */
-export const api = { MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug, Camera, GUI, Rect, Color, TextAnchor };
+export const api = { Collider2D, MonoBehaviour, GameObject, Instantiate, Destroy, Vector2, Time, Input, KeyCode, Debug, Camera, GUI, Rect, Color, TextAnchor };
 
 /** Spawns the Level, resets Camera.main, attaches one new Script instance per scripted box and calls Start. `gui` off skips OnGUI. */
 export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart, gui = true) {
@@ -244,6 +255,7 @@ export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart, 
   sounds.clear();
   labels.length = 0;
   const g: NonNullable<typeof game> = (game = { objects: [], behaviours: [], fresh: [], scripts });
+  const contacts = contactNotifications();
   // Start runs once, before a Script's first Update; Scripts made inside Start get started too.
   const startFresh = () => {
     for (let b; (b = g.fresh.shift()); ) if (!b.gameObject.destroyed) (g.behaviours.push(b), b.Start?.());
@@ -267,6 +279,7 @@ export function startGame(level: Box[], scripts: Scripts, camera?: CameraStart, 
         o.moved = { x: o.transform.position.x - x, y: o.transform.position.y - y };
         if (o.moved.x) o.facing = Math.sign(o.moved.x);
       }
+      contacts([...before.keys()], g.behaviours);
       sweep();
       labels.length = 0;
       if (gui) for (const b of g.behaviours) if (b.OnGUI) (resetGUI(), b.OnGUI());

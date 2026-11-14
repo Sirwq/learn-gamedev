@@ -3,7 +3,7 @@ import type { Project } from "./sandbox";
 import { t } from "./i18n";
 
 export const PROJECT_FORMAT = "learn-dev-project";
-const VERSION = 1;
+const VERSION = 2;
 const MAX_IMAGE = 256;
 const PNG_URL = "data:image/png;base64,";
 
@@ -26,7 +26,7 @@ const isNum = (v: unknown) => typeof v === "number" && Number.isFinite(v);
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isArt = (a: unknown) => isObj(a) && (a.draw === "stretch" || a.draw === "tile") && typeof a.pixel === "boolean";
 const isBox = (b: unknown) => isObj(b) && typeof b.tag === "string" && typeof b.color === "string" &&
-  ["x", "y", "w", "h"].every((k) => isNum(b[k])) && (b.script === undefined || typeof b.script === "string");
+  ["x", "y", "w", "h"].every((k) => isNum(b[k])) && (b.script === undefined || typeof b.script === "string") && (b.collider === undefined || typeof b.collider === "boolean");
 
 /** The PNG's bytes, or why the data URL is refused. Reads the header only: nothing from the file is decoded or drawn. */
 function pngBytes(url: unknown): Uint8Array | string {
@@ -51,7 +51,7 @@ export type ProjectFile = { project: Omit<Project, "id">; pngs: [string, Blob][]
 export function checkProjectFile(file: unknown): ProjectFile {
   const bad = (why: string) => new Error(t("This file can't be opened: {why}.", { why }));
   if (!isObj(file) || file.format !== PROJECT_FORMAT) throw bad(t("it isn't a learn-dev Project file"));
-  if (!isNum(file.version) || (file.version as number) > VERSION) throw bad(t("it comes from a newer learn-dev. Reload the page and try again"));
+  if (!Number.isInteger(file.version) || (file.version as number) < 1 || (file.version as number) > VERSION) throw bad(t("it comes from a newer learn-dev. Reload the page and try again"));
   const { project: p, images = {} } = file;
   const level = isObj(p) ? p.level : undefined;
   if (!isObj(p) || typeof p.name !== "string" || !isObj(p.scripts) || !isObj(level) || !Array.isArray(level.boxes) ||

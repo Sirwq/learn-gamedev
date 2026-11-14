@@ -219,3 +219,16 @@ describe("palette", () => {
     expect(dropped("Lava", { x: 0, y: 0 }, [], tags)).toMatchObject({ tag: "Lava", color: "red", w: 40, h: 40 });
   });
 });
+
+it("keeps contact opt-in through duplicate, undo/redo and Level code output", () => {
+  const level = { boxes: [box()] };
+  const ed = levelEditor(level);
+  ed.edit((boxes) => { boxes[0].collider = true; });
+  ed.edit((boxes) => { boxes.push({ ...boxes[0], x: 80 }); });
+  expect(level.boxes.map((b) => b.collider)).toEqual([true, true]);
+  ed.undo(); ed.undo(); expect(level.boxes[0].collider).toBeUndefined();
+  ed.redo(); ed.redo(); expect(levelCode(level.boxes)).toContain("collider: true");
+  ed.running = true;
+  expect(ed.edit((boxes) => { boxes[0].collider = false; })).toBe(false);
+  expect(level.boxes[0].collider).toBe(true);
+});
