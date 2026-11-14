@@ -8,6 +8,7 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "Slow practice (next Run)": "Медленная тренировка (со следующего запуска)",
   "Build your own 2D platformer in the browser": "Создай свой 2D-платформер в браузере",
   "21 lessons · 2 chapters · your own Sandbox project": "21 урок · 2 главы · свой проект в песочнице",
   "Start Lesson 1": "Начать урок 1",

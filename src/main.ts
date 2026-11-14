@@ -616,6 +616,8 @@ function log(batch: ConsoleLine[]) {
 
 // Sound and screen text exist only in Sandbox and Chapter 2; so does the mute button.
 const v2 = v2Features(project ? { level: project.level } : { lesson: lessonIndex });
+const slowPractice = document.getElementById("slow-practice") as HTMLInputElement;
+document.getElementById("slow-practice-label")!.hidden = !!project || (lessonIndex !== 18 && lessonIndex !== 19);
 const muteBtn = document.getElementById("mute") as HTMLButtonElement;
 let muted = loadMuted(localStorage);
 const showMute = () => {
@@ -763,7 +765,7 @@ async function run() {
   running = true;
   paused = false;
   canvas.focus();
-  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex }), earned: [...earned], scripts }, [offscreen]);
+  post({ type: "start", canvas: offscreen, ...(project ? { level: project.level, images: level!.images() } : { lesson: lessonIndex, slowPractice: slowPractice.checked }), earned: [...earned], scripts }, [offscreen]);
   post({ type: "inspect", open: objectViewOpen });
 
   let lastTick = performance.now();

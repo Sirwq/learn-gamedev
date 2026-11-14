@@ -1,5 +1,5 @@
 // One worker per Run: owns the game loop, the canvas and the student's code.
-import { errorLine, v2Features } from "./run-utils";
+import { errorLine, v2Features, scheduleRunFrame } from "./run-utils";
 import { api, Camera, findScript, type MonoBehaviour, scriptSource } from "./engine";
 import { drawWorld, loadImages, ownSprites } from "./sprites";
 import { createRun, drainRunLogs, releaseRunKeys, runInput } from "./run-frame";
@@ -42,6 +42,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     return send({ type: "paused", paused: false }); // acks arrive in order, so a quick blur+focus can't leave the page thinking it's paused
   }
 
+  const slowPractice = "lesson" in data && (data.lesson === 18 || data.lesson === 19) && data.slowPractice === true;
   const canvas = data.canvas;
   // Goals and Lose events are functions, so the worker loads a Lesson itself; a Sandbox Project sends its Level and has neither.
   const lesson = "level" in data ? { level: data.level, goals: [], lose: [] } : course[data.lesson];
@@ -91,7 +92,7 @@ self.onmessage = async ({ data }: MessageEvent<ToWorker>) => {
     if (gui !== lastLabels) send({ type: "labels", labels: result.labels });
     lastLabels = gui;
     drawWorld(ctx, sprites, Camera.main, run.objects, v2 ? frames++ / 60 : undefined, own);
-    if (!result.check.lost && !result.check.passed) requestAnimationFrame(frame);
+    if (!result.check.lost && !result.check.passed) scheduleRunFrame(frame, slowPractice);
   };
   requestAnimationFrame(frame);
 };

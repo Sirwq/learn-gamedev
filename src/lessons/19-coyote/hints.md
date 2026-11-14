@@ -1,11 +1,11 @@
 ## Hint 1
 
-Watch for the Player's feet leaving a box top without a jump. Keep a short timer for that edge; the Goal needs a jump just after leaving, not from the top.
+Fix support first: remove the y < 40 clamp, recompute onGround before Space, and land only on actual Ground/Platform/Wall tops approached from above.
 
 ## Hint 2
 
-A 0.1 second timer is about six frames here. Refill it while supported; count it down after leaving; clear it on a jump.
+Refill coyote to 0.1 on support; otherwise subtract Time.deltaTime and clamp at zero. Test Space with onGround || coyote > 0, then clear the timer when jumping.
 
 ## Hint 3
 
-Remove the unconditional `y < 40` ground clamp. Only land when falling onto a real Ground box, and recompute `onGround` from the boxes under your feet before testing Space.
+Show onGround and coyote with OnGUI. Enable Slow practice before Run; game time still advances by 1/60 per step. Compare a supported press, a press two or three steps after leaving, and a press after the timer reaches zero.

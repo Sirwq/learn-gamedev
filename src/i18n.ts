@@ -6,6 +6,7 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Slow practice (next Run)": "Slow practice (next Run)",
   "Build your own 2D platformer in the browser": "Build your own 2D platformer in the browser",
   "21 lessons · 2 chapters · your own Sandbox project": "21 lessons · 2 chapters · your own Sandbox project",
   "Start Lesson 1": "Start Lesson 1",

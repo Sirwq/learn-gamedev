@@ -73,3 +73,28 @@ describe("Chapter 2 features", () => {
     expect(v2Features({ level: {} })).toBe(true);
   });
 });
+
+describe("slow practice scheduling", () => {
+  it("delays playback without changing simulation deltaTime", async () => {
+    const { vi } = await import("vitest");
+    const { scheduleRunFrame } = await import("./run-utils");
+    const { Time } = await import("./engine");
+    vi.useFakeTimers();
+    const raf = vi.fn();
+    vi.stubGlobal("requestAnimationFrame", raf);
+    try {
+      const frame = () => {};
+      scheduleRunFrame(frame, true);
+      expect(raf).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(100);
+      expect(raf).toHaveBeenCalledWith(frame);
+      expect(Time.deltaTime).toBe(1 / 60);
+      raf.mockClear();
+      scheduleRunFrame(frame, false);
+      expect(raf).toHaveBeenCalledWith(frame);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
+  });
+});

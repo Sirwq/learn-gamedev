@@ -20,6 +20,11 @@ class Player extends MonoBehaviour {
     this.health = 3;
   }
 
+  OnGUI() {
+    GUI.Label(new Rect(600, 40, 350, 24), "onGround: " + this.onGround);
+    GUI.Label(new Rect(600, 66, 350, 24), "coyote: " + this.coyote);
+  }
+
   Update() {
     if (Input.GetKey(KeyCode.RightArrow)) {
       this.transform.position = this.transform.position.Add(new Vector2(this.speed * Time.deltaTime, 0));
@@ -43,8 +48,20 @@ class Player extends MonoBehaviour {
     const ground = GameObject.FindGameObjectsWithTag("Ground");
     const platformsBelow = GameObject.FindGameObjectsWithTag("Platform").concat(GameObject.FindGameObjectsWithTag("Wall"), ground);
     const feet = this.transform.position;
-    this.onGround = platformsBelow.some((box) => feet.x < box.transform.position.x + box.w && feet.x + this.gameObject.w > box.transform.position.x && Math.abs(feet.y - box.transform.position.y - box.h) < 2);
-    this.coyote = this.onGround ? 0.1 : Math.max(0, this.coyote - Time.deltaTime);
+    this.onGround = false;
+    for (let i = 0; i < platformsBelow.length; i++) {
+      const box = platformsBelow[i];
+      const top = box.transform.position.y + box.h;
+      if (feet.x < box.transform.position.x + box.w && feet.x + this.gameObject.w > box.transform.position.x
+          && Math.abs(feet.y - top) < 2) {
+        this.onGround = true;
+      }
+    }
+    if (this.onGround) {
+      this.coyote = 0.1;
+    } else {
+      this.coyote = Math.max(0, this.coyote - Time.deltaTime);
+    }
 
     if (Input.GetKeyDown(KeyCode.Space) && (this.onGround || this.coyote > 0)) {
       this.velocityY = this.jumpSpeed;
@@ -57,7 +74,8 @@ class Player extends MonoBehaviour {
 
     this.velocityY = this.velocityY - this.gravity * Time.deltaTime;
     this.transform.position = this.transform.position.Add(new Vector2(0, this.velocityY * Time.deltaTime));
-    for (const box of ground) {
+    for (let i = 0; i < ground.length; i++) {
+      const box = ground[i];
       if (this.velocityY < 0 && Overlaps(this.gameObject, box) && feet.y >= box.transform.position.y + box.h - 2) {
         this.transform.position = new Vector2(this.transform.position.x, box.transform.position.y + box.h);
         this.velocityY = 0;

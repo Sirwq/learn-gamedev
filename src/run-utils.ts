@@ -35,3 +35,9 @@ export const runStartLine = (lessonIndex: number, projectName?: string) =>
 
 /** Sandbox and Chapter 2 (Lesson 16 on) animate sprites and play sounds; Lessons 1–15 draw still frames and stay silent. */
 export const v2Features = (start: { lesson: number } | { level: unknown }) => !("lesson" in start) || start.lesson >= 15;
+
+/** Slow practice delays playback only; simulation time still advances by Time.deltaTime. */
+export function scheduleRunFrame(frame: FrameRequestCallback, slow: boolean) {
+  if (slow) setTimeout(() => requestAnimationFrame(frame), 100);
+  else requestAnimationFrame(frame);
+}

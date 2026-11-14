@@ -220,3 +220,24 @@ describe.each(course.map((l, i) => [l.title, l, i] as const))("Lesson %s", (_, l
     expect(lost).toContain("spikes");
   });
 });
+
+it("distinguishes supported, coyote-window and expired presses at the first safe ledge", async () => {
+  const { createRun, runInput } = await import("../run-frame");
+  const lesson = course[18];
+  for (const [press, jump, goal] of [[20, true, false], [26, true, true], [35, false, false]] as const) {
+    const run = createRun({ ...lesson, classes: { Player: loadScript(lesson.scripts.Player.reference, "Player") }, earned: new Set(), v2: true });
+    let jumped = false;
+    let edgeGoal = false;
+    for (let frame = 1; frame <= 36; frame++) {
+      runInput(KeyCode.RightArrow, true);
+      runInput(KeyCode.Space, frame === press);
+      const result = run.step();
+      if ("error" in result) throw result.error;
+      jumped ||= result.sounds.includes("Jump");
+      edgeGoal ||= result.check.met[0];
+      expect(result.labels.some(label => label.text.startsWith("coyote: "))).toBe(true);
+    }
+    expect({ jumped, edgeGoal }).toEqual({ jumped: jump, edgeGoal: goal });
+    releaseAllKeys();
+  }
+});
