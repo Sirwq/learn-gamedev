@@ -8,7 +8,12 @@
     "build": "tsc && vite build",
     "typecheck": "tsc",
     "afk": "node .sandcastle/main.ts",
-    "afk:login": "node .sandcastle/login.ts"
+    "afk:login": "node .sandcastle/login.ts",
+    "build:player": "vite build --config vite.player.config.ts",
+    "predev": "npm run build:player",
+    "prebuild": "npm run build:player",
+    "pretest": "npm run build:player",
+    "pretypecheck": "npm run build:player"
   },
   "repository": {
     "type": "git",

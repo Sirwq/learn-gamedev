@@ -28,7 +28,9 @@ import { startingObjects } from "./object-snapshots";
 import { achievementToast, toast } from "./toast";
 import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
-import { createProject, deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProject, saveProjectWithImages } from "./project-storage";
+import { createProject, deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProjectWithImages } from "./project-storage";
+import { exportGame } from "./game-export";
+import { saveState } from "./save-state";
 import { exportFileName } from "./project-file";
 import { formatCode } from "./format-code";
 import { activeCatalog, catalogs, escapeHtml, localizeAchievement, localizeCheck, localizeDocs, localizeLesson, localizeRuntimeError, t, translateStatic } from "./i18n";
@@ -92,6 +94,16 @@ await migrateProjects();
 const projects = await loadProjects();
 const projectData = askedProject ? await loadProject(askedProject) : undefined;
 const project: Project | undefined = projectData?.project;
+let projectImages = projectData?.images ?? {};
+const saveButton = document.getElementById("save-state") as HTMLButtonElement;
+const saves = saveState((state) => {
+  saveButton.textContent = state === "saving" ? t("Saving…") : state === "saved" ? t("Saved on this device") : t("Save failed — click to retry");
+});
+const saveCurrentProject = () => project ? saves.track(saveProjectWithImages(project, projectImages)) : Promise.resolve(true);
+saveButton.onclick = () => { void saveCurrentProject(); };
+window.addEventListener("beforeunload", (event) => {
+  if (saves.dirty) { event.preventDefault(); event.returnValue = ""; }
+});
 const current = currentLesson(course);
 const lessonIndex = asked !== null && Number.isInteger(Number(asked)) && unlocked(course, Number(asked)) ? Number(asked) : current;
 const replaying = !project && lessonIndex !== current;
@@ -175,7 +187,7 @@ function addModel(name: string, code: string) {
     }
     if (!project) return saveScript(name, model.getValue());
     project.scripts[name] = model.getValue();
-    saveProject(project);
+    void saveCurrentProject();
   });
 }
 for (const [name, code] of Object.entries(project?.scripts ?? loadScripts(course, lessonIndex))) addModel(name, code);
@@ -279,7 +291,7 @@ function newScript(name: string) {
   const error = addScript(project!, name);
   if (error) return error;
   addModel(name, project!.scripts[name]);
-  saveProject(project!);
+  void saveCurrentProject();
   const tab = makeTab(`${name}.ts`);
   tabs.splice(tabs.length - 1, 0, tab);
   tabs[tabs.length - 1].before(tab);
@@ -494,7 +506,7 @@ document.getElementById("show-explanation")!.onclick = () => showLeftView(false)
 document.getElementById("show-objects")!.onclick = () => showLeftView(true);
 images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasElement).getContext("2d")!, imgs, new Camera(startLevel.camera),
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
-if (project) level = levelView({ project, images, ownImages: projectData!.images, scripts: () => Object.keys(models), save: (own) => { refreshStoppedObjects(); saveProjectWithImages(project, own); }, addScript: newScript });
+if (project) level = levelView({ project, images, ownImages: projectData!.images, scripts: () => Object.keys(models), save: (own) => { refreshStoppedObjects(); projectImages = { ...own }; void saveCurrentProject(); }, addScript: newScript });
 // The Course menu and its Sandbox tab.
 const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
@@ -506,10 +518,22 @@ if (project) {
     const name = prompt(t("Project name:"), project.name)?.trim();
     if (!name) return;
     project.name = lessonTitle.textContent = name;
-    saveProject(project);
+    void saveCurrentProject();
   };
   document.getElementById("duplicate")!.onclick = async () => (location.search = `?sandbox=${(await duplicateProject(project)).id}`);
-  document.getElementById("export")!.onclick = async () => download(await exportProject(project), exportFileName(project.name));
+  for (const [id, game] of [["export", false], ["export-game", true]] as const) {
+    const button = document.getElementById(id) as HTMLButtonElement;
+    button.onclick = async () => {
+      button.disabled = true;
+      try {
+        await saveCurrentProject();
+        const text = game ? await exportGame(project, projectImages) : await exportProject(project, projectImages);
+        download(text, game ? exportFileName(project.name).replace(/\.learn-dev\.json$/, ".html") : exportFileName(project.name), game ? "text/html" : "application/json");
+        if (game) toast(t("Open the downloaded HTML file in a desktop browser. It works offline; no course or editor needed."));
+      } catch (error) { toast(t("Export failed: {message}", { message: String(error) })); }
+      finally { button.disabled = false; }
+    };
+  }
   document.getElementById("delete")!.onclick = () => {
     if (!confirm(t("Delete \"{name}\"? Its Scripts are gone for good.", { name: project.name }))) return;
     deleteProject(project.id).then(() => (location.search = "?sandbox"));

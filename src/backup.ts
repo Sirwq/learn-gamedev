@@ -18,9 +18,9 @@ type Store = Pick<Storage, "getItem" | "setItem">;
 type Course = Pick<Lesson, "title" | "scripts">[];
 
 /** Saves the text as a file through the browser's download. */
-export function download(text: string, name: string) {
+export function download(text: string, name: string, type = "application/json") {
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.href = URL.createObjectURL(new Blob([text], { type }));
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href));

@@ -8,6 +8,17 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "Mute": "Без звука",
+  "Export project": "Экспорт проекта",
+  "Export game": "Экспорт игры",
+  "Saved on this device": "Сохранено на этом устройстве",
+  "Saving…": "Сохраняем…",
+  "Save failed — click to retry": "Не сохранено — нажмите, чтобы повторить",
+  "Play / Restart": "Играть / Заново",
+  "Open this HTML file in a desktop browser, then press Play. Click the game to use its keyboard controls. Arrow keys / WASD, Space, S: depends on the game.": "Откройте этот HTML-файл в браузере на компьютере и нажмите «Играть». Нажмите на игру для управления клавиатурой. Стрелки / WASD, пробел, S: зависит от игры.",
+  "Open the downloaded HTML file in a desktop browser. It works offline; no course or editor needed.": "Откройте скачанный HTML-файл в браузере на компьютере. Он работает без интернета, курса и редактора.",
+  "Export failed: {message}": "Не удалось экспортировать: {message}",
+
   "Start final project": "Начать итоговый проект",
   "Could not create the project. Your course code is unchanged. Try again.": "Не удалось создать проект. Код курса не изменён. Попробуйте ещё раз.",
   "Final project: two routes, one new mechanic": "Итоговый проект: два маршрута и новая механика",

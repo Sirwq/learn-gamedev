@@ -179,9 +179,12 @@ export async function duplicateProject(project: Project, store: Local = localSto
 }
 
 /** The Project and all its images in the portable JSON file. */
-export async function exportProject(project: Project) {
-  await pending.get(project.id)?.catch(() => {});
-  const images = await loadImageBlobs(project.id);
+export async function exportProject(project: Project, images?: Record<string, Blob>) {
+  // The editor can export unsaved images even when browser storage is unavailable.
+  if (images === undefined) {
+    await pending.get(project.id)?.catch(() => {});
+    images = await loadImageBlobs(project.id);
+  }
   const { id: _, ...rest } = project;
   return JSON.stringify(await encodeProjectFile(rest, images));
 }

@@ -6,3 +6,5 @@ dist
 .playwright-mcp/
 .vercel
 learn-dev-v0.1.0.zip
+
+.generated/

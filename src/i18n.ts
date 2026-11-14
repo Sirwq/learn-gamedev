@@ -6,6 +6,17 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Mute": "Mute",
+  "Export project": "Export project",
+  "Export game": "Export game",
+  "Saved on this device": "Saved on this device",
+  "Saving…": "Saving…",
+  "Save failed — click to retry": "Save failed — click to retry",
+  "Play / Restart": "Play / Restart",
+  "Open this HTML file in a desktop browser, then press Play. Click the game to use its keyboard controls. Arrow keys / WASD, Space, S: depends on the game.": "Open this HTML file in a desktop browser, then press Play. Click the game to use its keyboard controls. Arrow keys / WASD, Space, S: depends on the game.",
+  "Open the downloaded HTML file in a desktop browser. It works offline; no course or editor needed.": "Open the downloaded HTML file in a desktop browser. It works offline; no course or editor needed.",
+  "Export failed: {message}": "Export failed: {message}",
+
   "Start final project": "Start final project",
   "Could not create the project. Your course code is unchanged. Try again.": "Could not create the project. Your course code is unchanged. Try again.",
   "Final project: two routes, one new mechanic": "Final project: two routes, one new mechanic",
