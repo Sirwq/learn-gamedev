@@ -515,6 +515,11 @@
         <section id="lesson" tabindex="0" aria-labelledby="lesson-title">
           <h1><span id="lesson-title"></span><span id="replaying" hidden>↺ replaying a passed Lesson</span>
             <span id="project-actions" hidden><button id="rename">Rename</button> <button id="duplicate">Duplicate</button> <button id="export" title="Save this Project as a file: to keep, or to send to a friend.">Export</button> <button id="delete">Delete</button></span></h1>
+          <details id="code-origin" hidden>
+            <summary>Where did this code come from?</summary>
+            <p>Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.</p>
+            <p>Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.</p>
+          </details>
           <div id="explanation"></div>
           <div id="hints"></div>
           <p><button id="next-hint"></button></p>
@@ -621,10 +626,12 @@
     <section id="compare" hidden aria-label="Compare">
       <header>
         <b id="compare-title"></b>
-        <span>Your code (left) and the Reference code (right)</span>
+        <span id="compare-sides">Your code (left) and the Reference code (right)</span>
+        <label id="compare-previous-label" hidden><input id="compare-previous" type="checkbox" /> Show my previous passed solution</label>
         <button id="load-reference">Load reference code</button>
         <button id="compare-close" aria-label="Close"><span aria-hidden="true">✕</span></button>
       </header>
+      <p>Loading the reference replaces the current editor file with a working example. Your passed solution stays saved. You can undo this edit until you leave or reload the page.</p>
       <div id="diff"></div>
     </section>
     <section id="achievements" hidden aria-label="Achievements">

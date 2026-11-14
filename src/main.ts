@@ -11,7 +11,7 @@ import type { Label } from "./engine";
 import { FONT_MAX, FONT_MIN, savedFontSize, zoom, zoomPercent } from "./zoom";
 import { marked } from "marked";
 import { course } from "./lessons/course";
-import { loadScripts, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot } from "./lesson";
+import { loadScripts, openedHints, restoreStash, saveOpenedHints, saveScript, saveSnapshot, snapshot } from "./lesson";
 import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, chapterProgress, currentLesson, markPassed, progress, referenceFor, unlocked } from "./check";
 import { addLine, clearLines, type ConsoleLine, lineText } from "./console";
 import engineApi from "./engine-api.d.ts?raw";
@@ -102,6 +102,7 @@ const lessonTitle = document.getElementById("lesson-title")!;
 lessonTitle.textContent = project ? project.name : displayLesson.title;
 document.title = `${lessonTitle.textContent} · learn-dev`;
 document.getElementById("replaying")!.hidden = !replaying;
+document.getElementById("code-origin")!.hidden = !!project || lessonIndex === 0;
 const explanation = document.getElementById("explanation")!;
 if (!project) explanation.innerHTML = marked.parse(displayLesson.explanation, { async: false }); // our own trusted Markdown
 else explanation.textContent = t("This Project uses the saved Level and your Scripts. Open Objects to inspect the current game, or 🗺 Level to edit the starting boxes.");
@@ -507,11 +508,33 @@ const diff = monaco.editor.createDiffEditor(document.getElementById("diff")!, {
   minimap: { enabled: false }, renderOverviewRuler: false,
 });
 let comparing = "";
+let savedComparisonModel: monaco.editor.ITextModel | undefined;
+const comparePrevious = document.getElementById("compare-previous") as HTMLInputElement;
+let previousSolution: string | undefined;
+comparePrevious.onchange = () => {
+  const modified = diff.getModel()!.modified;
+  const oldSaved = savedComparisonModel;
+  savedComparisonModel = comparePrevious.checked && previousSolution !== undefined
+    ? monaco.editor.createModel(previousSolution, "javascript") : undefined;
+  diff.setModel({ original: savedComparisonModel ?? models[comparing], modified });
+  oldSaved?.dispose();
+  document.getElementById("compare-sides")!.textContent = comparePrevious.checked
+    ? t("Previous passed solution (left) and Reference code (right)")
+    : t("Your code (left) and the Reference code (right)");
+};
 function openCompare(name: string) {
   const reference = referenceFor(course, name);
   if (reference === undefined) return;
   comparing = name;
-  diff.getModel()?.modified.dispose();
+  const oldModified = diff.getModel()?.modified;
+  diff.setModel(null);
+  oldModified?.dispose();
+  savedComparisonModel?.dispose();
+  savedComparisonModel = undefined;
+  previousSolution = !project && lessonIndex > 0 ? snapshot(course[lessonIndex - 1].title)?.[name] : undefined;
+  comparePrevious.checked = false;
+  document.getElementById("compare-previous-label")!.hidden = previousSolution === undefined;
+  document.getElementById("compare-sides")!.textContent = t("Your code (left) and the Reference code (right)");
   diff.setModel({ original: models[name], modified: monaco.editor.createModel(reference, "javascript") });
   document.getElementById("compare-title")!.textContent = t("Compare {name}.ts", { name });
   compare.hidden = false;

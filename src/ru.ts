@@ -8,6 +8,12 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "Where did this code come from?": "Откуда взялся этот код?",
+  "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.": "Ваши сохранённые скрипты переходят в следующий урок. Начальную заготовку получают только новые файлы; переход между уроками не заменяет вашу работу эталоном.",
+  "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.": "Сравнение выделяет отличия от эталона последнего пройденного урока для этого скрипта. Там же можно посмотреть своё решение предыдущего пройденного урока. Выберите одну изменённую строку и объясните, как она меняет игру.",
+  "Show my previous passed solution": "Показать моё решение предыдущего урока",
+  "Previous passed solution (left) and Reference code (right)": "Моё пройденное решение (слева) и эталон (справа)",
+  "Loading the reference replaces the current editor file with a working example. Your passed solution stays saved. You can undo this edit until you leave or reload the page.": "Загрузка эталона заменяет текущий файл редактора рабочим примером. Ваше пройденное решение остаётся сохранённым. Изменение можно отменить до ухода со страницы или её перезагрузки.",
   "Slow practice (next Run)": "Медленная тренировка (со следующего запуска)",
   "Build your own 2D platformer in the browser": "Создай свой 2D-платформер в браузере",
   "21 lessons · 2 chapters · your own Sandbox project": "21 урок · 2 главы · свой проект в песочнице",

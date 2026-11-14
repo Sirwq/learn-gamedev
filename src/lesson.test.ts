@@ -77,3 +77,16 @@ describe("replay", () => {
     expect(loadScripts(lessons, 1, s)).toEqual({ Player: "newest player", Bullet: "bullet stub" });
   });
 });
+
+it("keeps single- and multi-script pass snapshots when later code is replaced or reloaded", () => {
+  const store = memoryStore();
+  saveScript("Player", "my player", store);
+  saveSnapshot("first", loadScripts(lessons, 0, store), store);
+  expect(loadScripts(lessons, 1, store)).toEqual({ Player: "my player", Bullet: "bullet stub" });
+  saveScript("Bullet", "my bullet", store);
+  saveSnapshot("second", loadScripts(lessons, 1, store), store);
+  saveScript("Player", "player 2", store); // explicit reference load
+  expect(snapshot("first", store)).toEqual({ Player: "my player" });
+  expect(snapshot("second", store)).toEqual({ Player: "my player", Bullet: "my bullet" });
+  expect(loadScripts(lessons, 1, store)).toEqual({ Player: "player 2", Bullet: "my bullet" });
+});

@@ -6,6 +6,12 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Where did this code come from?": "Where did this code come from?",
+  "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.": "Your saved scripts carry into the next lesson. Only new files get starter code; moving between lessons does not replace your work with a reference.",
+  "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.": "Compare shows highlighted differences from the latest passed reference. You can also view your previous passed solution there. Pick one changed line and explain how it changes the game.",
+  "Show my previous passed solution": "Show my previous passed solution",
+  "Previous passed solution (left) and Reference code (right)": "Previous passed solution (left) and Reference code (right)",
+  "Loading the reference replaces the current editor file with a working example. Your passed solution stays saved. You can undo this edit until you leave or reload the page.": "Loading the reference replaces the current editor file with a working example. Your passed solution stays saved. You can undo this edit until you leave or reload the page.",
   "Slow practice (next Run)": "Slow practice (next Run)",
   "Build your own 2D platformer in the browser": "Build your own 2D platformer in the browser",
   "21 lessons · 2 chapters · your own Sandbox project": "21 lessons · 2 chapters · your own Sandbox project",
