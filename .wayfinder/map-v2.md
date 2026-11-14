@@ -19,6 +19,7 @@ A build-ready spec for v2, what comes after the MVP ([MVP map](map.md)): a Const
 ## Decisions so far
 
 <!-- one line per closed ticket -->
+- [Automatic collision checks](tickets/100-automatic-collision-checks.md): opt-in Sandbox box-contact notifications, without physical blocking; existing content stays disabled. Implementation: [101](tickets/101-opt-in-contact-notifications.md).
 - [What is in v2?](tickets/048-v2-scope.md): a Construct-like Sandbox for the same student, all of it unlocked after the Course (Lesson 15): Level editor, own sprites, sound and animation, UI text, extra Mechanics as Achievements only. The authors' Lesson editor is left to its own ticket.
 - [How does the Level editor work?](tickets/049-level-editor.md): Sandbox only, a 🗺 Level file tab where the stopped game view is the editor; inspector dropdowns, 20 px snap, edit only while stopped, Level code behind a button.
 - [How do students bring their own sprites?](tickets/050-own-sprites.md): Sandbox only, one PNG/JPEG per tag per Project (at most 256×256), set in the inspector; Stretch or 20 px Tile with an optional Top image, Reset to the Kenney art, drawn shape = hitbox kept, no new code API.

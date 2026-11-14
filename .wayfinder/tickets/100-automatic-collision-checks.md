@@ -1,7 +1,7 @@
 ---
 title: Define automatic collision checks for objects with a collision component
 label: wayfinder:grilling
-status: open
+status: closed
 blocked_by: []
 assignee:
 ---
@@ -24,6 +24,10 @@ Objects currently have boxes and Lessons can call overlap helpers, but the stude
 
 - A build-ready follow-up ticket specifies the component, student-facing API, event timing, editor controls, compatibility with existing Lessons, and a small test Level with expected collisions.
 
-## Blocked
+## Resolution
 
-This is a `wayfinder:grilling` decision ticket. The Grilling workflow requires the student's product decisions before resolving its dependent API, timing, and compatibility details. The current engine has no built-in collision or physics; Course Lessons write their own overlap checks, and Sandbox Level boxes have no collider field. Asked for decisions on (1) overlap notifications alone versus physical blocking too, and (2) opt-in components versus automatic defaults. Once those are answered, continue the design tree, write the build-ready follow-up ticket, and close this decision ticket.
+2026-11-14: The user chose **opt-in contact notifications first**. Sandbox objects explicitly enable a box trigger; both participants must opt in. Contact callbacks notify scripts without blocking movement or adding physics. Existing Lessons and Projects remain disabled by default.
+
+Implementation details and acceptance checks are specified in [101 — Opt-in contact notifications](101-opt-in-contact-notifications.md): Enter/Stay/Exit callbacks, post-Update detection, stable pair identity, spawn/destroy rules, editor controls, save/export compatibility, and a small test Level.
+
+This closes the design decision only. Implementation remains open in ticket 101.
