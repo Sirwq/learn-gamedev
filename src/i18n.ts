@@ -6,6 +6,16 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "Build your own 2D platformer in the browser": "Build your own 2D platformer in the browser",
+  "21 lessons · 2 chapters · your own Sandbox project": "21 lessons · 2 chapters · your own Sandbox project",
+  "Start Lesson 1": "Start Lesson 1",
+  "Continue Lesson {number}": "Continue Lesson {number}",
+  "About this course": "About this course",
+  "Example platformer level with platforms and obstacles": "Example platformer level with platforms and obstacles",
+  "Example: your platformer after Chapter 2": "Example: your platformer after Chapter 2",
+  "For beginners who know variables and simple expressions. No game engine experience needed.": "For beginners who know variables and simple expressions. No game engine experience needed.",
+  "Learn movement, jumps, coins and game feel, then build your own level in Sandbox. Chapter 2 and Sandbox unlock after Lesson 15.": "Learn movement, jumps, coins and game feel, then build your own level in Sandbox. Chapter 2 and Sandbox unlock after Lesson 15.",
+  "Read the task, change the code, then press Run to try it. Hints and Docs are there when you need them.": "Read the task, change the code, then press Run to try it. Hints and Docs are there when you need them.",
   "Run": "Run", "Stop": "Stop", "Docs": "Docs", "Level": "Level", "Sandbox": "Sandbox",
   "Finish the code or fix syntax errors before formatting. Your code was left intact.": "Finish the code or fix syntax errors before formatting. Your code was left intact.",
   "Formatting is unavailable right now. Try again.": "Formatting is unavailable right now. Try again.",

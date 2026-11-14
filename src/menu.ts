@@ -65,7 +65,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   }
   const courseCards = course.map((l, i) => coverCard(t("Lesson {number}", { number: i + 1 }).toUpperCase(), localizeLesson(l).title.replace(/^\d+\.\s*/, ""), i));
   let projectCards: HTMLButtonElement[] = [];
-  const cards = () => (mode === "course" ? courseCards.slice(0, chapters.unlocked ? course.length : CHAPTER_ONE_COUNT) : projectCards);
+  const cards = () => (mode === "course" ? courseCards : projectCards);
+  const unlockLesson = (i: number) => i >= CHAPTER_ONE_COUNT && !chapters.unlocked ? CHAPTER_ONE_COUNT : menuCurrent + 1;
   const coverOf = (i: number) => cards()[i].querySelector("canvas")!;
   const menuBg = document.getElementById("menu-bg") as HTMLCanvasElement;
   const drawBg = () => menuBg.getContext("2d")!.drawImage(coverOf(focused), 0, 0);
@@ -127,7 +128,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       meta.innerHTML = p ? files(Object.keys(p.scripts)) : line("meta-concept", sandboxEmptyMessage(projects.length) || t("Blank, My platformer, or Example: Sandbox tour"));
     } else {
       const scripts = [...new Set(course.slice(0, focused + 1).flatMap((l) => Object.keys(l.scripts)))];
-      const state = { passed: [CHECK, t("Passed")], current: [PLAY, t("Up next")], locked: [LOCK, t("Pass Lesson {number} to unlock", { number: menuCurrent + 1 })] }[states[focused]];
+      const state = { passed: [CHECK, t("Passed")], current: [PLAY, t("Up next")], locked: [LOCK, t("Pass Lesson {number} to unlock", { number: unlockLesson(focused) })] }[states[focused]];
       // Code words in the concept (Update(), Time.deltaTime, if, &&) get the inline-code look; "Script:" is a plain word.
       const concept = localizeLesson(course[focused]).concept.replace(/else if|&&|\b(?:if|for)\b|[A-Z]\w*(?:\.\w+)*(?:\(\))?(?!:)/g, (c) => `<code translate="no">${c.replaceAll("&", "&amp;")}</code>`);
       title = localizeLesson(course[focused]).title;
@@ -157,6 +158,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
   }
   function showMode(m: typeof mode) {
     mode = m;
+    document.getElementById("course-intro")!.hidden = m !== "course";
     if (m === "sandbox") buildProjectCards();
     focused = m === "course" ? lessonIndex : Math.max(0, projects.findIndex((p) => p.id === project?.id));
     rail.replaceChildren(...cards());
@@ -172,10 +174,10 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     });
     const chapterLabel = document.createElement("span");
     chapterLabel.className = "chapter-label";
-    chapterLabel.textContent = t("Chapter 2");
+    chapterLabel.textContent = `${chapters.unlocked ? "" : "🔒 "}${t("Chapter 2")}`;
     chapterLabel.style.left = dotButtons.length > CHAPTER_ONE_COUNT
       ? `${100 * CHAPTER_ONE_COUNT / dotButtons.length}%` : "calc(100% - 72px)";
-    dots.replaceChildren(...dotButtons, ...(m === "course" && chapters.unlocked ? [chapterLabel] : []));
+    dots.replaceChildren(...dotButtons, ...(m === "course" ? [chapterLabel] : []));
     for (const [chip, on] of [[chipCourse, m === "course"], [chipSandbox, m === "sandbox"]] as const) {
       chip.classList.toggle("on", on);
       chip.ariaPressed = String(on);
@@ -206,6 +208,8 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     states = cardStates(course);
     chapters = chapterProgress(course);
     menuCurrent = currentLesson(course);
+    document.getElementById("course-continue")!.textContent = t("Continue Lesson {number}", { number: menuCurrent + 1 });
+    document.getElementById("course-continue")!.hidden = menuCurrent === 0;
     chipSandbox.hidden = !sandboxUnlocked(course);
     const due = backupReminder(course);
     reminder.hidden = !due;
@@ -228,7 +232,7 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
       if (projects[i].id === project?.id) return closeMenu();
       return void (location.search = `?sandbox=${projects[i].id}`);
     }
-    if (states[i] === "locked") return void toast(t("Pass Lesson {number} to unlock", { number: menuCurrent + 1 }));
+    if (states[i] === "locked") return void toast(t("Pass Lesson {number} to unlock", { number: unlockLesson(i) }));
     if (i === lessonIndex && !project) return closeMenu();
     if (states[i] === "current" || (states[i] === "passed" && i === menuCurrent) || !snapshot(course[i].title)) return go(i);
     replayBox.querySelector("h3")!.textContent = t("Replay {title}?", { title: localizeLesson(course[i]).title });
@@ -392,6 +396,9 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     menuOpen.lastChild!.textContent = ` ${t("Back to Projects")}`;
   }
   document.getElementById("menu-achievements")!.onclick = () => trophies.click();
+  document.getElementById("course-start")!.onclick = () => pick(0);
+  document.getElementById("course-continue")!.onclick = () => pick(menuCurrent);
+  drawCover(document.getElementById("course-preview") as HTMLCanvasElement, course[course.length - 1].level.boxes);
   document.getElementById("menu-play")!.onclick = () => pick(focused);
   prevBtn.onclick = () => focusCard(focused - 1);
   nextBtn.onclick = () => focusCard(focused + 1);

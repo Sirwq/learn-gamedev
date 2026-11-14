@@ -345,6 +345,17 @@
       #menu-dots button.passed::before { background: #ffffffb3; }
       #menu-dots button:hover::before { background: #fffd; }
       #menu-dots button[aria-current]::before { height: 6px; background: var(--accent); }
+      #course-intro { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); width: min(680px, 90%); text-align: center; z-index: 4; }
+      #course-intro > strong, #course-intro > span { display: block; margin-bottom: 5px; }
+      #course-intro > span { font-size: 13px; }
+      #course-intro button { padding: 5px 12px; }
+      #course-intro details { font-size: 13px; margin-top: 5px; }
+      #course-intro summary { cursor: pointer; }
+      .course-details { background: var(--surface-panel); border: 1px solid var(--border-dialog); border-radius: 12px; padding: 16px; text-align: left; max-height: 50vh; overflow: auto; }
+      .course-details figure { float: left; width: 120px; margin: 0 16px 8px 0; }
+      .course-details canvas { width: 120px; height: 160px; image-rendering: pixelated; }
+      .course-details::after { content: ""; display: block; clear: both; }
+      #menu:has(#course-intro:not([hidden])) #rail { top: 27%; height: 45%; }
       #rail { position: absolute; left: 0; right: 0; top: 12%; height: 60%; touch-action: pan-y pinch-zoom; }
       /* Arrows sit just outside the big card's outline, on the neighbour card: forward is filled like the "Up next" pill, back is quiet like the locked one. */
       #menu .nav { position: absolute; top: 42%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; transform: translate(-50%, -50%); transition: transform .15s, opacity .15s; }
@@ -641,6 +652,17 @@
         <button id="menu-saves" aria-haspopup="dialog"><span aria-hidden="true">💾</span> Saves</button>
         </div>
         <p id="menu-reminder" hidden><span></span> · <button id="reminder-backup">Back up now</button> · <button id="reminder-later">Not now</button></p>
+      </div>
+      <div id="course-intro">
+        <strong>Build your own 2D platformer in the browser</strong>
+        <span>21 lessons · 2 chapters · your own Sandbox project</span>
+        <div><button id="course-start">Start Lesson 1</button> <button id="course-continue" hidden></button></div>
+        <details><summary>About this course</summary><div class="course-details">
+          <figure><canvas id="course-preview" width="240" height="320" role="img" aria-label="Example platformer level with platforms and obstacles"></canvas><figcaption>Example: your platformer after Chapter 2</figcaption></figure>
+          <p>For beginners who know variables and simple expressions. No game engine experience needed.</p>
+          <p>Learn movement, jumps, coins and game feel, then build your own level in Sandbox. Chapter 2 and Sandbox unlock after Lesson 15.</p>
+          <p>Read the task, change the code, then press Run to try it. Hints and Docs are there when you need them.</p>
+        </div></details>
       </div>
       <div id="rail"></div>
       <button id="menu-prev" class="nav" aria-label="Previous Lesson"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>

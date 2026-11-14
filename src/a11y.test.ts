@@ -116,7 +116,7 @@ describe("Course menu on small screens", () => {
     expect(main).toContain('KeyE: () => (chipSandbox.hidden ? toast(t("Sandbox opens when you finish the Course"))');
     expect(main).toContain('t("Back to Lesson {number}", { number: lessonIndex + 1 })');
     expect(main).not.toContain('"Locked"');
-    expect(main.match(/t\("Pass Lesson \{number\} to unlock", \{ number: menuCurrent \+ 1 \}\)/g)).toHaveLength(2); // the Play toast and the line under the title
+    expect(main.match(/t\("Pass Lesson \{number\} to unlock", \{ number: unlockLesson\((?:focused|i)\) \}\)/g)).toHaveLength(2); // the Play toast and the line under the title
   });
   it("shows no minimap in the code editor or Compare, and no overview ruler as a second scrollbar", () => {
     expect(main.match(/minimap: \{ enabled: false \}/g)).toHaveLength(2);
