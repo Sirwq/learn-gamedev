@@ -427,5 +427,5 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     projects = await loadProjects();
     if (!menu.hidden && mode === "sandbox") showMode("sandbox");
   };
-  return { menu, openMenu, setMode };
+  return { menu, openMenu, closeMenu, setMode };
 }

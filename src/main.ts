@@ -511,7 +511,7 @@ images.then((imgs) => drawWorld((document.getElementById("game") as HTMLCanvasEl
   startLevel.boxes.map((b) => new GameObject(b.tag, b.w, b.h, b.color, undefined, new Vector2(b.x, b.y)))));
 if (project) level = levelView({ project, images, ownImages: projectData!.images, scripts: () => Object.keys(models), save: (own) => { refreshStoppedObjects(); projectImages = { ...own }; void saveCurrentProject(); }, addScript: newScript });
 // The Course menu and its Sandbox tab.
-const { menu, openMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
+const { menu, openMenu, closeMenu, setMode } = courseMenu({ lessonIndex, project, projects, askedProject, earned, images, focusEditor: () => editor.focus(), refreshDocs });
 if (asked === null && !project) openMenu(); // the app opens on the Course menu (or the Sandbox menu for ?sandbox)
 
 // The Lesson strip of a Project: its name, Rename / Duplicate / Export / Delete.
@@ -952,6 +952,7 @@ if (localeView) {
     if (view.tab) document.querySelector<HTMLElement>(`#tabs [data-key="${CSS.escape(view.tab)}"]`)?.click();
     if (view.docsPage) openDocs(view.docsPage);
     if (view.objects) showLeftView(true);
+    if (view.menu === false) closeMenu();
     if (view.menu) {
       openMenu(view.mode);
       const dots = document.querySelectorAll<HTMLElement>("#menu-dots button");

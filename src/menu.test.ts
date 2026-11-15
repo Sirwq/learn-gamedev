@@ -83,6 +83,21 @@ it("keeps code replacement opt-in and resets consent for each imported file", as
   } finally { vi.restoreAllMocks(); }
 });
 
+it("restores an open lesson after the startup menu, including keyboard access", () => {
+  const menu = open();
+  const header = document.querySelector<HTMLElement>("body > header")!;
+  const main = document.querySelector<HTMLElement>("main")!;
+  expect(header.inert).toBe(true);
+  expect(main.inert).toBe(true);
+  menu.closeMenu();
+  expect(menu.menu.hidden).toBe(true);
+  expect(header.inert).toBe(false);
+  expect(main.inert).toBe(false);
+  menu.openMenu();
+  expect(menu.menu.hidden).toBe(false);
+  expect(main.inert).toBe(true);
+});
+
 it.each([0, 2, 17, 21])("counts all 21 lessons in menu stats with %i passed", (done) => {
   course.slice(0, done).forEach(l => markPassed(l.title));
   open();
