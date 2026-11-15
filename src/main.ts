@@ -752,6 +752,7 @@ async function run() {
   const versions = Object.fromEntries(Object.entries(models).map(([name, model]) => [name, model.getVersionId()]));
   const errors: CodeError[] = [];
   const scripts: Record<string, string> = {};
+  const source: Record<string, string> = {};
   try {
     const getWorker = await monaco.typescript.getTypeScriptWorker();
     const ts = await getWorker(...Object.values(models).map((model) => model.uri));
@@ -766,7 +767,10 @@ async function run() {
     }
     if (!errors.length) {
       for (const [name, model] of Object.entries(models)) {
-        try { scripts[name] = transpile(model.getValue()); }
+        try {
+          source[name] = model.getValue();
+          scripts[name] = transpile(source[name]);
+        }
         catch (error) {
           const at = error as Error & { loc?: { line: number; column: number } };
           errors.push({ script: name, line: at.loc?.line ?? 1, column: (at.loc?.column ?? 0) + 1, message: at.message });
@@ -854,7 +858,7 @@ async function run() {
       if (e.data.passed) {
         const wasUnlocked = sandboxUnlocked(course);
         markPassed(lesson.title);
-        saveSnapshot(lesson.title, Object.fromEntries(Object.entries(models).map(([n, m]) => [n, m.getValue()])));
+        saveSnapshot(lesson.title, source);
         showProgress();
         showOverlay(t("✓ Lesson passed"), false, true);
         toast(t("Lesson passed"));
