@@ -226,3 +226,10 @@ it("round-trips contact projects in backups and rejects unsupported embedded ver
   expect(into.getItem(`passed:${l1.title}`)).toBeNull();
   expect(await loadProjects(into)).toEqual(before);
 });
+
+it.each(["not JSON", "null", "[]", '{"Player":42}', '{"bad-name":"code"}'])("rejects damaged backup snapshot %s before any writes", async (snapshot) => {
+  const store = memoryStore();
+  const file = { format: "learn-dev-backup", version: 1, progress: { [`passed:${l1.title}`]: "1", [`snapshot:${l1.title}`]: snapshot }, projects: [] };
+  await expect(planImport(JSON.stringify(file), course, store)).rejects.toThrow();
+  expect(store.getItem(`passed:${l1.title}`)).toBeNull();
+});

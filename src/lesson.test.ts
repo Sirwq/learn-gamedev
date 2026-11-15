@@ -90,3 +90,13 @@ it("keeps single- and multi-script pass snapshots when later code is replaced or
   expect(snapshot("second", store)).toEqual({ Player: "my player", Bullet: "my bullet" });
   expect(loadScripts(lessons, 1, store)).toEqual({ Player: "player 2", Bullet: "my bullet" });
 });
+
+it.each(["not JSON", "null", "[]", '{"Player":42}', '{"bad-name":"code"}'])("ignores damaged saved snapshots without changing current code: %s", (text) => {
+  const store = memoryStore();
+  store.setItem("snapshot:broken", text);
+  saveScript("Player", "my current work", store);
+  expect(snapshot("broken", store)).toBeNull();
+  expect(() => loadSnapshot("broken", store)).not.toThrow();
+  expect(store.getItem("code:Player")).toBe("my current work");
+  expect(store.getItem("snapshot:broken")).toBe(text);
+});

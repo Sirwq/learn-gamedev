@@ -1,7 +1,7 @@
 // Export everything / Import everything (spec 059): every Project plus Course progress in one file, merged in without overwriting.
 import { achievements } from "./achievements";
 import { isPassed } from "./check";
-import type { Lesson } from "./lesson";
+import { parseSnapshot, type Lesson } from "./lesson";
 import { addProjectFile, exportProject, loadProjects } from "./project-storage";
 import { checkProjectFile, PROJECT_FORMAT, type ProjectFile } from "./project-file";
 import type { Project } from "./sandbox";
@@ -74,9 +74,17 @@ export async function planImport(text: string, course: Course, store: Store = lo
     const p = checkProjectFile(file);
     return { single: true, summary: t("Adds the Project \"{name}\". Nothing here is overwritten.", { name: p.project.name }), apply: () => addProjectFile(p, store) };
   }
-  if (file?.format !== FORMAT || typeof file.progress !== "object" || !file.progress || !Array.isArray(file.projects)) throw bad;
-  if (typeof file.version !== "number" || file.version > VERSION) throw new Error(t("This file can't be opened: it comes from a newer learn-dev. Reload the page and try again."));
+  if (file?.format !== FORMAT || typeof file.progress !== "object" || !file.progress || Array.isArray(file.progress) || !Array.isArray(file.projects)) throw bad;
+  if (!Number.isInteger(file.version) || (file.version as number) < 1 || (file.version as number) > VERSION) throw new Error(t("This file can't be opened: it comes from a newer learn-dev. Reload the page and try again."));
   const from = file.progress as Record<string, unknown>;
+  for (const k of progressKeys(course)) {
+    if (!Object.hasOwn(from, k)) continue;
+    const value = from[k];
+    if (typeof value !== "string" ||
+      (k.startsWith("snapshot:") && !parseSnapshot(value)) ||
+      (k.startsWith("hints:") && (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)))) ||
+      ((k.startsWith("passed:") || k.startsWith("achievement:")) && value !== "1")) throw bad;
+  }
   const has = (k: string) => typeof from[k] === "string";
   const take: [string, string][] = [];
   const newly = course.flatMap((l, i) => (from[`passed:${l.title}`] === "1" && !isPassed(l.title, store) ? [i] : []));

@@ -69,8 +69,17 @@ const STASH = "code-before-replay";
 export function saveSnapshot(lesson: string, code: Record<string, string>, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
   if (store.getItem(snapshotKey(lesson)) === null) store.setItem(snapshotKey(lesson), JSON.stringify(code));
 }
-export const snapshot = (lesson: string, store: Pick<Storage, "getItem"> = localStorage): Record<string, string> | null =>
-  JSON.parse(store.getItem(snapshotKey(lesson)) ?? "null");
+/** Invalid snapshots are ignored without deleting the original stored value. */
+export function parseSnapshot(text: string): Record<string, string> | null {
+  try {
+    const value: unknown = JSON.parse(text);
+    return value !== null && typeof value === "object" && !Array.isArray(value) &&
+      Object.entries(value).every(([name, code]) => /^[A-Z][A-Za-z0-9_]*$/.test(name) && typeof code === "string")
+      ? value as Record<string, string> : null;
+  } catch { return null; }
+}
+export const snapshot = (lesson: string, store: Pick<Storage, "getItem"> = localStorage) =>
+  parseSnapshot(store.getItem(snapshotKey(lesson)) ?? "null");
 
 /** "Load my code from when I passed it": the pass's code goes in, the newer code is put aside (never over code already put aside). */
 export function loadSnapshot(lesson: string, store: Pick<Storage, "getItem" | "setItem"> = localStorage) {
