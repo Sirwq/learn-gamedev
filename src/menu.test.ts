@@ -2,6 +2,7 @@
 import html from "../index.html?raw";
 import { beforeEach, expect, it, vi } from "vitest";
 import { russian } from "./ru";
+import * as backups from "./backup";
 import { courseMenu } from "./menu";
 import { course } from "./lessons/course";
 import { markPassed } from "./check";
@@ -55,4 +56,29 @@ it("translates the course overview into Russian", () => {
   open();
   expect(document.getElementById("course-intro")!.textContent).toContain("21 урок · 2 главы");
 
+});
+
+it("keeps code replacement opt-in and resets consent for each imported file", async () => {
+  const plan = { summary: "Different lesson code", codeConflicts: ["Player"], apply: vi.fn() };
+  const read = vi.spyOn(backups, "planImport").mockResolvedValue(plan);
+  for (const box of document.querySelectorAll("dialog")) {
+    box.showModal = () => { box.open = true; };
+    box.close = () => { box.open = false; };
+  }
+  try {
+    open();
+    const file = document.getElementById("saves-file") as HTMLInputElement;
+    Object.defineProperty(file, "files", { value: [{ text: async () => "backup" }] });
+    file.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.getElementById("saves-code-choice")!.hidden).toBe(false));
+    const checkbox = document.getElementById("saves-replace-code") as HTMLInputElement;
+    expect(checkbox.checked).toBe(false);
+    expect(checkbox.closest("label")!.textContent).toContain("Player");
+    checkbox.checked = true;
+    file.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(checkbox.checked).toBe(false));
+    read.mockResolvedValue({ ...plan, codeConflicts: [] });
+    file.dispatchEvent(new Event("change"));
+    await vi.waitFor(() => expect(document.getElementById("saves-code-choice")!.hidden).toBe(true));
+  } finally { vi.restoreAllMocks(); }
 });

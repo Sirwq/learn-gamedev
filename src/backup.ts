@@ -120,11 +120,11 @@ export async function planImport(text: string, course: Course, store: Store = lo
     take.some(([k]) => k.startsWith("code:") || k.startsWith("hints:") || k.startsWith("snapshot:")) && t("saved lesson work"),
   ].filter(Boolean);
   return {
-    summary: parts.length ? t("Adds {items}. Nothing here is overwritten.", { items: parts.join(", ") }) : t("Everything in this file is already here. Nothing changes."),
+    summary: parts.length ? t("Adds {items}. Nothing here is overwritten.", { items: parts.join(", ") }) : codeConflicts.length ? t("The backup has different lesson code. Keep this browser’s code, or choose replacement below.") : t("Everything in this file is already here. Nothing changes."),
     codeConflicts: codeConflicts.map((k) => k.slice(5)),
     apply: async (replaceCode = false) => {
       for (const [p, id] of adds) await addProjectFile(p, store, id);
-      for (const [k, v] of take) if (store.getItem(k) === null) store.setItem(k, v);
+      for (const [k, v] of take) if (k.startsWith("passed:") || store.getItem(k) === null) store.setItem(k, v);
       if (replaceCode) for (const k of codeConflicts) store.setItem(k, from[k] as string);
     },
   };

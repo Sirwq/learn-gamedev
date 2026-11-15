@@ -17,3 +17,8 @@ it("allows only one editor per project while allowing different projects", async
 it("refuses unsafe editing when locking is unavailable", async () => {
   expect(await claimProjectEditor("one", undefined)).toBe(false);
 });
+
+it("refuses editing when the browser rejects a lock request", async () => {
+  const locks = { request: vi.fn().mockRejectedValue(new Error("unavailable")) } as unknown as LockManager;
+  expect(await claimProjectEditor("one", locks)).toBe(false);
+});

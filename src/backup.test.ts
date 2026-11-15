@@ -76,7 +76,7 @@ describe("Import everything", () => {
     markPassed(l1.title, to);
     saveScript("Player", "// browser", to);
     const plan = await planImport(await exportEverything(course, from), course, to);
-    expect(plan.summary).toBe("Everything in this file is already here. Nothing changes.");
+    expect(plan.summary).toContain("The backup has different lesson code");
     await plan.apply();
     expect(to.getItem("code:Player")).toBe("// browser");
   });
