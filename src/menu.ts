@@ -307,12 +307,16 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     }
     newBox.close();
     document.getElementById("saves-summary")!.textContent = plan.summary;
+    const choice = document.getElementById("saves-code-choice")!;
+    choice.hidden = !plan.codeConflicts?.length;
+    (document.getElementById("saves-replace-code") as HTMLInputElement).checked = false;
+    choice.querySelector("span")!.textContent = t("Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.", { scripts: plan.codeConflicts?.join(", ") ?? "" });
     showSaves(true);
   }
   document.getElementById("saves-yes")!.onclick = async () => {
     let done;
     try {
-      done = await plan!.apply();
+      done = await plan!.apply((document.getElementById("saves-replace-code") as HTMLInputElement).checked);
     } catch (e) {
       if (e instanceof Error && e.name === "QuotaExceededError") throw e; // main.ts's storage-full toast
       savesBox.close();

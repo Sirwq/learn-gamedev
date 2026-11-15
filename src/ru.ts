@@ -8,6 +8,8 @@ export const russian: Catalog = {
   locale: "ru",
   messages: {
     ...russianStatic,
+  "saved lesson work": "сохранённая работа над уроками",
+  "Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.": "Заменить код уроков кодом из резервной копии: {scripts}. Снимите флажок, чтобы сохранить код этого браузера.",
   "Contact notifications": "Уведомления о контакте",
   "Enable on both objects. Reports overlap; does not stop movement.": "Включите у обоих объектов. Сообщает о пересечении, но не останавливает движение.",
   "Enabled": "Включены",

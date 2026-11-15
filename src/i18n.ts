@@ -6,6 +6,8 @@ import { russian } from "./ru";
 /** English is the source catalog. Entries are the complete English message, including named slots. */
 export const english = {
   ...staticMessages,
+  "saved lesson work": "saved lesson work",
+  "Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.": "Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.",
   "Contact notifications": "Contact notifications",
   "Enable on both objects. Reports overlap; does not stop movement.": "Enable on both objects. Reports overlap; does not stop movement.",
   "Enabled": "Enabled",
