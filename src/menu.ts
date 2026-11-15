@@ -1,7 +1,7 @@
 // Course menu: a cover carousel, one card per Lesson. Once unlocked, a Sandbox tab: one card per Project, then "+ New".
 import { course } from "./lessons/course";
 import { loadSnapshot, snapshot } from "./lesson";
-import { CHAPTER_ONE_COUNT, CHAPTER_TWO_COUNT, cardStates, chapterProgress, currentLesson } from "./check";
+import { CHAPTER_ONE_COUNT, cardStates, chapterProgress, currentLesson } from "./check";
 import { achievements } from "./achievements";
 import { type Box, Camera, GameObject, Vector2 } from "./engine";
 import { drawWorld, type Images } from "./sprites";
@@ -139,11 +139,10 @@ export function courseMenu({ lessonIndex, project, projects: loaded, askedProjec
     nextBtn.disabled = focused === list.length - 1;
     if ((document.activeElement as HTMLButtonElement).disabled) menu.focus(); // a disabled button drops focus to <body>
     document.getElementById("menu-play")!.querySelector("b")!.textContent = playLabel(focused);
-    const chapterTwoStat = chapters.unlocked ? ` · ${t("Ch. 2 {done} / {total}", { done: chapters.chapterTwo, total: CHAPTER_TWO_COUNT })}` : "";
-    const chapterTwoSpoken = chapters.unlocked ? `, ${t("Chapter 2: {done} of {total} Lessons passed", { done: chapters.chapterTwo, total: CHAPTER_TWO_COUNT })}` : "";
+    const passed = chapters.chapterOne + chapters.chapterTwo;
     document.getElementById("menu-stats")!.innerHTML =
-      `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${chapters.chapterOne} / ${CHAPTER_ONE_COUNT}${chapterTwoStat}</span>` +
-      `<span class="sr-only">${t("{earned} of {achievements} Achievements, Chapter 1: {done} of {total} Lessons passed{chapterTwo}", { earned: earned.size, achievements: achievements.length, done: chapters.chapterOne, total: CHAPTER_ONE_COUNT, chapterTwo: chapterTwoSpoken })}</span>`;
+      `<span aria-hidden="true">🏆 ${earned.size} / ${achievements.length}   ✓ ${passed} / ${course.length}</span>` +
+      `<span class="sr-only">${t("{earned} of {achievements} Achievements, {done} of {total} Lessons passed", { earned: earned.size, achievements: achievements.length, done: passed, total: course.length })}</span>`;
   }
   const menuLive = document.getElementById("menu-live")!;
   const announce = () =>

@@ -82,3 +82,24 @@ it("keeps code replacement opt-in and resets consent for each imported file", as
     await vi.waitFor(() => expect(document.getElementById("saves-code-choice")!.hidden).toBe(true));
   } finally { vi.restoreAllMocks(); }
 });
+
+it.each([0, 2, 17, 21])("counts all 21 lessons in menu stats with %i passed", (done) => {
+  course.slice(0, done).forEach(l => markPassed(l.title));
+  open();
+  const stats = document.getElementById("menu-stats")!;
+  expect(stats.querySelector('[aria-hidden="true"]')!.textContent).toContain(`✓ ${done} / 21`);
+  expect(stats.querySelector(".sr-only")!.textContent).toContain(`${done} of 21 Lessons passed`);
+  expect(stats.textContent).not.toContain("Chapter 1:");
+});
+
+it("announces the full lesson count in Russian", async () => {
+  localStorage.setItem("locale", "ru");
+  vi.resetModules();
+  const { courseMenu: localizedMenu } = await import("./menu");
+  course.slice(0, 2).forEach(l => markPassed(l.title));
+  localizedMenu({ lessonIndex: 0, project: undefined, projects: [], askedProject: null,
+    earned: new Set(), images: new Promise(() => {}), focusEditor() {}, refreshDocs() {} }).openMenu();
+  expect(document.querySelector("#menu-stats .sr-only")!.textContent).toContain("Пройдено уроков: 2 из 21");
+  localStorage.removeItem("locale");
+  vi.resetModules();
+});

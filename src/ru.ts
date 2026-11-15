@@ -127,7 +127,7 @@ export const russian: Catalog = {
     "Back to Project": "Вернуться к проекту", "Back to Projects": "Вернуться к проектам",
     "▶ Running {target}…": "▶ Выполняется {target}…", "Ch. 2 {done} / {total}": "Гл. 2 {done} / {total}",
     "Chapter 2: {done} of {total} Lessons passed": "Глава 2: пройдено {done} из {total} уроков",
-    "{earned} of {achievements} Achievements, Chapter 1: {done} of {total} Lessons passed{chapterTwo}": "Получено достижений: {earned} из {achievements}. Глава 1: пройдено уроков {done} из {total}{chapterTwo}",
+    "{earned} of {achievements} Achievements, {done} of {total} Lessons passed": "Получено достижений: {earned} из {achievements}. Пройдено уроков: {done} из {total}",
     "This file can't be opened: {why}.": "Не удалось открыть файл: {why}.",
     "it isn't a learn-dev Project file": "это не файл проекта learn-dev",
     "it comes from a newer learn-dev. Reload the page and try again": "он создан в более новой версии learn-dev. Обновите страницу и попробуйте снова",

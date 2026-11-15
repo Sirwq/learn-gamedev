@@ -130,7 +130,7 @@ export const english = {
   "▶ Running {target}…": "▶ Running {target}…",
   "Ch. 2 {done} / {total}": "Ch. 2 {done} / {total}",
   "Chapter 2: {done} of {total} Lessons passed": "Chapter 2: {done} of {total} Lessons passed",
-  "{earned} of {achievements} Achievements, Chapter 1: {done} of {total} Lessons passed{chapterTwo}": "{earned} of {achievements} Achievements, Chapter 1: {done} of {total} Lessons passed{chapterTwo}",
+  "{earned} of {achievements} Achievements, {done} of {total} Lessons passed": "{earned} of {achievements} Achievements, {done} of {total} Lessons passed",
   "This file can't be opened: {why}.": "This file can't be opened: {why}.",
   "it isn't a learn-dev Project file": "it isn't a learn-dev Project file",
   "it comes from a newer learn-dev. Reload the page and try again": "it comes from a newer learn-dev. Reload the page and try again",
