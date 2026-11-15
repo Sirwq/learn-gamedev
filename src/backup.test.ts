@@ -41,7 +41,7 @@ describe("Export everything", () => {
 describe("Import everything", () => {
   beforeEach(() => clear());
 
-  it("takes a Lesson's code, hints and snapshot only when the file has it passed and the browser doesn't", async () => {
+  it("restores progress while keeping conflicting browser code by default", async () => {
     const from = memoryStore();
     for (const l of [l1, l2, l3]) markPassed(l.title, from);
     saveOpenedHints(l1.title, 3, from);
@@ -55,13 +55,16 @@ describe("Import everything", () => {
     saveOpenedHints(l1.title, 1, to);
     saveScript("Player", "// browser", to);
     const plan = await planImport(file, course, to);
-    expect(plan.summary).toBe("Adds 2 Lessons passed. Nothing here is overwritten.");
+    expect(plan.summary).toBe("Adds 2 Lessons passed, saved lesson work. Nothing here is overwritten.");
     expect(isPassed(l2.title, to)).toBe(false); // nothing written before Import
     await plan.apply();
     expect([l1, l2, l3].map((l) => isPassed(l.title, to))).toEqual([true, true, true]);
     expect(to.getItem(`hints:${l1.title}`)).toBe("1");
     expect(to.getItem(`hints:${l3.title}`)).toBe("2");
     expect(to.getItem(`snapshot:${l3.title}`)).toBe(JSON.stringify({ Player: "// l3" }));
+    expect(to.getItem("code:Player")).toBe("// browser");
+    expect(plan.codeConflicts).toEqual(["Player"]);
+    await plan.apply(true);
     expect(to.getItem("code:Player")).toBe("// file");
   });
 
@@ -73,9 +76,31 @@ describe("Import everything", () => {
     markPassed(l1.title, to);
     saveScript("Player", "// browser", to);
     const plan = await planImport(await exportEverything(course, from), course, to);
-    expect(plan.summary).toBe("Everything in this file is already here. Nothing changes.");
+    expect(plan.summary).toContain("The backup has different lesson code");
     await plan.apply();
     expect(to.getItem("code:Player")).toBe("// browser");
+  });
+
+  it("restores unfinished code and hints into an empty browser without requiring a pass", async () => {
+    const from = memoryStore(), to = memoryStore();
+    saveScript("Player", "// unfinished", from);
+    saveOpenedHints(l1.title, 1, from);
+    const plan = await planImport(await exportEverything(course, from), course, to);
+    expect(plan.summary).toContain("saved lesson work");
+    await plan.apply();
+    expect(to.getItem("code:Player")).toBe("// unfinished");
+    expect(to.getItem(`hints:${l1.title}`)).toBe("1");
+    expect(isPassed(l1.title, to)).toBe(false);
+    expect((await planImport(await exportEverything(course, from), course, to)).summary).toContain("Nothing changes");
+  });
+
+  it("does not overwrite code edited after import confirmation was prepared", async () => {
+    const from = memoryStore(), to = memoryStore();
+    saveScript("Player", "// backup", from);
+    const plan = await planImport(await exportEverything(course, from), course, to);
+    saveScript("Player", "// new edit", to);
+    await plan.apply();
+    expect(to.getItem("code:Player")).toBe("// new edit");
   });
 
   it("Achievements are the union; settings only fill gaps", async () => {
@@ -200,4 +225,11 @@ it("round-trips contact projects in backups and rejects unsupported embedded ver
   await expect(planImport(JSON.stringify(file), course, into)).rejects.toThrow();
   expect(into.getItem(`passed:${l1.title}`)).toBeNull();
   expect(await loadProjects(into)).toEqual(before);
+});
+
+it.each(["not JSON", "null", "[]", '{"Player":42}', '{"bad-name":"code"}'])("rejects damaged backup snapshot %s before any writes", async (snapshot) => {
+  const store = memoryStore();
+  const file = { format: "learn-dev-backup", version: 1, progress: { [`passed:${l1.title}`]: "1", [`snapshot:${l1.title}`]: snapshot }, projects: [] };
+  await expect(planImport(JSON.stringify(file), course, store)).rejects.toThrow();
+  expect(store.getItem(`passed:${l1.title}`)).toBeNull();
 });

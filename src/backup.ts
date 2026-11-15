@@ -1,7 +1,7 @@
 // Export everything / Import everything (spec 059): every Project plus Course progress in one file, merged in without overwriting.
 import { achievements } from "./achievements";
 import { isPassed } from "./check";
-import type { Lesson } from "./lesson";
+import { parseSnapshot, type Lesson } from "./lesson";
 import { addProjectFile, exportProject, loadProjects } from "./project-storage";
 import { checkProjectFile, PROJECT_FORMAT, type ProjectFile } from "./project-file";
 import type { Project } from "./sandbox";
@@ -59,7 +59,7 @@ const plural = (n: number, one: "Lesson passed" | "Achievement" | "Project" | "d
   }
 };
 
-export type ImportPlan = { summary: string; apply: () => Promise<Project | void>; single?: boolean };
+export type ImportPlan = { summary: string; apply: (replaceCode?: boolean) => Promise<Project | void>; single?: boolean; codeConflicts?: string[] };
 
 /** Reads a backup or a single Project file without writing anything; `apply` does the import. Throws a plain message for a bad file. */
 export async function planImport(text: string, course: Course, store: Store = localStorage): Promise<ImportPlan> {
@@ -74,16 +74,28 @@ export async function planImport(text: string, course: Course, store: Store = lo
     const p = checkProjectFile(file);
     return { single: true, summary: t("Adds the Project \"{name}\". Nothing here is overwritten.", { name: p.project.name }), apply: () => addProjectFile(p, store) };
   }
-  if (file?.format !== FORMAT || typeof file.progress !== "object" || !file.progress || !Array.isArray(file.projects)) throw bad;
-  if (typeof file.version !== "number" || file.version > VERSION) throw new Error(t("This file can't be opened: it comes from a newer learn-dev. Reload the page and try again."));
+  if (file?.format !== FORMAT || typeof file.progress !== "object" || !file.progress || Array.isArray(file.progress) || !Array.isArray(file.projects)) throw bad;
+  if (!Number.isInteger(file.version) || (file.version as number) < 1 || (file.version as number) > VERSION) throw new Error(t("This file can't be opened: it comes from a newer learn-dev. Reload the page and try again."));
   const from = file.progress as Record<string, unknown>;
+  for (const k of progressKeys(course)) {
+    if (!Object.hasOwn(from, k)) continue;
+    const value = from[k];
+    if (typeof value !== "string" ||
+      (k.startsWith("snapshot:") && !parseSnapshot(value)) ||
+      (k.startsWith("hints:") && (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)))) ||
+      ((k.startsWith("passed:") || k.startsWith("achievement:")) && value !== "1")) throw bad;
+  }
   const has = (k: string) => typeof from[k] === "string";
   const take: [string, string][] = [];
-  // A Lesson the file has passed and this browser hasn't comes in with its hints and snapshot, and the code of its Scripts.
   const newly = course.flatMap((l, i) => (from[`passed:${l.title}`] === "1" && !isPassed(l.title, store) ? [i] : []));
-  for (const i of newly) for (const k of ["passed", "hints", "snapshot"].map((p) => `${p}:${course[i].title}`)) if (has(k)) take.push([k, from[k] as string]);
-  if (newly.length)
-    for (const n of new Set(course.slice(0, Math.max(...newly) + 1).flatMap((l) => Object.keys(l.scripts)))) if (has(`code:${n}`)) take.push([`code:${n}`, from[`code:${n}`] as string]);
+  for (const i of newly) take.push([`passed:${course[i].title}`, "1"]);
+  for (const l of course) for (const prefix of ["hints", "snapshot"]) {
+    const k = `${prefix}:${l.title}`;
+    if (has(k) && store.getItem(k) === null) take.push([k, from[k] as string]);
+  }
+  const codes = [...new Set(course.flatMap((l) => Object.keys(l.scripts)))].map((n) => `code:${n}`).filter(has);
+  const codeConflicts = codes.filter((k) => store.getItem(k) !== null && store.getItem(k) !== from[k]);
+  for (const k of codes) if (store.getItem(k) === null) take.push([k, from[k] as string]);
   const earned = achievements.map((a) => `achievement:${a.id}`).filter((k) => from[k] === "1" && store.getItem(k) !== "1");
   for (const k of earned) take.push([k, "1"]);
   for (const k of SETTINGS) if (has(k) && store.getItem(k) === null) take.push([k, from[k] as string]);
@@ -105,12 +117,15 @@ export async function planImport(text: string, course: Course, store: Store = lo
     newly.length && plural(newly.length, "Lesson passed"),
     earned.length && plural(earned.length, "Achievement"),
     adds.length && plural(adds.length, "Project"),
+    take.some(([k]) => k.startsWith("code:") || k.startsWith("hints:") || k.startsWith("snapshot:")) && t("saved lesson work"),
   ].filter(Boolean);
   return {
-    summary: parts.length ? t("Adds {items}. Nothing here is overwritten.", { items: parts.join(", ") }) : t("Everything in this file is already here. Nothing changes."),
-    apply: async () => {
-      for (const [k, v] of take) store.setItem(k, v);
+    summary: parts.length ? t("Adds {items}. Nothing here is overwritten.", { items: parts.join(", ") }) : codeConflicts.length ? t("The backup has different lesson code. Keep this browser’s code, or choose replacement below.") : t("Everything in this file is already here. Nothing changes."),
+    codeConflicts: codeConflicts.map((k) => k.slice(5)),
+    apply: async (replaceCode = false) => {
       for (const [p, id] of adds) await addProjectFile(p, store, id);
+      for (const [k, v] of take) if (k.startsWith("passed:") || store.getItem(k) === null) store.setItem(k, v);
+      if (replaceCode) for (const k of codeConflicts) store.setItem(k, from[k] as string);
     },
   };
 }

@@ -30,6 +30,7 @@ import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { createProject, deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProjectWithImages } from "./project-storage";
 import { exportGame } from "./game-export";
+import { claimProjectEditor } from "./project-lock";
 import { saveState } from "./save-state";
 import { exportFileName } from "./project-file";
 import { formatCode } from "./format-code";
@@ -92,7 +93,9 @@ addEventListener("unhandledrejection", (e) => {
 });
 await migrateProjects();
 const projects = await loadProjects();
-const projectData = askedProject ? await loadProject(askedProject) : undefined;
+const canEditProject = askedProject ? await claimProjectEditor(askedProject, navigator.locks) : false;
+if (askedProject && !canEditProject) toast(t("This Project cannot be edited here. Close its other tab and reopen it in a browser with Web Locks support."));
+const projectData = canEditProject ? await loadProject(askedProject!) : undefined;
 const project: Project | undefined = projectData?.project;
 let projectImages = projectData?.images ?? {};
 const saveButton = document.getElementById("save-state") as HTMLButtonElement;
@@ -749,6 +752,7 @@ async function run() {
   const versions = Object.fromEntries(Object.entries(models).map(([name, model]) => [name, model.getVersionId()]));
   const errors: CodeError[] = [];
   const scripts: Record<string, string> = {};
+  const source: Record<string, string> = {};
   try {
     const getWorker = await monaco.typescript.getTypeScriptWorker();
     const ts = await getWorker(...Object.values(models).map((model) => model.uri));
@@ -763,7 +767,10 @@ async function run() {
     }
     if (!errors.length) {
       for (const [name, model] of Object.entries(models)) {
-        try { scripts[name] = transpile(model.getValue()); }
+        try {
+          source[name] = model.getValue();
+          scripts[name] = transpile(source[name]);
+        }
         catch (error) {
           const at = error as Error & { loc?: { line: number; column: number } };
           errors.push({ script: name, line: at.loc?.line ?? 1, column: (at.loc?.column ?? 0) + 1, message: at.message });
@@ -851,7 +858,7 @@ async function run() {
       if (e.data.passed) {
         const wasUnlocked = sandboxUnlocked(course);
         markPassed(lesson.title);
-        saveSnapshot(lesson.title, Object.fromEntries(Object.entries(models).map(([n, m]) => [n, m.getValue()])));
+        saveSnapshot(lesson.title, source);
         showProgress();
         showOverlay(t("✓ Lesson passed"), false, true);
         toast(t("Lesson passed"));
