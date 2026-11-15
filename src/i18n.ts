@@ -8,6 +8,7 @@ export const english = {
   ...staticMessages,
   "saved lesson work": "saved lesson work",
   "Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.": "Replace existing lesson code with the backup: {scripts}. Leave unchecked to keep this browser’s code.",
+  "This Project cannot be edited here. Close its other tab and reopen it in a browser with Web Locks support.": "This Project cannot be edited here. Close its other tab and reopen it in a browser with Web Locks support.",
   "Contact notifications": "Contact notifications",
   "Enable on both objects. Reports overlap; does not stop movement.": "Enable on both objects. Reports overlap; does not stop movement.",
   "Enabled": "Enabled",

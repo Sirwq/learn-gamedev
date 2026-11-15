@@ -30,6 +30,7 @@ import { download } from "./backup";
 import { addScript, type Project, sandboxUnlocked } from "./sandbox";
 import { createProject, deleteProject, duplicateProject, exportProject, flushProjectWrites, loadProject, loadProjects, migrateProjects, saveProjectWithImages } from "./project-storage";
 import { exportGame } from "./game-export";
+import { claimProjectEditor } from "./project-lock";
 import { saveState } from "./save-state";
 import { exportFileName } from "./project-file";
 import { formatCode } from "./format-code";
@@ -92,7 +93,9 @@ addEventListener("unhandledrejection", (e) => {
 });
 await migrateProjects();
 const projects = await loadProjects();
-const projectData = askedProject ? await loadProject(askedProject) : undefined;
+const canEditProject = askedProject ? await claimProjectEditor(askedProject, navigator.locks) : false;
+if (askedProject && !canEditProject) toast(t("This Project cannot be edited here. Close its other tab and reopen it in a browser with Web Locks support."));
+const projectData = canEditProject ? await loadProject(askedProject!) : undefined;
 const project: Project | undefined = projectData?.project;
 let projectImages = projectData?.images ?? {};
 const saveButton = document.getElementById("save-state") as HTMLButtonElement;
