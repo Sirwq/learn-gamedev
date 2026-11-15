@@ -8,3 +8,9 @@ dist
 learn-dev-v0.1.0.zip
 
 .generated/
+
+# Local environment files; example templates stay shareable.
+.env
+.env.*
+!.env.example
+!.env.*.example
